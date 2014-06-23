@@ -1,0 +1,17 @@
+* Refactor to parallel the object heirarchy of Kinetic for easier compatability.  For example, coordinates of all shapes should be demoted to the generic shape base class.
+
+* Come up with more intelligent default values (e.g., colors could start as "Unknown")...
+
+* Change all in_var to just _var.
+
+* Clean up pass-back of values from JS functions (such as frames in an animation).
+
+Several new classes to incorporate:
+* A color class to handle RGBa and convert as needed.
+* A font class that handles font family, size, color, etc.
+* A coordinates class.
+
+
+Other libraries to think about:
+d3.js
+Processing.js
