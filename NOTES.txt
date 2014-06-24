@@ -1,10 +1,13 @@
-* Refactor to parallel the object heirarchy of Kinetic for easier compatability.  For example, coordinates of all shapes should be demoted to the generic shape base class.
-
-* Come up with more intelligent default values (e.g., colors could start as "Unknown")...
-
+* Implement image handling
+* Implement events with pass-back info
+* Implement other shapes (circles, etc.)
+* Implement free-drawing on canvas.
+* Clean up pass-back of values from JS functions (such as frames in an animation).
 * Change all in_var to just _var.
 
-* Clean up pass-back of values from JS functions (such as frames in an animation).
+Once we have a first draft of the basic framework:
+* Refactor to parallel the object heirarchy of Kinetic for easier compatability.
+* Come up with more intelligent default values (e.g., colors could start as "Unknown")...
 
 Several new classes to incorporate:
 * A color class to handle RGBa and convert as needed.

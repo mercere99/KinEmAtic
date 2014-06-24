@@ -12,6 +12,10 @@ extern "C" {
   extern void EMK_Alert(const char * in_msg);
   extern void EMK_Setup_OnEvent(int obj_id, const char * trigger, int callback_id);
 
+  extern int EMK_Image_Load(const char * file);
+  extern int EMK_Image_IsLoaded(int img_id);
+  extern int EMK_Image_AllLoaded();
+
   extern int EMK_Stage_Build(int in_w, int in_h, const char * in_name);
   extern int EMK_Stage_AddLayer(int stage_obj_id, int layer_obj_id);
 
@@ -31,8 +35,9 @@ extern "C" {
   extern int EMK_AnimationFrame_GetTimeDiff();
   extern int EMK_AnimationFrame_GetFrameRate();
 
-  extern void EMK_Shape_SetScale(int obj_id, double x_scale, double y_scale);
+  extern void EMK_Shape_SetFillPatternImage(int obj_id, int img_id);
   extern void EMK_Shape_SetOffset(int obj_id, int x_offset, int y_offset);
+  extern void EMK_Shape_SetScale(int obj_id, double x_scale, double y_scale);
   extern void EMK_Shape_DoRotate(int obj_id, double rot);
 }
 
@@ -48,7 +53,7 @@ protected:
 
   emkObject() : obj_id(-1) {;}  // Protected so that you can't make a direct emkObject.
 public:
-  int GetID() { return obj_id; }
+  int GetID() const { return obj_id; }
 
   template<class T> void On(std::string in_trigger, T * in_target, void (T::*in_method_ptr)());
 };
@@ -118,6 +123,16 @@ extern "C" void emkJSDoCallback(int cb_id)
 }
 
 
+class emkImage : public emkObject {
+private:
+  std::string filename;
+public:
+  emkImage(const std::string & _filename) : filename(_filename) {
+    int obj_id = EMK_Image_Load(filename.c_str());
+  }
+};
+
+
 // The subclass of object that may be placed in a layer.
 class emkShape : public emkObject {
 private:
@@ -125,13 +140,19 @@ public:
   emkShape() { ; }
   virtual ~emkShape() { ; }
 
-  void SetScale(double _x, double _y) {    
-    EMK_Shape_SetScale(obj_id, _x, _y);
+  void SetFillPatternImage(const emkImage & image) {
+    EMK_Shape_SetFillPatternImage(obj_id, image.GetID());
   }
+
 
   void SetOffset(int _x, int _y) {    
     EMK_Shape_SetOffset(obj_id, _x, _y);
   }
+
+  void SetScale(double _x, double _y) {    
+    EMK_Shape_SetScale(obj_id, _x, _y);
+  }
+
 
   void DoRotate(double rot) {
     EMK_Shape_DoRotate(obj_id, rot);

@@ -1,24 +1,5 @@
-//"use strict";
-
-// An implementation of a libc for the web. Basically, implementations of
-// the various standard C libraries, that can be called from compiled code,
-// and work using the actual JavaScript environment.
-//
-// We search the Library object when there is an external function. If the
-// entry in the Library is a function, we insert it. If it is a string, we
-// do another lookup in the library (a simple way to write a function once,
-// if it can be called by different names). We also allow dependencies,
-// using __deps. Initialization code to be run after allocating all
-// global constants can be defined by __postset.
-//
-// Note that the full function name will be '_' + the name in the Library
-// object. For convenience, the short name appears here. Note that if you add a
-// new function with an '_', it will not be found.
-
-// Memory allocated during startup, in postsets, should only be ALLOC_STATIC
-
 mergeInto(LibraryManager.library, {
-    $emk_info: { objs:[], counter:0 },
+    $emk_info: { objs:[], images:[], image_load_count:0 },
 
     EMK_Alert: function(in_msg) {
         in_msg = Pointer_stringify(in_msg);
@@ -34,6 +15,32 @@ mergeInto(LibraryManager.library, {
         });
     },
 
+
+    // Function to load images into an image object and return the ID.
+    EMK_Image_Load__deps: ['$emk_info'],
+    EMK_Image_Load: function(file) {
+        file = Pointer_stringify(file);
+        img_id = emk_info.images.length;
+        emk_info.images[img_id] = new Image();
+        emk_info.images[img_id].src = file;
+        emk_info.images[img_id].loaded = false;
+        emk_info.images[img_id].onload = function() {
+            emk_info.images[img_id].loaded = true;
+            emk_info.image_load_count += 1;
+        };
+        return img_id;
+    },
+
+    EMK_Image_IsLoaded__deps: ['$emk_info'],
+    EMK_Image_IsLoaded: function(img_id) {
+        return emk_info.image[img_id].loaded;
+    },
+
+    EMK_Image_AllLoaded__deps: ['$emk_info'],
+    EMK_Image_AllLoaded: function() {
+        alert("Testing! " + emk_info.images.length + "  " + emk_info.image_load_count);
+        return (emk_info.images.length == emk_info.image_load_count);
+    },
 
     EMK_Stage_Build__deps: ['$emk_info'],
     EMK_Stage_Build: function(in_w, in_h, in_name) {
@@ -102,7 +109,7 @@ mergeInto(LibraryManager.library, {
             y: in_y,
             width: in_w,
             height: in_h,
-            fill: in_fill,
+            // fill: in_fill,
             stroke: in_stroke,
             strokeWidth: in_stroke_width,
             draggable: in_draggable
@@ -153,15 +160,17 @@ mergeInto(LibraryManager.library, {
     EMK_AnimationFrame_GetFrameRate: function() { return emk_info.anim_frame.frameRate; },
 
 
-    EMK_Animation_Start: ['$emk_info'],
+    EMK_Animation_Start__deps: ['$emk_info'],
     EMK_Animation_Start: function(obj_id) {
         emk_info.objs[obj_id].start();
     },
 
 
-    EMK_Shape_SetScale__deps: ['$emk_info'],
-    EMK_Shape_SetScale: function(obj_id, x_scale, y_scale) {
-        emk_info.objs[obj_id].scale({x:x_scale, y:y_scale});
+    EMK_Shape_SetFillPatternImage__deps: ['$emk_info'],
+    EMK_Shape_SetFillPatternImage: function(obj_id, img_id) {
+        delete emk_info.objs[obj_id].fill; // Delete fill, otherwise fill overwrite image.
+        // emk_info.objs[obj_id].fill('red'); // Delete fill, otherwise fill overwrite image.
+        emk_info.objs[obj_id].fillPatternImage(emk_info.images[img_id]);
     },
 
     EMK_Shape_SetOffset__deps: ['$emk_info'],
@@ -169,6 +178,11 @@ mergeInto(LibraryManager.library, {
         emk_info.objs[obj_id].offset({x:x_offset, y:y_offset});
     },
     
+    EMK_Shape_SetScale__deps: ['$emk_info'],
+    EMK_Shape_SetScale: function(obj_id, x_scale, y_scale) {
+        emk_info.objs[obj_id].scale({x:x_scale, y:y_scale});
+    },
+
     EMK_Shape_DoRotate__deps: ['$emk_info'],
     EMK_Shape_DoRotate: function(obj_id, rot) {
         emk_info.objs[obj_id].rotate(rot);
