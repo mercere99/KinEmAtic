@@ -23,7 +23,7 @@ private:
 public:
   KineticExample()
     : stage(600, 600, "container")
-    , rect(250, 250, 200, 200, "green", "black", 4)
+    , rect(250, 250, 200, 200, "transparent", "black", 4)
     , rect2(350, 250, 200, 200, "red", "black", 4)
     , image_test("http://www.html5canvastutorials.com/demos/assets/darth-vader.jpg")
     , poly(100, 100, 8, 50, "blue")

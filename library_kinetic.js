@@ -181,9 +181,8 @@ mergeInto(LibraryManager.library, {
 
     EMK_Shape_SetFillPatternImage__deps: ['$emk_info'],
     EMK_Shape_SetFillPatternImage: function(obj_id, img_id) {
-        delete emk_info.objs[obj_id].fill; // Delete fill, otherwise fill overwrite image.
-        // emk_info.objs[obj_id].fill('red'); // Delete fill, otherwise fill overwrite image.
-        emk_info.objs[obj_id].fillPatternImage(emk_info.images[img_id]);
+        emk_info.objs[obj_id].setFillPriority('pattern');
+        emk_info.objs[obj_id].setFillPatternImage(emk_info.images[img_id]);
     },
 
     EMK_Shape_SetOffset__deps: ['$emk_info'],
