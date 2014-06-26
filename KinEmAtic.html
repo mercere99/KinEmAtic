@@ -8,7 +8,7 @@
     <script type="text/javascript" src="kinetic-v5.1.0.min.js"></script>
     <script type="text/javascript" src="test.js"></script>
     <script>
-      emkJSDoCallback = Module.cwrap('emkJSDoCallback', null, ['number']);
+      emkJSDoCallback = Module.cwrap('emkJSDoCallback', null, ['number', 'number']);
       emkMain = Module.cwrap('emkMain', 'number');
       var result = emkMain();
     </script>

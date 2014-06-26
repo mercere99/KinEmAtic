@@ -11,7 +11,14 @@ mergeInto(LibraryManager.library, {
     EMK_Setup_OnEvent: function(obj_id, trigger, callback_id) {
         trigger = Pointer_stringify(trigger);
         emk_info.objs[obj_id].on(trigger, function() {
-            emkJSDoCallback(callback_id); // @CAO Will callback change for all if outer function run again? Test!
+
+            var ptr= Module._malloc(16);
+            setValue(ptr, 92, 'float');
+            setValue(ptr+4, 3.14, 'float');
+
+            emkJSDoCallback(callback_id, ptr);
+
+            Module._free(ptr);
         });
     },
 
@@ -26,7 +33,7 @@ mergeInto(LibraryManager.library, {
 
         emk_info.images[img_id].onload = function() {
             emk_info.image_load_count += 1;
-            emkJSDoCallback(callback_id);
+            emkJSDoCallback(callback_id, 0);
         };
         return img_id;
     },
@@ -154,8 +161,18 @@ mergeInto(LibraryManager.library, {
     EMK_Animation_Build: function(callback_id, layer_id) {
         var obj_id = emk_info.objs.length;                   // Determine the next free id for a Kinetic object.
         emk_info.objs[obj_id] = new Kinetic.Animation(function(frame) {
+
             emk_info.anim_frame = frame;
-            emkJSDoCallback(callback_id); // @CAO Will callback change for all if outer function run again? Test!
+
+            var ptr= Module._malloc(16); // 4 ints @ 4 bytes each...
+            setValue(ptr,    frame.timeDiff,  'i32');
+            setValue(ptr+4,  frame.lastTime,  'i32');
+            setValue(ptr+8,  frame.time,      'i32');
+            setValue(ptr+12, frame.frameRate, 'i32');
+
+            emkJSDoCallback(callback_id, ptr);
+
+            Module._free(ptr);
         }, emk_info.objs[layer_id]);
         return obj_id;
     },

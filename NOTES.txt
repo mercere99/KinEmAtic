@@ -1,6 +1,6 @@
-* Implement image handling
 * Implement events with pass-back info
 * Implement other shapes (circles, etc.)
+* Implement other accessors
 * Implement free-drawing on canvas.
 * Clean up pass-back of values from JS functions (such as frames in an animation).
 * Change all in_var to just _var.

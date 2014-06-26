@@ -68,7 +68,7 @@ public:
   emkJSCallback() { ; }
   virtual ~emkJSCallback() { ; }
 
-  virtual void DoCallback() = 0;
+  virtual void DoCallback(int * arg_ptr) = 0;
 };
 
 
@@ -93,8 +93,8 @@ public:
     return cb_id;
   }
 
-  void DoCallback(int cb_id) {
-    callback_info[cb_id]->DoCallback();
+  void DoCallback(int cb_id, int * arg_ptr) {
+    callback_info[cb_id]->DoCallback(arg_ptr);
   }
 };
 
@@ -111,7 +111,23 @@ public:
 
   ~emkMethodCallback() { ; }
 
-  void DoCallback() { (target->*(method_ptr))(); }
+  void DoCallback(int * arg_ptr) { (target->*(method_ptr))(); }
+};
+
+
+template <class T> class emkMethodCallback_I : public emkJSCallback {
+private:
+  T * target;
+  void (T::*method_ptr)(int);
+public:
+  emkMethodCallback_I(T * in_target, void (T::*in_method_ptr)(int))
+    : target(in_target)
+    , method_ptr(in_method_ptr)
+  { ; }
+
+  ~emkMethodCallback_I() { ; }
+
+  void DoCallback(int * arg_ptr) { (target->*(method_ptr))(arg_ptr[0]); }
 };
 
 
@@ -122,9 +138,9 @@ template<class T> void emkObject::On(std::string trigger, T * target, void (T::*
   EMK_Setup_OnEvent(obj_id, trigger.c_str(), cb_id);
 }
 
-extern "C" void emkJSDoCallback(int cb_id)
+extern "C" void emkJSDoCallback(int cb_id, int arg_ptr)
 { 
-  emkInfo::Info().DoCallback(cb_id);
+  emkInfo::Info().DoCallback(cb_id, (int *) arg_ptr);
 }
 
 
@@ -143,7 +159,7 @@ public:
 
   void DrawOnLoad(emkLayer * in_layer) { layers_waiting.push_back(in_layer); }
 
-  void DoCallback(); // Called back when image is loaded
+  void DoCallback(int * arg_ptr); // Called back when image is loaded
 };
 
 
@@ -274,12 +290,8 @@ public:
   int time;       // Miliseconds from start to current frame.
   int frame_rate; // Current frames per second.
 public:
-  emkAnimationFrame() {
-    time_diff  = EMK_AnimationFrame_GetTimeDiff();
-    last_time  = EMK_AnimationFrame_GetLastTime();
-    time       = EMK_AnimationFrame_GetTime();
-    frame_rate = EMK_AnimationFrame_GetFrameRate();
-  }
+  emkAnimationFrame(int _td, int _lt, int _t, int _fr)
+    : time_diff(_td), last_time(_lt), time(_t), frame_rate(_fr) { ; }
   ~emkAnimationFrame() { ; }
 };
 
@@ -301,8 +313,8 @@ public:
     obj_id = EMK_Animation_Build(cb_id, layer.GetID());
   }
 
-  void DoCallback() {
-    emkAnimationFrame frame;
+  void DoCallback(int * arg_ptr) {
+    emkAnimationFrame frame(arg_ptr[0], arg_ptr[1], arg_ptr[2], arg_ptr[3]);
     (target->*(method_ptr))(frame);
   }
     
@@ -316,7 +328,8 @@ public:
 //////////////////////////////////////////////////////////
 // Methods that refer to other classes defined later...
 
-void emkImage::DoCallback() { // Called back when image is loaded
+void emkImage::DoCallback(int * arg_ptr) { // Called back when image is loaded
+  (void) arg_ptr;
   has_loaded = true;
   while (layers_waiting.size()) {
     emkLayer * cur_layer = layers_waiting.front();
