@@ -4,6 +4,7 @@
 #include <emscripten.h>
 
 #include <assert.h>
+#include <list>
 #include <string>
 #include <vector>
 
@@ -12,7 +13,7 @@ extern "C" {
   extern void EMK_Alert(const char * in_msg);
   extern void EMK_Setup_OnEvent(int obj_id, const char * trigger, int callback_id);
 
-  extern int EMK_Image_Load(const char * file);
+  extern int EMK_Image_Load(const char * file, int cb_id);
   extern int EMK_Image_IsLoaded(int img_id);
   extern int EMK_Image_AllLoaded();
 
@@ -22,6 +23,8 @@ extern "C" {
   extern int EMK_Layer_Build(int stage_id);
   extern int EMK_Layer_AddObject(int layer_obj_id, int add_obj_id);
   extern void EMK_Layer_BatchDraw(int layer_obj_id);
+
+  extern int EMK_Image_Build(int in_x, int in_y, int img_id, int in_w, int in_h);
 
   extern int EMK_Text_Build(int in_x, int in_y, const char * in_text, const char * in_font_size, const char * in_font_family, const char * in_fill);
   extern int EMK_Rect_Build(int in_x, int in_y, int in_w, int in_h, const char * in_fill, const char * in_stroke, int in_stroke_width, int in_draggable);
@@ -73,6 +76,8 @@ public:
 // @CAO This is currently ugly callback management (too many steps...)
 class emkInfo {
 private:
+  // @CAO we should think about different data structures for maintaining callbacks -- right now we keep them forever,
+  // but some callbacks are one-time events (such as when signaling that an image has finished loading.)
   std::vector<emkJSCallback *> callback_info;  // Keep track of all of the callbacks that we are waiting for.
 
   emkInfo() { ; }                    // Private to prevent multiple instances.
@@ -94,17 +99,17 @@ public:
 };
 
 
-template <class T> class emkSimpleCallback : public emkJSCallback {
+template <class T> class emkMethodCallback : public emkJSCallback {
 private:
   T * target;
   void (T::*method_ptr)();
 public:
-  emkSimpleCallback(T * in_target, void (T::*in_method_ptr)())
+  emkMethodCallback(T * in_target, void (T::*in_method_ptr)())
     : target(in_target)
     , method_ptr(in_method_ptr)
   { ; }
 
-  ~emkSimpleCallback() { ; }
+  ~emkMethodCallback() { ; }
 
   void DoCallback() { (target->*(method_ptr))(); }
 };
@@ -112,7 +117,7 @@ public:
 
 template<class T> void emkObject::On(std::string trigger, T * target, void (T::*method_ptr)())
 {
-  emkSimpleCallback<T> * new_callback = new emkSimpleCallback<T>(target, method_ptr);
+  emkMethodCallback<T> * new_callback = new emkMethodCallback<T>(target, method_ptr);
   int cb_id = emkInfo::Info().RegisterCallback(new_callback);
   EMK_Setup_OnEvent(obj_id, trigger.c_str(), cb_id);
 }
@@ -123,25 +128,37 @@ extern "C" void emkJSDoCallback(int cb_id)
 }
 
 
-class emkImage : public emkObject {
+class emkImage : public emkJSCallback {
 private:
   std::string filename;
+  bool has_loaded;
+  std::list<emkLayer *> layers_waiting;
 public:
-  emkImage(const std::string & _filename) : filename(_filename) {
-    int obj_id = EMK_Image_Load(filename.c_str());
+  emkImage(const std::string & _filename) : filename(_filename), has_loaded(false) {
+    int cb_id = emkInfo::Info().RegisterCallback(this); // Call this object back on load...
+    obj_id = EMK_Image_Load(filename.c_str(), cb_id);   // Start loading the image.
   }
+
+  bool HasLoaded() const { return has_loaded; }
+
+  void DrawOnLoad(emkLayer * in_layer) { layers_waiting.push_back(in_layer); }
+
+  void DoCallback(); // Called back when image is loaded
 };
 
 
 // The subclass of object that may be placed in a layer.
 class emkShape : public emkObject {
 private:
+  emkImage * image;  // If we are drawing an image, keep track of it to make sure it loads.
+
 public:
-  emkShape() { ; }
+  emkShape() : image(NULL) { ; }
   virtual ~emkShape() { ; }
 
-  void SetFillPatternImage(const emkImage & image) {
-    EMK_Shape_SetFillPatternImage(obj_id, image.GetID());
+  void SetFillPatternImage(emkImage & _image) {
+    image = &_image;
+    EMK_Shape_SetFillPatternImage(obj_id, image->GetID());
   }
 
 
@@ -153,10 +170,11 @@ public:
     EMK_Shape_SetScale(obj_id, _x, _y);
   }
 
-
   void DoRotate(double rot) {
     EMK_Shape_DoRotate(obj_id, rot);
   }
+
+  emkImage * GetImage() { return image; }
 };
 
 
@@ -169,6 +187,11 @@ public:
 
   // Add other types of stage objects; always place them in the current layer.
   emkLayer & Add(emkShape & in_obj) {
+    // If the object we are adding has an image that hasn't been loaded, setup a callback.
+    emkImage * image = in_obj.GetImage();
+    if (image && image->HasLoaded() == false) {
+      image->DrawOnLoad(this);
+    }
     EMK_Layer_AddObject(obj_id, in_obj.GetID());
     return *this;
   }
@@ -202,6 +225,15 @@ public:
   emkStage & Add(emkLayer & in_layer) {
     EMK_Stage_AddLayer(obj_id, in_layer.GetID());
     return *this;
+  }
+};
+
+
+// Image
+class emkImageRect : public emkShape {
+public:
+  emkImageRect(int in_x, int in_y, int img_id, int in_w, int in_h) {
+    obj_id = EMK_Image_Build(in_x, in_y, img_id, in_w, in_h);
   }
 };
 
@@ -279,5 +311,18 @@ public:
     EMK_Animation_Start(obj_id);
   }
 };
+
+
+//////////////////////////////////////////////////////////
+// Methods that refer to other classes defined later...
+
+void emkImage::DoCallback() { // Called back when image is loaded
+  has_loaded = true;
+  while (layers_waiting.size()) {
+    emkLayer * cur_layer = layers_waiting.front();
+    layers_waiting.pop_front();
+    cur_layer->BatchDraw();
+  }
+}
 
 #endif

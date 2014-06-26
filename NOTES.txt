@@ -18,3 +18,4 @@ Several new classes to incorporate:
 Other libraries to think about:
 d3.js
 Processing.js
+http://fastly.github.io/epoch/

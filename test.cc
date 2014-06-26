@@ -14,6 +14,8 @@ private:
   emkRect rect;
   emkRect rect2;
   emkImage image_test;
+  emkRegularPolygon poly;
+  emkText text;
 
   emkAnimation<KineticExample> anim;
 
@@ -24,15 +26,24 @@ public:
     , rect(250, 250, 200, 200, "green", "black", 4)
     , rect2(350, 250, 200, 200, "red", "black", 4)
     , image_test("http://www.html5canvastutorials.com/demos/assets/darth-vader.jpg")
+    , poly(100, 100, 8, 50, "blue")
+    , text(400, 100, "Hello!", "30")
   {
     rect.SetOffset(100, 10);
-    while (EMK_Image_AllLoaded() == false) sleep(200);
     rect.SetFillPatternImage(image_test);
+    rect2.SetFillPatternImage(image_test);
     layer.Add(rect);
+    layer.Add(poly);
+    layer.Add(text);
     stage.Add(layer);
 
-    stage.On("contentMousemove", this, &KineticExample::DoRectRotation);
-    stage.On("contentClick", this, &KineticExample::DoClick);
+    rect.On("mousemove", this, &KineticExample::DoRectRotation);
+    rect.On("click", this, &KineticExample::DoClick);
+  }
+
+  void DoClick() {
+    layer.Add(rect2);
+    layer.BatchDraw();
   }
 
   void DoRectRotation() {
@@ -40,10 +51,8 @@ public:
     layer.BatchDraw();
   }
 
-  void DoClick() {
-    
-    layer.Add(rect2);
-    layer.BatchDraw();
+  void DoRectScale() {
+    rect.SetScale(0.5, 0.5);
   }
 };
 

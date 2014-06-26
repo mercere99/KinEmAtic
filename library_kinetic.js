@@ -18,15 +18,15 @@ mergeInto(LibraryManager.library, {
 
     // Function to load images into an image object and return the ID.
     EMK_Image_Load__deps: ['$emk_info'],
-    EMK_Image_Load: function(file) {
+    EMK_Image_Load: function(file, callback_id) {
         file = Pointer_stringify(file);
         img_id = emk_info.images.length;
         emk_info.images[img_id] = new Image();
         emk_info.images[img_id].src = file;
-        emk_info.images[img_id].loaded = false;
+
         emk_info.images[img_id].onload = function() {
-            emk_info.images[img_id].loaded = true;
             emk_info.image_load_count += 1;
+            emkJSDoCallback(callback_id);
         };
         return img_id;
     },
@@ -79,6 +79,19 @@ mergeInto(LibraryManager.library, {
         emk_info.objs[layer_obj_id].batchDraw();
     },
 
+    EMK_Image_Build__deps: ['$emk_info'],
+    EMK_Image_Build: function(in_x, in_y, img_id, in_w, in_h) {
+        var obj_id = emk_info.objs.length;
+        emk_info.objs[obj_id] = new Kinetic.Image({
+            x: in_x,
+            y: in_y,
+            image: emk_info.image[img_id],
+            width: in_w,
+            height: in_h
+        });
+        return obj_id;
+    },
+
     EMK_Text_Build__deps: ['$emk_info'],
     EMK_Text_Build: function(in_x, in_y, in_text, in_font_size, in_font_family, in_fill) {
         var obj_id = emk_info.objs.length;                   // Determine the next free id for a Kinetic object.
@@ -109,7 +122,7 @@ mergeInto(LibraryManager.library, {
             y: in_y,
             width: in_w,
             height: in_h,
-            // fill: in_fill,
+            fill: in_fill,
             stroke: in_stroke,
             strokeWidth: in_stroke_width,
             draggable: in_draggable
