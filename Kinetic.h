@@ -33,10 +33,6 @@ extern "C" {
 
   extern int EMK_Animation_Build(int callback_id, int layer_id);
   extern int EMK_Animation_Start(int obj_id);
-  extern int EMK_AnimationFrame_GetTime();
-  extern int EMK_AnimationFrame_GetLastTime();
-  extern int EMK_AnimationFrame_GetTimeDiff();
-  extern int EMK_AnimationFrame_GetFrameRate();
 
   extern void EMK_Shape_SetFillPatternImage(int obj_id, int img_id);
   extern void EMK_Shape_SetOffset(int obj_id, int x_offset, int y_offset);

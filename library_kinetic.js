@@ -177,18 +177,6 @@ mergeInto(LibraryManager.library, {
         return obj_id;
     },
 
-    EMK_AnimationFrame_GetTime__deps: ['$emk_info'],
-    EMK_AnimationFrame_GetTime: function() { return emk_info.anim_frame.time; },
-
-    EMK_AnimationFrame_GetTimeDiff__deps: ['$emk_info'],
-    EMK_AnimationFrame_GetTimeDiff: function() { return emk_info.anim_frame.timeDiff; },
-
-    EMK_AnimationFrame_GetLastTime__deps: ['$emk_info'],
-    EMK_AnimationFrame_GetLastTime: function() { return emk_info.anim_frame.lastTime; },
-
-    EMK_AnimationFrame_GetFrameRate__deps: ['$emk_info'],
-    EMK_AnimationFrame_GetFrameRate: function() { return emk_info.anim_frame.frameRate; },
-
 
     EMK_Animation_Start__deps: ['$emk_info'],
     EMK_Animation_Start: function(obj_id) {
