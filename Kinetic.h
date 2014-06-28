@@ -11,9 +11,9 @@
 
 extern "C" {
   extern void EMK_Alert(const char * in_msg);
-  extern void EMK_Setup_OnEvent(int obj_id, const char * trigger, int callback_id);
+  extern void EMK_Setup_OnEvent(int obj_id, const char * trigger, int callback_ptr);
 
-  extern int EMK_Image_Load(const char * file, int cb_id);
+  extern int EMK_Image_Load(const char * file, int callback_ptr);
   extern int EMK_Image_AllLoaded();
 
   extern int EMK_Stage_Build(int in_w, int in_h, const char * in_name);
@@ -30,8 +30,8 @@ extern "C" {
   extern int EMK_RegularPolygon_Build(int in_x, int in_y, int in_sides, int in_radius,
                                       const char * in_fill, const char * in_stroke, int in_stroke_width, int in_draggable);
 
-  extern int EMK_Animation_Build(int callback_id, int layer_id);
-  extern int EMK_Animation_Build_NoFrame(int callback_id, int layer_id);
+  extern int EMK_Animation_Build(int callback_ptr, int layer_id);
+  extern int EMK_Animation_Build_NoFrame(int callback_ptr, int layer_id);
   extern int EMK_Animation_Start(int obj_id);
 
   extern void EMK_Shape_SetFillPatternImage(int obj_id, int img_id);
@@ -59,39 +59,12 @@ public:
 
 
 // Mediator for handling callbacks from JS.
-class emkJSCallback : public emkObject {  // @CAO Should this really be an emkObject??
+class emkJSCallback : public emkObject {
 public:
   emkJSCallback() { ; }
   virtual ~emkJSCallback() { ; }
 
   virtual void DoCallback(int * arg_ptr) = 0;
-};
-
-
-// Global info for this Kinetic Wrapper
-// @CAO This is currently ugly callback management (too many steps...)
-class emkInfo {
-private:
-  // @CAO we should think about different data structures for maintaining callbacks -- right now we keep them forever,
-  // but some callbacks are one-time events (such as when signaling that an image has finished loading.)
-  std::vector<emkJSCallback *> callback_info;  // Keep track of all of the callbacks that we are waiting for.
-
-  emkInfo() { ; }                    // Private to prevent multiple instances.
-  emkInfo(const emkInfo &);          // Don't allow copies to be made.
-  void operator=(const emkInfo &);   // Don't allow.
-
-public:
-  static emkInfo & Info() { static emkInfo info; return info; }  // Singleton
-
-  int RegisterCallback(emkJSCallback * _cb) {
-    int cb_id = (int) callback_info.size();
-    callback_info.push_back(_cb);
-    return cb_id;
-  }
-
-  void DoCallback(int cb_id, int * arg_ptr) {
-    callback_info[cb_id]->DoCallback(arg_ptr);
-  }
 };
 
 
@@ -130,13 +103,12 @@ public:
 template<class T> void emkObject::On(std::string trigger, T * target, void (T::*method_ptr)())
 {
   emkMethodCallback<T> * new_callback = new emkMethodCallback<T>(target, method_ptr);
-  int cb_id = emkInfo::Info().RegisterCallback(new_callback);
-  EMK_Setup_OnEvent(obj_id, trigger.c_str(), cb_id);
+  EMK_Setup_OnEvent(obj_id, trigger.c_str(), (int) new_callback);
 }
 
-extern "C" void emkJSDoCallback(int cb_id, int arg_ptr)
-{ 
-  emkInfo::Info().DoCallback(cb_id, (int *) arg_ptr);
+extern "C" void emkJSDoCallback(int cb_ptr, int arg_ptr)
+{
+  ((emkJSCallback *) cb_ptr)->DoCallback((int *) arg_ptr);
 }
 
 
@@ -147,8 +119,7 @@ private:
   std::list<emkLayer *> layers_waiting;
 public:
   emkImage(const std::string & _filename) : filename(_filename), has_loaded(false) {
-    int cb_id = emkInfo::Info().RegisterCallback(this); // Call this object back on load...
-    obj_id = EMK_Image_Load(filename.c_str(), cb_id);   // Start loading the image.
+    obj_id = EMK_Image_Load(filename.c_str(), (int) this);   // Start loading the image.
   }
 
   bool HasLoaded() const { return has_loaded; }
@@ -306,15 +277,13 @@ public:
   void Setup(T * in_target, void (T::*in_method_ptr)(const emkAnimationFrame &), emkLayer & layer) {
     target = in_target;
     method_ptr = in_method_ptr;
-    int cb_id = emkInfo::Info().RegisterCallback(this);
-    obj_id = EMK_Animation_Build(cb_id, layer.GetID());
+    obj_id = EMK_Animation_Build((int) this, layer.GetID());
   }
 
   void Setup(T * in_target, void (T::*in_method_ptr)(), emkLayer & layer) {
     target = in_target;
     method_ptr_nf = in_method_ptr;
-    int cb_id = emkInfo::Info().RegisterCallback(this);
-    obj_id = EMK_Animation_Build_NoFrame(cb_id, layer.GetID());
+    obj_id = EMK_Animation_Build_NoFrame((int) this, layer.GetID());
   }
 
   void DoCallback(int * arg_ptr) {

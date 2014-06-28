@@ -8,17 +8,17 @@ mergeInto(LibraryManager.library, {
 
 
     EMK_Setup_OnEvent__deps: ['$emk_info'],
-    EMK_Setup_OnEvent: function(obj_id, trigger, callback_id) {
+    EMK_Setup_OnEvent: function(obj_id, trigger, callback_ptr) {
         trigger = Pointer_stringify(trigger);
         emk_info.objs[obj_id].on(trigger, function() {
-            emkJSDoCallback(callback_id);
+            emkJSDoCallback(callback_ptr);
         });
     },
 
 
     // Function to load images into an image object and return the ID.
     EMK_Image_Load__deps: ['$emk_info'],
-    EMK_Image_Load: function(file, callback_id) {
+    EMK_Image_Load: function(file, callback_ptr) {
         file = Pointer_stringify(file);
         img_id = emk_info.images.length;
         emk_info.images[img_id] = new Image();
@@ -26,7 +26,7 @@ mergeInto(LibraryManager.library, {
 
         emk_info.images[img_id].onload = function() {
             emk_info.image_load_count += 1;
-            emkJSDoCallback(callback_id, 0);
+            emkJSDoCallback(callback_ptr, 0);
         };
         return img_id;
     },
@@ -145,7 +145,7 @@ mergeInto(LibraryManager.library, {
 
 
     EMK_Animation_Build__deps: ['$emk_info'],
-    EMK_Animation_Build: function(callback_id, layer_id) {
+    EMK_Animation_Build: function(callback_ptr, layer_id) {
         var obj_id = emk_info.objs.length;                   // Determine the next free id for a Kinetic object.
         emk_info.objs[obj_id] = new Kinetic.Animation(function(frame) {
             var ptr= Module._malloc(16); // 4 ints @ 4 bytes each...
@@ -154,7 +154,7 @@ mergeInto(LibraryManager.library, {
             setValue(ptr+8,  frame.time,      'i32');
             setValue(ptr+12, frame.frameRate, 'i32');
 
-            emkJSDoCallback(callback_id, ptr);
+            emkJSDoCallback(callback_ptr, ptr);
 
             Module._free(ptr);
         }, emk_info.objs[layer_id]);
@@ -163,10 +163,10 @@ mergeInto(LibraryManager.library, {
 
 
     EMK_Animation_Build_NoFrame__deps: ['$emk_info'],
-    EMK_Animation_Build_NoFrame: function(callback_id, layer_id) {
+    EMK_Animation_Build_NoFrame: function(callback_ptr, layer_id) {
         var obj_id = emk_info.objs.length;                   // Determine the next free id for a Kinetic object.
         emk_info.objs[obj_id] = new Kinetic.Animation(function(frame) {
-            emkJSDoCallback(callback_id, 0);
+            emkJSDoCallback(callback_ptr, 0);
         }, emk_info.objs[layer_id]);
         return obj_id;
     },
