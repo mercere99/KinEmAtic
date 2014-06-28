@@ -11,14 +11,7 @@ mergeInto(LibraryManager.library, {
     EMK_Setup_OnEvent: function(obj_id, trigger, callback_id) {
         trigger = Pointer_stringify(trigger);
         emk_info.objs[obj_id].on(trigger, function() {
-
-            var ptr= Module._malloc(16);
-            setValue(ptr, 92, 'float');
-            setValue(ptr+4, 3.14, 'float');
-
-            emkJSDoCallback(callback_id, ptr);
-
-            Module._free(ptr);
+            emkJSDoCallback(callback_id);
         });
     },
 
@@ -38,14 +31,8 @@ mergeInto(LibraryManager.library, {
         return img_id;
     },
 
-    EMK_Image_IsLoaded__deps: ['$emk_info'],
-    EMK_Image_IsLoaded: function(img_id) {
-        return emk_info.image[img_id].loaded;
-    },
-
     EMK_Image_AllLoaded__deps: ['$emk_info'],
     EMK_Image_AllLoaded: function() {
-        alert("Testing! " + emk_info.images.length + "  " + emk_info.image_load_count);
         return (emk_info.images.length == emk_info.image_load_count);
     },
 
@@ -161,9 +148,6 @@ mergeInto(LibraryManager.library, {
     EMK_Animation_Build: function(callback_id, layer_id) {
         var obj_id = emk_info.objs.length;                   // Determine the next free id for a Kinetic object.
         emk_info.objs[obj_id] = new Kinetic.Animation(function(frame) {
-
-            emk_info.anim_frame = frame;
-
             var ptr= Module._malloc(16); // 4 ints @ 4 bytes each...
             setValue(ptr,    frame.timeDiff,  'i32');
             setValue(ptr+4,  frame.lastTime,  'i32');
@@ -173,6 +157,16 @@ mergeInto(LibraryManager.library, {
             emkJSDoCallback(callback_id, ptr);
 
             Module._free(ptr);
+        }, emk_info.objs[layer_id]);
+        return obj_id;
+    },
+
+
+    EMK_Animation_Build_NoFrame__deps: ['$emk_info'],
+    EMK_Animation_Build_NoFrame: function(callback_id, layer_id) {
+        var obj_id = emk_info.objs.length;                   // Determine the next free id for a Kinetic object.
+        emk_info.objs[obj_id] = new Kinetic.Animation(function(frame) {
+            emkJSDoCallback(callback_id, 0);
         }, emk_info.objs[layer_id]);
         return obj_id;
     },

@@ -14,7 +14,6 @@ extern "C" {
   extern void EMK_Setup_OnEvent(int obj_id, const char * trigger, int callback_id);
 
   extern int EMK_Image_Load(const char * file, int cb_id);
-  extern int EMK_Image_IsLoaded(int img_id);
   extern int EMK_Image_AllLoaded();
 
   extern int EMK_Stage_Build(int in_w, int in_h, const char * in_name);
@@ -32,6 +31,7 @@ extern "C" {
                                       const char * in_fill, const char * in_stroke, int in_stroke_width, int in_draggable);
 
   extern int EMK_Animation_Build(int callback_id, int layer_id);
+  extern int EMK_Animation_Build_NoFrame(int callback_id, int layer_id);
   extern int EMK_Animation_Start(int obj_id);
 
   extern void EMK_Shape_SetFillPatternImage(int obj_id, int img_id);
@@ -107,7 +107,7 @@ public:
 
   ~emkMethodCallback() { ; }
 
-  void DoCallback(int * arg_ptr) { (target->*(method_ptr))(); }
+  void DoCallback(int * arg_ptr) { (void) arg_ptr; (target->*(method_ptr))(); }
 };
 
 
@@ -296,12 +296,13 @@ template <class T> class emkAnimation : public emkJSCallback {
 private:
   T * target;
   void (T::*method_ptr)(const emkAnimationFrame &);
+  void (T::*method_ptr_nf)();
 public:
-  emkAnimation() : target(NULL), method_ptr(NULL) { ; }
+  emkAnimation() : target(NULL), method_ptr(NULL), method_ptr_nf(NULL) { ; }
   ~emkAnimation() { ; }
 
   // Setup this animation object to know what class it will be working with, which update method it should use,
-  // and what Stage layer it is in.
+  // and what Stage layer it is in.  The method pointed to may, optionally, take a frame object.
   void Setup(T * in_target, void (T::*in_method_ptr)(const emkAnimationFrame &), emkLayer & layer) {
     target = in_target;
     method_ptr = in_method_ptr;
@@ -309,9 +310,21 @@ public:
     obj_id = EMK_Animation_Build(cb_id, layer.GetID());
   }
 
+  void Setup(T * in_target, void (T::*in_method_ptr)(), emkLayer & layer) {
+    target = in_target;
+    method_ptr_nf = in_method_ptr;
+    int cb_id = emkInfo::Info().RegisterCallback(this);
+    obj_id = EMK_Animation_Build_NoFrame(cb_id, layer.GetID());
+  }
+
   void DoCallback(int * arg_ptr) {
-    emkAnimationFrame frame(arg_ptr[0], arg_ptr[1], arg_ptr[2], arg_ptr[3]);
-    (target->*(method_ptr))(frame);
+    if (arg_ptr > 0) {
+      emkAnimationFrame frame(arg_ptr[0], arg_ptr[1], arg_ptr[2], arg_ptr[3]);
+      (target->*(method_ptr))(frame);
+    } else {
+      emkAnimationFrame frame(arg_ptr[0], arg_ptr[1], arg_ptr[2], arg_ptr[3]);
+      (target->*(method_ptr_nf))();
+    }
   }
     
   void Start() {
