@@ -13,6 +13,10 @@ extern "C" {
   extern void EMK_Alert(const char * in_msg);
   extern void EMK_Setup_OnEvent(int obj_id, const char * trigger, int callback_ptr);
 
+  extern void EMK_Object_Draw(int obj_id);
+  extern void EMK_Object_DrawLayer(int obj_id);
+  extern void EMK_Object_MoveToTop(int obj_id);
+
   extern int EMK_Image_Load(const char * file, int callback_ptr);
   extern int EMK_Image_AllLoaded();
 
@@ -37,9 +41,10 @@ extern "C" {
   extern void EMK_Shape_SetCornerRadius(int obj_id, int radius);
   extern void EMK_Shape_SetFillPatternImage(int obj_id, int img_id);
   extern void EMK_Shape_SetFillPatternScale(int obj_id, double scale);
-  extern void EMK_Shape_SetLineJoin(int obj_id, const std::string & join_type);
+  extern void EMK_Shape_SetLineJoin(int obj_id, const char * join_type);
   extern void EMK_Shape_SetOffset(int obj_id, int x_offset, int y_offset);
   extern void EMK_Shape_SetScale(int obj_id, double x_scale, double y_scale);
+  extern void EMK_Shape_SetStroke(int obj_id, const char * color);
   extern void EMK_Shape_SetX(int obj_id, int x);
   extern void EMK_Shape_SetY(int obj_id, int y);
   extern void EMK_Shape_SetXY(int obj_id, int x, int y);
@@ -47,6 +52,9 @@ extern "C" {
   extern void EMK_Shape_SetHeight(int obj_id, int h);
   extern void EMK_Shape_SetSize(int obj_id, int w, int h);
   extern void EMK_Shape_DoRotate(int obj_id, double rot);
+
+  // These may already be in HTML5
+  extern void EMK_Cursor_Set(const char * type);
 }
 
 // Pre-declarations of some classes...
@@ -58,10 +66,23 @@ class emkStage;
 class emkObject {
 protected:
   int obj_id;
+  emkObject * layer;
 
   emkObject() : obj_id(-1) {;}  // Protected so that you can't make a direct emkObject.
 public:
   int GetID() const { return obj_id; }
+
+  void SetLayer(emkObject * _layer) { layer = _layer; }
+
+  // Draw either this object or objects in contains.
+  void Draw() { EMK_Object_Draw(obj_id); }
+
+  // Draw all objects in this layer.
+  void DrawLayer() { if (layer) EMK_Object_Draw(layer->GetID()); }
+
+  // Move this object to the top of the current layer.
+  void MoveToTop() { EMK_Object_MoveToTop(obj_id); }
+
 
   template<class T> void On(const std::string & in_trigger, T * in_target, void (T::*in_method_ptr)());
 };
@@ -155,10 +176,11 @@ public:
 
   void SetCornerRadius(int radius) { EMK_Shape_SetCornerRadius(obj_id, radius); }
   void SetFillPatternScale(double scale) { EMK_Shape_SetFillPatternScale(obj_id, scale); }
-  void SetLineJoin(const std::string & join_type) { EMK_Shape_SetLineJoin(obj_id, join_type); }
+  void SetLineJoin(const char * join_type) { EMK_Shape_SetLineJoin(obj_id, join_type); }
   void SetOffset(int _x, int _y) { EMK_Shape_SetOffset(obj_id, _x, _y); }
   void SetScale(double _x, double _y) { EMK_Shape_SetScale(obj_id, _x, _y); }
   void SetScale(double scale) { EMK_Shape_SetScale(obj_id, scale, scale); }
+  void SetStroke(const char * color) { EMK_Shape_SetStroke(obj_id, color); }
   void SetX(int x) { EMK_Shape_SetX(obj_id, x); }
   void SetY(int y) { EMK_Shape_SetY(obj_id, y); }
   void SetXY(int x, int y) { EMK_Shape_SetXY(obj_id, x, y); }
@@ -181,6 +203,8 @@ public:
 
   // Add other types of stage objects; always place them in the current layer.
   emkLayer & Add(emkShape & in_obj) {
+    in_obj.SetLayer(this);
+
     // If the object we are adding has an image that hasn't been loaded, setup a callback.
     const emkImage * image = in_obj.GetImage();
     if (image && image->HasLoaded() == false) {

@@ -16,6 +16,16 @@ mergeInto(LibraryManager.library, {
     },
 
 
+    EMK_Object_Draw_deps: ['$emk_info'],
+    EMK_Object_Draw: function (obj_id) {
+        emk_info.objs[obj_id].draw();
+    },
+
+    EMK_Object_MoveToTop_deps: ['$emk_info'],
+    EMK_Object_MoveToTop: function (obj_id) {
+        emk_info.objs[obj_id].moveToTop();
+    },
+
     // Function to load images into an image object and return the ID.
     EMK_Image_Load__deps: ['$emk_info'],
     EMK_Image_Load: function(file, callback_ptr) {
@@ -212,6 +222,12 @@ mergeInto(LibraryManager.library, {
         emk_info.objs[obj_id].scale({x:x_scale, y:y_scale});
     },
 
+    EMK_Shape_SetStroke__deps: ['$emk_info'],
+    EMK_Shape_SetStroke: function(obj_id, color) {
+        color = Pointer_stringify(color);
+        emk_info.objs[obj_id].stroke(color);
+    },
+    
     EMK_Shape_SetX__deps: ['$emk_info'],
     EMK_Shape_SetX: function(obj_id, x) {
         emk_info.objs[obj_id].x(x);
@@ -247,5 +263,13 @@ mergeInto(LibraryManager.library, {
     EMK_Shape_DoRotate__deps: ['$emk_info'],
     EMK_Shape_DoRotate: function(obj_id, rot) {
         emk_info.objs[obj_id].rotate(rot);
+    },
+
+
+
+    EMK_Cursor_Set__deps: ['$emk_info'],
+    EMK_Cursor_Set: function(cur_type) {
+        cur_type  = Pointer_stringify(cur_type);
+        document.body.style.cursor = cur_type;
     }
 });
