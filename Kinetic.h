@@ -34,9 +34,18 @@ extern "C" {
   extern int EMK_Animation_Build_NoFrame(int callback_ptr, int layer_id);
   extern int EMK_Animation_Start(int obj_id);
 
+  extern void EMK_Shape_SetCornerRadius(int obj_id, int radius);
   extern void EMK_Shape_SetFillPatternImage(int obj_id, int img_id);
+  extern void EMK_Shape_SetFillPatternScale(int obj_id, double scale);
+  extern void EMK_Shape_SetLineJoin(int obj_id, const std::string & join_type);
   extern void EMK_Shape_SetOffset(int obj_id, int x_offset, int y_offset);
   extern void EMK_Shape_SetScale(int obj_id, double x_scale, double y_scale);
+  extern void EMK_Shape_SetX(int obj_id, int x);
+  extern void EMK_Shape_SetY(int obj_id, int y);
+  extern void EMK_Shape_SetXY(int obj_id, int x, int y);
+  extern void EMK_Shape_SetWidth(int obj_id, int w);
+  extern void EMK_Shape_SetHeight(int obj_id, int h);
+  extern void EMK_Shape_SetSize(int obj_id, int w, int h);
   extern void EMK_Shape_DoRotate(int obj_id, double rot);
 }
 
@@ -54,7 +63,7 @@ protected:
 public:
   int GetID() const { return obj_id; }
 
-  template<class T> void On(std::string in_trigger, T * in_target, void (T::*in_method_ptr)());
+  template<class T> void On(const std::string & in_trigger, T * in_target, void (T::*in_method_ptr)());
 };
 
 
@@ -100,7 +109,7 @@ public:
 };
 
 
-template<class T> void emkObject::On(std::string trigger, T * target, void (T::*method_ptr)())
+template<class T> void emkObject::On(const std::string & trigger, T * target, void (T::*method_ptr)())
 {
   emkMethodCallback<T> * new_callback = new emkMethodCallback<T>(target, method_ptr);
   EMK_Setup_OnEvent(obj_id, trigger.c_str(), (int) new_callback);
@@ -114,9 +123,9 @@ extern "C" void emkJSDoCallback(int cb_ptr, int arg_ptr)
 
 class emkImage : public emkJSCallback {
 private:
-  std::string filename;
-  bool has_loaded;
-  std::list<emkLayer *> layers_waiting;
+  const std::string filename;
+  mutable bool has_loaded;
+  mutable std::list<emkLayer *> layers_waiting;
 public:
   emkImage(const std::string & _filename) : filename(_filename), has_loaded(false) {
     obj_id = EMK_Image_Load(filename.c_str(), (int) this);   // Start loading the image.
@@ -124,7 +133,7 @@ public:
 
   bool HasLoaded() const { return has_loaded; }
 
-  void DrawOnLoad(emkLayer * in_layer) { layers_waiting.push_back(in_layer); }
+  void DrawOnLoad(emkLayer * in_layer) const { layers_waiting.push_back(in_layer); }
 
   void DoCallback(int * arg_ptr); // Called back when image is loaded
 };
@@ -133,31 +142,33 @@ public:
 // The subclass of object that may be placed in a layer.
 class emkShape : public emkObject {
 private:
-  emkImage * image;  // If we are drawing an image, keep track of it to make sure it loads.
+  const emkImage * image;  // If we are drawing an image, keep track of it to make sure it loads.
 
 public:
   emkShape() : image(NULL) { ; }
   virtual ~emkShape() { ; }
 
-  void SetFillPatternImage(emkImage & _image) {
+  void SetFillPatternImage(const emkImage & _image) {
     image = &_image;
     EMK_Shape_SetFillPatternImage(obj_id, image->GetID());
   }
 
+  void SetCornerRadius(int radius) { EMK_Shape_SetCornerRadius(obj_id, radius); }
+  void SetFillPatternScale(double scale) { EMK_Shape_SetFillPatternScale(obj_id, scale); }
+  void SetLineJoin(const std::string & join_type) { EMK_Shape_SetLineJoin(obj_id, join_type); }
+  void SetOffset(int _x, int _y) { EMK_Shape_SetOffset(obj_id, _x, _y); }
+  void SetScale(double _x, double _y) { EMK_Shape_SetScale(obj_id, _x, _y); }
+  void SetScale(double scale) { EMK_Shape_SetScale(obj_id, scale, scale); }
+  void SetX(int x) { EMK_Shape_SetX(obj_id, x); }
+  void SetY(int y) { EMK_Shape_SetY(obj_id, y); }
+  void SetXY(int x, int y) { EMK_Shape_SetXY(obj_id, x, y); }
+  void SetWidth(int w) { EMK_Shape_SetWidth(obj_id, w); }
+  void SetHeight(int h) { EMK_Shape_SetHeight(obj_id, h); }
+  void SetSize(double w, double h) { EMK_Shape_SetSize(obj_id, w, h); }
 
-  void SetOffset(int _x, int _y) {    
-    EMK_Shape_SetOffset(obj_id, _x, _y);
-  }
+  void DoRotate(double rot) { EMK_Shape_DoRotate(obj_id, rot); }
 
-  void SetScale(double _x, double _y) {    
-    EMK_Shape_SetScale(obj_id, _x, _y);
-  }
-
-  void DoRotate(double rot) {
-    EMK_Shape_DoRotate(obj_id, rot);
-  }
-
-  emkImage * GetImage() { return image; }
+  const emkImage * GetImage() { return image; }
 };
 
 
@@ -171,7 +182,7 @@ public:
   // Add other types of stage objects; always place them in the current layer.
   emkLayer & Add(emkShape & in_obj) {
     // If the object we are adding has an image that hasn't been loaded, setup a callback.
-    emkImage * image = in_obj.GetImage();
+    const emkImage * image = in_obj.GetImage();
     if (image && image->HasLoaded() == false) {
       image->DrawOnLoad(this);
     }
@@ -212,6 +223,7 @@ public:
 };
 
 
+/*
 // Image
 class emkImageRect : public emkShape {
 public:
@@ -219,6 +231,7 @@ public:
     obj_id = EMK_Image_Build(in_x, in_y, img_id, in_w, in_h);
   }
 };
+*/
 
 
 // The text object from Kinetic...

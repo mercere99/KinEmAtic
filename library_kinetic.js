@@ -178,12 +178,30 @@ mergeInto(LibraryManager.library, {
     },
 
 
+
+    EMK_Shape_SetCornerRadius__deps: ['$emk_info'],
+    EMK_Shape_SetCornerRadius: function(obj_id, radius) {
+        emk_info.objs[obj_id].cornerRadius(radius);
+    },
+
     EMK_Shape_SetFillPatternImage__deps: ['$emk_info'],
     EMK_Shape_SetFillPatternImage: function(obj_id, img_id) {
         emk_info.objs[obj_id].setFillPriority('pattern');
         emk_info.objs[obj_id].setFillPatternImage(emk_info.images[img_id]);
     },
 
+    EMK_Shape_SetFillPatternScale__deps: ['$emk_info'],
+    EMK_Shape_SetFillPatternScale: function(obj_id, scale) {
+        emk_info.objs[obj_id].fillPatternScaleX(scale);
+        emk_info.objs[obj_id].fillPatternScaleY(scale);
+    },
+
+    EMK_Shape_SetLineJoin__deps: ['$emk_info'],
+    EMK_Shape_SetLineJoin: function(obj_id, join_type) {
+        join_type = Pointer_stringify(join_type);
+        emk_info.objs[obj_id].lineJoin(join_type);
+    },
+    
     EMK_Shape_SetOffset__deps: ['$emk_info'],
     EMK_Shape_SetOffset: function(obj_id, x_offset, y_offset) {
         emk_info.objs[obj_id].offset({x:x_offset, y:y_offset});
@@ -192,6 +210,38 @@ mergeInto(LibraryManager.library, {
     EMK_Shape_SetScale__deps: ['$emk_info'],
     EMK_Shape_SetScale: function(obj_id, x_scale, y_scale) {
         emk_info.objs[obj_id].scale({x:x_scale, y:y_scale});
+    },
+
+    EMK_Shape_SetX__deps: ['$emk_info'],
+    EMK_Shape_SetX: function(obj_id, x) {
+        emk_info.objs[obj_id].x(x);
+    },
+
+    EMK_Shape_SetY__deps: ['$emk_info'],
+    EMK_Shape_SetY: function(obj_id, y) {
+        emk_info.objs[obj_id].y(y);
+    },
+ 
+    EMK_Shape_SetXY__deps: ['$emk_info'],
+    EMK_Shape_SetXY: function(obj_id, x, y) {
+        emk_info.objs[obj_id].x(x);
+        emk_info.objs[obj_id].y(y);
+    },
+
+    EMK_Shape_SetWidth__deps: ['$emk_info'],
+    EMK_Shape_SetWidth: function(obj_id, w) {
+        emk_info.objs[obj_id].width(w);
+    },
+
+    EMK_Shape_SetHeight__deps: ['$emk_info'],
+    EMK_Shape_SetHeight: function(obj_id, h) {
+        emk_info.objs[obj_id].height(h);
+    },
+
+    EMK_Shape_SetSize__deps: ['$emk_info'],
+    EMK_Shape_SetSize: function(obj_id, w, h) {
+        emk_info.objs[obj_id].width(w);
+        emk_info.objs[obj_id].height(h);
     },
 
     EMK_Shape_DoRotate__deps: ['$emk_info'],
