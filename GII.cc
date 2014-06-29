@@ -39,6 +39,9 @@ namespace GII
       card_rect.SetFillPatternScale(0.5);
       card_rect.SetLineJoin("round");
       card_rect.SetCornerRadius(10);
+      card_rect.On("mouseover", this, &Card::MouseOver);
+      card_rect.On("mouseout", this, &Card::MouseOut);
+      card_rect.On("mousedown", this, &Card::MouseDown);
     }
     ~Card() { ; }
 
@@ -47,7 +50,23 @@ namespace GII
     int GetColor() const { return color; }
     int GetRank() const { return rank; }
     int GetID() const { return id; }
+
+    void MouseOver() {
+      card_rect.SetStroke("red");
+      card_rect.DrawLayer();
+      EMK_Cursor_Set("pointer");
+    }
   
+    void MouseOut() {
+      card_rect.SetStroke("black");
+      card_rect.DrawLayer();
+      EMK_Cursor_Set("default");
+    }
+  
+    void MouseDown() {
+      card_rect.MoveToTop();
+    }
+
     void Rescale(double scale) {
       card_rect.SetWidth(150 * scale);
       card_rect.SetHeight(210 * scale);
