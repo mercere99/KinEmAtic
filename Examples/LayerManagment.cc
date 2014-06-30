@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cmath>
 
-#include "EmKinetic.h"
+#include "Kinetic.h"
 
 using namespace std;
 
