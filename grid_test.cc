@@ -7,7 +7,7 @@
 
 using namespace std;
 
-class KineticExample {
+class GridExample {
 private:
   emkStage stage;
   emkLayer layer;
@@ -15,37 +15,37 @@ private:
   emkText title;
   emk::Grid grid;
 
-  emkAnimation<KineticExample> anim;
+  emkAnimation<GridExample> anim;
 
-
+  int next_id;
+  bool color2;
 public:
-  KineticExample()
+  GridExample()
     : stage(1200, 800, "container")
-    , grid(50, 50, 600, 600, 60, 60)
     , title(10, 10, "Grid viewer test!", "30", "Calibri", "black")
+    , grid(50, 50, 600, 600, 60, 60)
   {
     layer.Add(grid);
     layer.Add(title);
     stage.Add(layer);
 
-    // anim.Setup(this, &KineticExample::Animate, layer_anim);
-    // anim.Start();
+    anim.Setup(this, &GridExample::Animate, layer);
+    anim.Start();
   }
 
   void Animate(const emkAnimationFrame & frame) {
-    const double PI = 3.141592653589793238463;
-    const double period = 2000.0;
-    const double scale = std::sin(frame.time * 2 * PI / period) + 0.001;
+    if (next_id > grid.GetNumCells()) { next_id = 0; color2 = !color2; }
+    grid.SetColor(next_id++, color2 ? 2 : 3);
   }
 };
 
 
 
-KineticExample * example;
+GridExample * example;
 
 extern "C" int emkMain()
 {
-  example = new KineticExample();
+  example = new GridExample();
 
   return 0;
 }

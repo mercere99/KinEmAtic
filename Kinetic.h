@@ -286,7 +286,9 @@ protected:
   int x;
   int y;
 public:
-  template <class T> emkCustomShape(int x, int y, T * target, void (T::*draw_ptr)(emkCanvas &)) {
+  template <class T> emkCustomShape(int _x, int _y, T * target, void (T::*draw_ptr)(emkCanvas &))
+    : x(_x), y(_y)
+  {
     emkDrawCallback<T> * new_callback = new emkDrawCallback<T>(target, draw_ptr);
     obj_id = EMK_Custom_Shape_Build((int) new_callback);
   }
