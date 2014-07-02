@@ -12,14 +12,15 @@ namespace emk {
 
   public:
     Color() { ; }
+    Color(const Color & _in) : colorname(_in.colorname) { ; }
     Color(const std::string & _name) : colorname(_name) { ; }
+    Color(const char * _name) : colorname(_name) { ; }
     Color(int r, int g, int b) { // @CAO This is technically shorter than "rgb(##,##,##)", but more processing.
       std::stringstream stream;
       stream << '#' << std::setw(2) << std::setfill('0') << std::hex << r
              << std::setw(2) << std::setfill('0') << std::hex << g
              << std::setw(2) << std::setfill('0') << std::hex << b;
       colorname = stream.str();
-      EMK_Alert(colorname.c_str());
     }
     Color(int r, int g, int b, double a) {
       std::stringstream stream;
@@ -28,8 +29,31 @@ namespace emk {
     }
 
     const std::string & AsString() const { return colorname; }
+
+    void Set(const Color & _in) { colorname = _in.colorname; }
   };
 
+
+  class ColorMap {
+  private:
+    std::vector<Color> color_map;
+  public:
+    ColorMap(int size, bool autocolor=false) : color_map(size) {
+      if (autocolor) {
+        const double cap = 240.0;
+        const double step = cap / (double) size;
+        for (int i = 0; i < size; i++) {
+          const double hue = step * (double) i;
+          std::stringstream stream;
+          stream << "hsl(" << hue << ",100%,50%)";
+          color_map[i].Set(stream.str());
+        }
+      }
+    }
+    ~ColorMap() { ; }
+
+    int GetSize() const { return (int) color_map.size(); }
+  };
 }
 
 #endif

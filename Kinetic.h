@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "tools/Colors.h"
 
 extern "C" {
   extern void EMK_Alert(const char * in_msg);
@@ -120,14 +121,14 @@ public:
 class emkCanvas {
 public:
   // Setting values
-  inline static void SetFillStyle(const std::string & fs) { EMK_Canvas_SetFillStyle(fs.c_str()); }
+  inline static void SetFillStyle(const emk::Color & color) { EMK_Canvas_SetFillStyle(color.AsString().c_str()); }
   inline static void SetLineJoin(const std::string & lj) { EMK_Canvas_SetLineJoin(lj.c_str()); }
   inline static void SetLineWidth(const std::string & lw) { EMK_Canvas_SetLineWidth(lw.c_str()); }
 
   inline static void SetFont(const std::string & font) { EMK_Canvas_SetFont(font.c_str()); }
-  inline static void SetTextAlign(const std::string & ta) { EMK_Canvas_SetTextAlign(ta.c_str()); }
+  inline static void SetTextAlign(const std::string & align) { EMK_Canvas_SetTextAlign(align.c_str()); }
 
-  inline static void SetShadowColor(const std::string & sc) { EMK_Canvas_SetShadowColor(sc.c_str()); }
+  inline static void SetShadowColor(const emk::Color & color) { EMK_Canvas_SetShadowColor(color.AsString().c_str()); }
   inline static void SetShadowBlur(int blur) { EMK_Canvas_SetShadowBlur(blur); }
   inline static void SetShadowOffsetX(int offset_x) { EMK_Canvas_SetShadowOffsetX(offset_x); }
   inline static void SetShadowOffsetY(int offset_y) { EMK_Canvas_SetShadowOffsetY(offset_y); }
@@ -260,7 +261,7 @@ public:
   void SetOffset(int _x, int _y) { EMK_Shape_SetOffset(obj_id, _x, _y); }
   void SetScale(double _x, double _y) { EMK_Shape_SetScale(obj_id, _x, _y); }
   void SetScale(double scale) { EMK_Shape_SetScale(obj_id, scale, scale); }
-  void SetStroke(const char * color) { EMK_Shape_SetStroke(obj_id, color); }
+  void SetStroke(const emk::Color & color) { EMK_Shape_SetStroke(obj_id, color.AsString().c_str()); }
   void SetX(int x) { EMK_Shape_SetX(obj_id, x); }
   void SetY(int y) { EMK_Shape_SetY(obj_id, y); }
   void SetXY(int x, int y) { EMK_Shape_SetXY(obj_id, x, y); }

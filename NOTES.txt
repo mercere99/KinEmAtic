@@ -1,18 +1,18 @@
 * Implement events with pass-back info (coordinates, keypresses, etc.)
 * Implement other shapes (circles, etc.)
-* Implement other accessors
-* Implement free-drawing on canvas.
 * Change all in_var to just _var.
 * Split up Kinetic.h into multiple files.
 
 Once we have a first draft of the basic framework:
 * Refactor to parallel the object heirarchy of Kinetic for easier compatability.
-* Come up with more intelligent default values (e.g., colors could start as "Unknown")...
+* Come up with more intelligent default values
 
 Several new classes to incorporate:
-* A color class to handle RGBa and convert as needed.
 * A font class that handles font family, size, color, etc.
 * A coordinates class.
+
+Optimizations:
+* Grid class would be faster if it only did updates rather than full redraws with every change.
 
 
 Other libraries to think about:

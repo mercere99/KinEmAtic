@@ -17,7 +17,7 @@ namespace emk {
     int border_width;
     
     std::vector<int> grid_colors;
-    std::vector<std::string> color_map;
+    std::vector<emk::Color> color_map;
 
     inline int CellID(int row, int col) const { return row * num_cols + col; }
   public:
@@ -69,7 +69,7 @@ namespace emk {
           const int y_pos = y + cell_y_space * row;
           const int id = col + row * num_cols;
           
-          canvas.SetFillStyle(color_map[grid_colors[id]]);
+          canvas.SetFillStyle(color_map[grid_colors[id]].AsString());
           canvas.Rect(x_pos, y_pos, cell_width, cell_height, true);
         }
       }
