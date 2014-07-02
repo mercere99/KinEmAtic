@@ -17,26 +17,16 @@ namespace emk {
     int border_width;
     
     std::vector<int> grid_colors;
-    std::vector<emk::Color> color_map;
+    emk::ColorMap color_map;
 
     inline int CellID(int row, int col) const { return row * num_cols + col; }
   public:
     Grid(int _x, int _y, int _width, int _height, int _cols, int _rows, int _border_width=1)
       : emkCustomShape(_x, _y, this, &Grid::Draw)
       , width(_width), height(_height), num_cols(_cols), num_rows(_rows), num_cells(num_rows*num_cols)
-      , border_width(_border_width), grid_colors(num_cells)
+      , border_width(_border_width), grid_colors(num_cells), color_map(60, true)
     {
-      // @CAO For testing purposes, build a static color map and start everyone as black.
-      emk::Color test_color(0,255,255);
-
-      color_map.push_back(test_color.AsString());
-      color_map.push_back("black");
-      color_map.push_back("gray");
-      color_map.push_back("red");
-      color_map.push_back("blue");
-      color_map.push_back("green");
-
-      for (int i = 0; i < num_cells; i++) grid_colors[i] = 0;
+      for (int i = 0; i < num_cells; i++) grid_colors[i] = i % 60;
     }
     ~Grid() { ; }
 

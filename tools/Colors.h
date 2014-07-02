@@ -53,6 +53,9 @@ namespace emk {
     ~ColorMap() { ; }
 
     int GetSize() const { return (int) color_map.size(); }
+
+    Color & operator[](int id) { return color_map[id]; }
+    const Color & operator[](int id) const { return color_map[id]; }
   };
 }
 
