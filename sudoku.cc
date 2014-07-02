@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <stdlib.h>
 
 #include "Kinetic.h"
 
@@ -223,6 +224,11 @@ private:
 
   emkCustomShape test_shape;
 
+  const int cols;
+  const int rows;
+  const int num_cells;
+  vector<string> colors;
+
 public:
   SudokuInterface(const SudokuPuzzle & _puzzle)
     : puzzle(_puzzle)
@@ -230,17 +236,64 @@ public:
     , cell_width(0), region_width(0), board_width(0) // @CAO Cut line since these get calculate later?
     , stage(1200, 600, "container")
     , test_shape(100, 100, this, &SudokuInterface::DrawGrid)
+    , cols(60), rows(60), num_cells(cols * rows), colors(num_cells)
   {
     stage.ResizeMax(min_size, min_size);
 
     /////// TEST //////
+    for (int i = 0; i < num_cells; i++) {
+      int col_id = rand() % 7;
+      switch (col_id) {
+      case 0:
+        colors[i] = "red";
+        break;
+      case 1:
+        colors[i] = "green";
+        break;
+      case 2:
+        colors[i] = "blue";
+        break;
+      case 3:
+        colors[i] = "yellow";
+        break;
+      case 4:
+        colors[i] = "purple";
+        break;
+      case 5:
+        colors[i] = "orange";
+        break;
+      case 6:
+        colors[i] = "brown";
+        break;
+      }
+
+      if (i < 4) EMK_Alert(std::to_string(rand()).c_str()); 
+    }
+
     layer_main.Add(test_shape);
     stage.Add(layer_main);
   }
   ~SudokuInterface() { ; }
 
   void DrawGrid(emkCanvas & canvas) {
-    canvas.Rect(10,10,50,50,true);
+    const int x_offset = 10;
+    const int y_offset = 10;
+    const int size = 9;
+    const int border = 1;
+    const int step = size + border;
+    const int max_x = x_offset + step * cols;
+    const int max_y = y_offset + step * rows;
+
+    int pos = 0;
+
+    for (int x = x_offset; x < max_x; x += step) {
+      for (int y = y_offset; y < max_y; y += step) {
+        if (pos < 2) EMK_Alert(colors[pos].c_str());
+        canvas.SetFillStyle(colors[pos].c_str());
+        canvas.Rect(x, y, 9, 9, true);
+        pos++;
+      }
+    }
     canvas.Draw();
   }
 };
