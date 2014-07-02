@@ -26,6 +26,138 @@ mergeInto(LibraryManager.library, {
         emk_info.objs[obj_id].moveToTop();
     },
 
+
+    // The following series of wrappers deal with the canvas context.
+    // NOTE, we assume that a context has been placed in emk_info.ctx
+    EMK_Canvas_SetFillStyle__deps: ['$emk_info'],
+    EMK_Canvas_SetFillStyle: function(fs) {
+        fs = Pointer_stringify(fs);
+        emk_info.ctx.fillStyle = fs;
+    },
+
+    EMK_Canvas_SetLineJoin__deps: ['$emk_info'],
+    EMK_Canvas_SetLineJoin: function(lj) {
+        lj = Pointer_stringify(lj);
+        emk_info.ctx.lineJoin = lj;
+    },
+
+    EMK_Canvas_SetLineWidth__deps: ['$emk_info'],
+    EMK_Canvas_SetLineWidth: function(lw) {
+        lw = Pointer_stringify(lw);
+        emk_info.ctx.lineWidth = lw;
+    },
+
+    EMK_Canvas_SetFont__deps: ['$emk_info'],
+    EMK_Canvas_SetFont: function(font) {
+        font = Pointer_stringify(font);
+        emk_info.ctx.font = font;
+    },
+
+    EMK_Canvas_SetTextAlign__deps: ['$emk_info'],
+    EMK_Canvas_SetTextAlign: function(ta) {
+        ta = Pointer_stringify(ta);
+        emk_info.ctx.testAlign = ta;
+    },
+
+    EMK_Canvas_SetShadowColor__deps: ['$emk_info'],
+    EMK_Canvas_SetShadowColor: function(sc) {
+        sc = Pointer_stringify(sc);
+        emk_info.ctx.shadowColor = sc;
+    },
+
+    EMK_Canvas_SetShadowBlur__deps: ['$emk_info'],
+    EMK_Canvas_SetShadowBlur: function(blur) {
+        emk_info.ctx.shadowBlur = blur;
+    },
+
+    EMK_Canvas_SetShadowOffsetX__deps: ['$emk_info'],
+    EMK_Canvas_SetShadowOffsetX: function(offset_x) {
+        emk_info.ctx.shadowOffsetX = offset_x;
+    },
+
+    EMK_Canvas_SetShadowOffsetY__deps: ['$emk_info'],
+    EMK_Canvas_SetShadowOffsetY: function(offset_y) {
+        emk_info.ctx.shadowOffsetY = offset_y;
+    },
+
+    EMK_Canvas_FillText__deps: ['$emk_info'],
+    EMK_Canvas_FillText: function(msg, x, y) {
+        msg = Pointer_stringify(msg);
+        emk_info.ctx.fillText(msg, x, y);
+    },
+
+    EMK_Canvas_StrokeText__deps: ['$emk_info'],
+    EMK_Canvas_StrokeText: function(msg, x, y) {
+        msg = Pointer_stringify(msg);
+        emk_info.ctx.strokeText(msg, x, y);
+    },
+
+    EMK_Canvas_FillRect__deps: ['$emk_info'],
+    EMK_Canvas_FillRect: function(x, y, width, height) {
+        emk_info.ctx.fillRect(x, y, width, height);
+    },
+
+    EMK_Canvas_StrokeRect__deps: ['$emk_info'],
+    EMK_Canvas_StrokeRect: function(x, y, width, height) {
+        emk_info.ctx.strokeRect(x, y, width, height);
+    },
+
+    EMK_Canvas_Arc__deps: ['$emk_info'],
+    EMK_Canvas_Arc: function(x, y, radius, start, end, cclockwise) {
+        emk_info.ctx.arc(x, y, radius, start, end, cclockwise);
+    },
+
+    EMK_Canvas_BeginPath__deps: ['$emk_info'],
+    EMK_Canvas_BeginPath: function() {
+        emk_info.ctx.beginPath();
+    },
+
+    EMK_Canvas_ClosePath__deps: ['$emk_info'],
+    EMK_Canvas_ClosePath: function() {
+        emk_info.ctx.closePath();
+    },
+
+    EMK_Canvas_Fill__deps: ['$emk_info'],
+    EMK_Canvas_Fill: function() {
+        emk_info.ctx.fill();
+    },
+
+    EMK_Canvas_LineTo__deps: ['$emk_info'],
+    EMK_Canvas_LineTo: function(x, y) {
+        emk_info.ctx.lineTo(x, y);
+    },
+
+    EMK_Canvas_MoveTo__deps: ['$emk_info'],
+    EMK_Canvas_MoveTo: function(x, y) {
+        emk_info.ctx.moveTo(x, y);
+    },
+
+    EMK_Canvas_Restore__deps: ['$emk_info'],
+    EMK_Canvas_Restore: function() {
+        emk_info.ctx.restore();
+    },
+
+    EMK_Canvas_Save__deps: ['$emk_info'],
+    EMK_Canvas_Save: function() {
+        emk_info.ctx.save();
+    },
+
+    EMK_Canvas_Scale__deps: ['$emk_info'],
+    EMK_Canvas_Scale: function(x, y) {
+        emk_info.ctx.scale(x, y);
+    },
+
+    EMK_Canvas_Translate__deps: ['$emk_info'],
+    EMK_Canvas_Translate: function(x, y) {
+        emk_info.ctx.translate(x, y);
+    },
+
+    EMK_Canvas_Stroke__deps: ['$emk_info'],
+    EMK_Canvas_Stroke: function() {
+        emk_info.ctx.stroke();
+    },
+
+
     // Function to load images into an image object and return the ID.
     EMK_Image_Load__deps: ['$emk_info'],
     EMK_Image_Load: function(file, callback_ptr) {
@@ -63,6 +195,13 @@ mergeInto(LibraryManager.library, {
     EMK_Stage_AddLayer: function(stage_obj_id, layer_obj_id) {
         emk_info.objs[stage_obj_id].add(emk_info.objs[layer_obj_id]);  // Add the new layer to the stage.
     },
+
+    EMK_Stage_ResizeMax__deps: ['$emk_info'],
+    EMK_Stage_ResizeMax: function(stage_obj_id, min_x, min_y) {
+        emk_info.objs[stage_obj_id].setWidth(  Math.max(window.innerWidth - 10, min_x)  );
+        emk_info.objs[stage_obj_id].setHeight( Math.max(window.innerHeight - 10, min_y) );
+    },
+
 
     EMK_Layer_Build__deps: ['$emk_info'],
     EMK_Layer_Build: function() {
@@ -188,7 +327,19 @@ mergeInto(LibraryManager.library, {
     },
 
 
-
+    EMK_Custom_Shape_Build__deps: ['$emk_info'],
+    EMK_Custom_Shape_Build: function(draw_callback) {
+        var obj_id = emk_info.objs.length;                   // Determine the next free id for a Kinetic object
+        emk_info.objs[obj_id] = new Kinetic.Shape({          // Build the shape!
+            drawFunc: function(canvas) {                     // For an arbitrary shape, we just have a draw function
+                emk_info.ctx = canvas._context;              // WTF??  This should be canvas.getContext();
+                emkJSDoCallback(draw_callback, 0);
+                emk_info.ctx = null;
+            }
+        });
+        return obj_id;                                       // Return the Kinetic object id.
+    },
+  
     EMK_Shape_SetCornerRadius__deps: ['$emk_info'],
     EMK_Shape_SetCornerRadius: function(obj_id, radius) {
         emk_info.objs[obj_id].cornerRadius(radius);
@@ -265,6 +416,14 @@ mergeInto(LibraryManager.library, {
         emk_info.objs[obj_id].rotate(rot);
     },
 
+    EMK_Shape_SetDrawFunction__deps: ['$emk_info'],
+    EMK_Shape_SetDrawFunction: function(obj_id, callback_ptr) {
+        emk_info.objs[obj_id].setDrawFunc( function(in_ctx) {
+            emk_info.ctx = in_ctx._context;
+            emkJSDoCallback(callback_ptr, 0);
+            emk_info.ctx = null;
+        } );
+    },
 
 
     EMK_Cursor_Set__deps: ['$emk_info'],
