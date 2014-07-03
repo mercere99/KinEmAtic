@@ -26,7 +26,7 @@ namespace emk {
       , width(_width), height(_height), num_cols(_cols), num_rows(_rows), num_cells(num_rows*num_cols)
       , border_width(_border_width), grid_colors(num_cells), color_map(60, true)
     {
-      for (int i = 0; i < num_cells; i++) grid_colors[i] = i % 60;
+      for (int i = 0; i < num_cells; i++) grid_colors[i] = 0;
     }
     ~Grid() { ; }
 

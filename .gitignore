@@ -26,3 +26,9 @@ grid_test.js.map
 grid_test.js
 
 tools/Colors.h~
+
+*.cc~
+
+*.h~
+
+tools/cRandom.cc

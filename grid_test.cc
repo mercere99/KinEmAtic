@@ -4,6 +4,7 @@
 
 #include "Kinetic.h"
 #include "tools/Grid.h"
+#include "tools/Random.h"
 
 using namespace std;
 
@@ -14,6 +15,7 @@ private:
 
   emkText title;
   emk::Grid grid;
+  emk::Random random;
 
   emkAnimation<GridExample> anim;
 
@@ -29,13 +31,19 @@ public:
     layer.Add(title);
     stage.Add(layer);
 
+    for (int i = 0; i < 3600; i++) grid.SetColor(i, random.GetInt(60));
+
     anim.Setup(this, &GridExample::Animate, layer);
     anim.Start();
   }
 
   void Animate(const emkAnimationFrame & frame) {
-    if (next_id > grid.GetNumCells()) { next_id = 0; color2 = !color2; }
-    grid.SetColor(next_id++, color2 ? 2 : 3);
+    for (int i = 0; i < 100; i++) {
+      int id = random.GetInt(3600);
+      int from = id + (random.GetInt(3) - 1) + (random.GetInt(3) - 1) * 60;
+      if (from >= 3600) from -= 3600;
+      grid.SetColor(id, grid.GetColor(from));
+    }
   }
 };
 

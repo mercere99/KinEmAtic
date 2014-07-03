@@ -364,6 +364,7 @@ public:
   {
     obj_id = EMK_Text_Build(x, y, text.c_str(), font_size.c_str(), font_family.c_str(), fill.c_str());
   }
+  ~emkText() { ; }
 };
 
 // The rectangle object from Kinetic...
