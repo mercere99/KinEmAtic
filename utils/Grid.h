@@ -1,7 +1,7 @@
 #ifndef EMK_GRID_H
 #define EMK_GRID_H
 
-#include "Colors.h"
+#include "../tools/Colors.h"
 #include "../Kinetic.h"
 
 #include <vector>

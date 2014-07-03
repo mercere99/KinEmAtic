@@ -3,8 +3,8 @@
 #include <cmath>
 
 #include "Kinetic.h"
-#include "tools/Grid.h"
 #include "tools/Random.h"
+#include "utils/Grid.h"
 
 using namespace std;
 
