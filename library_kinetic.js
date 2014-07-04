@@ -238,8 +238,8 @@ mergeInto(LibraryManager.library, {
         emk_info.ctx.stroke();
     },
 
-    EMK_Canvas_Stroke_Obj__deps: ['$emk_info'],
-    EMK_Canvas_Stroke_Obj: function(obj_id) {
+    EMK_Canvas_SetupTarget__deps: ['$emk_info'],
+    EMK_Canvas_SetupTarget: function(obj_id) {
         emk_info.canvas.fillStrokeShape(emk_info.objs[obj_id]);
     },
 

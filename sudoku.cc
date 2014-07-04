@@ -464,7 +464,7 @@ public:
       canvas.LineTo(offset + board_width, offset + board_width);
       canvas.LineTo(offset, offset + board_width);
       canvas.ClosePath();
-      canvas.Stroke(puzzle_board);
+      canvas.SetupTarget(puzzle_board);
   }
 };
 

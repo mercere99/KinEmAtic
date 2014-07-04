@@ -56,7 +56,7 @@ extern "C" {
   extern void EMK_Canvas_Scale(double x, double y);
   extern void EMK_Canvas_Translate(int x, int y);
   extern void EMK_Canvas_Stroke();
-  extern void EMK_Canvas_Stroke_Obj(int obj_id);
+  extern void EMK_Canvas_SetupTarget(int obj_id);
 
   extern int EMK_Image_Load(const char * file, int callback_ptr);
   extern int EMK_Image_AllLoaded();
@@ -202,7 +202,7 @@ public:
 
   // Finsihing
   inline static void Stroke() { EMK_Canvas_Stroke(); }
-  inline static void Stroke(const emkObject & obj) { EMK_Canvas_Stroke_Obj(obj.GetID()); }
+  inline static void SetupTarget(const emkObject & obj) { EMK_Canvas_SetupTarget(obj.GetID()); }
 };
 
 // Mediator for handling callbacks from JS.
