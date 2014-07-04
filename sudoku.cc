@@ -274,8 +274,8 @@ public:
   }
   ~SudokuInterface() { ; }
 
-  void OnClick() {
-    emkAlert("Click!");
+  void OnClick(const emkEventInfo & info) {
+    emkAlert(info.shift_key);
   }
 
   void ResizeBoard() {
@@ -482,9 +482,6 @@ public:
 
   };
 
-
-
-  this.puzzle_board.info = this.info;
 
   this.puzzle_board.on('mousedown', function(evt) {
     // If this cell is locked, stop here -- there's nothing to do.

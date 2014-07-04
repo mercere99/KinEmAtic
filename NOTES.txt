@@ -13,6 +13,7 @@ Several new classes to incorporate:
 
 Optimizations:
 * Grid class would be faster if it only did updates rather than full redraws with every change.
+* When we pass back an object from JS, can we just plug in the memory block rather than copying it?
 
 
 Other libraries to think about:

@@ -12,7 +12,8 @@
 
 extern "C" {
   extern void EMK_Alert(const char * in_msg);
-  extern void EMK_Setup_OnEvent(int obj_id, const char * trigger, int callback_ptr);
+  extern void EMK_Setup_OnEvent(int obj_id, const char * trigger, int callback_ptr);      
+  extern void EMK_Setup_OnEvent_Info(int obj_id, const char * trigger, int callback_ptr); // Pass back event
 
   extern int EMK_Object_GetX(int obj_id);
   extern int EMK_Object_GetY(int obj_id);
@@ -102,6 +103,7 @@ extern "C" {
 }
 
 // Pre-declarations of some classes...
+class emkEventInfo;
 class emkLayer;
 class emkStage;
 
@@ -149,6 +151,7 @@ public:
 
 
   template<class T> void On(const std::string & in_trigger, T * in_target, void (T::*in_method_ptr)());
+  template<class T> void On(const std::string & in_trigger, T * in_target, void (T::*in_method_ptr)(const emkEventInfo &));
 };
 
 
@@ -228,6 +231,41 @@ public:
 };
 
 
+class emkEventInfo {
+public:
+  int layer_x;      // Coordinates of mouse in this layer.
+  int layer_y;
+  int button;       // Which button was pressed?
+  int key_code;     // Which key was pressed?
+  bool alt_key;     // Modifier keys
+  bool ctrl_key;
+  bool meta_key;
+  bool shift_key;  
+
+  emkEventInfo(int lx, int ly, int but, int key, int alt, int ctrl, int meta, int shift)
+    : layer_x(lx), layer_y(ly), button(but), key_code(key)
+    , alt_key(alt), ctrl_key(ctrl), meta_key(meta), shift_key(shift) { ; }
+};
+
+template <class T> class emkMethodCallback_Event : public emkJSCallback {
+private:
+  T * target;
+  void (T::*method_ptr)(const emkEventInfo &);
+public:
+  emkMethodCallback_Event(T * in_target, void (T::*in_method_ptr)(const emkEventInfo &))
+    : target(in_target)
+    , method_ptr(in_method_ptr)
+  { ; }
+
+  ~emkMethodCallback_Event() { ; }
+
+  void DoCallback(int * arg_ptr) {
+    emkEventInfo info(arg_ptr[0], arg_ptr[1], arg_ptr[2], arg_ptr[3], arg_ptr[4], arg_ptr[5], arg_ptr[6], arg_ptr[7]);
+    (target->*(method_ptr))(info);
+  }
+};
+
+
 template <class T> class emkDrawCallback : public emkJSCallback {
 private:
   T * target;
@@ -246,11 +284,20 @@ public:
 };
 
 
-template<class T> void emkObject::On(const std::string & trigger, T * target, void (T::*method_ptr)())
+template<class T> void emkObject::On(const std::string & trigger, T * target,
+                                     void (T::*method_ptr)())
 {
   // @CAO Technically we should track these callbacks to make sure we delete them properly.
   emkMethodCallback<T> * new_callback = new emkMethodCallback<T>(target, method_ptr);
   EMK_Setup_OnEvent(obj_id, trigger.c_str(), (int) new_callback);
+}
+
+template<class T> void emkObject::On(const std::string & trigger, T * target,
+                                     void (T::*method_ptr)(const emkEventInfo &))
+{
+  // @CAO Technically we should track these callbacks to make sure we delete them properly.
+  emkMethodCallback_Event<T> * new_callback = new emkMethodCallback_Event<T>(target, method_ptr);
+  EMK_Setup_OnEvent_Info(obj_id, trigger.c_str(), (int) new_callback);
 }
 
 extern "C" void emkJSDoCallback(int cb_ptr, int arg_ptr)

@@ -1,3 +1,11 @@
+/*
+  var long_result = "Target Info: ";
+  for (var i in evt) {
+    long_result += " (" + i + ":::" + evt[i] + ")  ";
+  }
+  alert(long_result);
+*/            
+
 mergeInto(LibraryManager.library, {
     $emk_info: { objs:[], images:[], image_load_count:0 },
 
@@ -12,6 +20,27 @@ mergeInto(LibraryManager.library, {
         trigger = Pointer_stringify(trigger);
         emk_info.objs[obj_id].on(trigger, function() {
             emkJSDoCallback(callback_ptr);
+        });
+    },
+
+    EMK_Setup_OnEvent_Info__deps: ['$emk_info'],
+    EMK_Setup_OnEvent_Info: function(obj_id, trigger, callback_ptr) {
+        trigger = Pointer_stringify(trigger);
+        emk_info.objs[obj_id].on(trigger, function(event) {
+            var evt = event.evt;
+            var ptr = Module._malloc(32); // 8 ints @ 4 bytes each...
+            setValue(ptr,    evt.layerX,   'i32');
+            setValue(ptr+4,  evt.layerY,   'i32');
+            setValue(ptr+8,  evt.button,   'i32');
+            setValue(ptr+12, evt.keyCode,  'i32');
+            setValue(ptr+16, evt.altKey,   'i32');
+            setValue(ptr+20, evt.ctrlKey,  'i32');
+            setValue(ptr+24, evt.metaKey,  'i32');
+            setValue(ptr+28, evt.shiftKey, 'i32');
+
+            emkJSDoCallback(callback_ptr, ptr);
+            Module._free(ptr);
+
         });
     },
 
