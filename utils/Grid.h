@@ -14,6 +14,7 @@ namespace emk {
     const int num_cols;
     const int num_rows;
     const int num_cells;
+    int num_colors;
     int border_width;
     
     std::vector<int> grid_colors;
@@ -21,10 +22,10 @@ namespace emk {
 
     inline int CellID(int row, int col) const { return row * num_cols + col; }
   public:
-    Grid(int _x, int _y, int _width, int _height, int _cols, int _rows, int _border_width=1)
+    Grid(int _x, int _y, int _width, int _height, int _cols, int _rows, int _num_colors=12, int _border_width=1)
       : emkCustomShape(_x, _y, this, &Grid::Draw)
       , width(_width), height(_height), num_cols(_cols), num_rows(_rows), num_cells(num_rows*num_cols)
-      , border_width(_border_width), grid_colors(num_cells), color_map(60, true)
+      , num_colors(_num_colors), border_width(_border_width), grid_colors(num_cells), color_map(num_colors, true)
     {
       for (int i = 0; i < num_cells; i++) grid_colors[i] = 0;
     }

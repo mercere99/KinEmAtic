@@ -16,12 +16,65 @@ mergeInto(LibraryManager.library, {
     },
 
 
-    EMK_Object_Draw_deps: ['$emk_info'],
+    EMK_Object_GetX__deps: ['$emk_info'],
+    EMK_Object_GetX: function (obj_id) {
+        return emk_info.objs[obj_id].x;
+    },
+    EMK_Object_GetY__deps: ['$emk_info'],
+    EMK_Object_GetY: function (obj_id) {
+        return emk_info.objs[obj_id].y;
+    },
+    EMK_Object_GetWidth__deps: ['$emk_info'],
+    EMK_Object_GetWidth: function (obj_id) {
+        return emk_info.objs[obj_id].width;
+    },
+    EMK_Object_GetHeight__deps: ['$emk_info'],
+    EMK_Object_GetHeight: function (obj_id) {
+        return emk_info.objs[obj_id].height;
+    },
+    EMK_Object_GetVisible__deps: ['$emk_info'],
+    EMK_Object_GetVisible: function (obj_id) {
+        return emk_info.objs[obj_id].visible;
+    },
+    EMK_Object_GetOpacity__deps: ['$emk_info'],
+    EMK_Object_GetOpacity: function (obj_id) {
+        return emk_info.objs[obj_id].opacity;
+    },
+    EMK_Object_GetListening__deps: ['$emk_info'],
+    EMK_Object_GetListening: function (obj_id) {
+        return emk_info.objs[obj_id].listening;
+    },
+    EMK_Object_GetScaleX__deps: ['$emk_info'],
+    EMK_Object_GetScaleX: function (obj_id) {
+        return emk_info.objs[obj_id].scaleX;
+    },
+    EMK_Object_GetScaleY__deps: ['$emk_info'],
+    EMK_Object_GetScaleY: function (obj_id) {
+        return emk_info.objs[obj_id].scaleY;
+    },
+    EMK_Object_GetOffsetX__deps: ['$emk_info'],
+    EMK_Object_GetOffsetX: function (obj_id) {
+        return emk_info.objs[obj_id].offsetX;
+    },
+    EMK_Object_GetOffsetY__deps: ['$emk_info'],
+    EMK_Object_GetOffsetY: function (obj_id) {
+        return emk_info.objs[obj_id].offsetY;
+    },
+    EMK_Object_GetRotation__deps: ['$emk_info'],
+    EMK_Object_GetRotation: function (obj_id) {
+        return emk_info.objs[obj_id].rotation;
+    },
+    EMK_Object_GetDraggable__deps: ['$emk_info'],
+    EMK_Object_GetDraggable: function (obj_id) {
+        return emk_info.objs[obj_id].draggable;
+    },
+
+    EMK_Object_Draw__deps: ['$emk_info'],
     EMK_Object_Draw: function (obj_id) {
         emk_info.objs[obj_id].draw();
     },
 
-    EMK_Object_MoveToTop_deps: ['$emk_info'],
+    EMK_Object_MoveToTop__deps: ['$emk_info'],
     EMK_Object_MoveToTop: function (obj_id) {
         emk_info.objs[obj_id].moveToTop();
     },
@@ -43,7 +96,6 @@ mergeInto(LibraryManager.library, {
 
     EMK_Canvas_SetLineWidth__deps: ['$emk_info'],
     EMK_Canvas_SetLineWidth: function(lw) {
-        lw = Pointer_stringify(lw);
         emk_info.ctx.lineWidth = lw;
     },
 
@@ -56,7 +108,7 @@ mergeInto(LibraryManager.library, {
     EMK_Canvas_SetTextAlign__deps: ['$emk_info'],
     EMK_Canvas_SetTextAlign: function(ta) {
         ta = Pointer_stringify(ta);
-        emk_info.ctx.testAlign = ta;
+        emk_info.ctx.textAlign = ta;
     },
 
     EMK_Canvas_SetShadowColor__deps: ['$emk_info'],
@@ -155,6 +207,11 @@ mergeInto(LibraryManager.library, {
     EMK_Canvas_Stroke__deps: ['$emk_info'],
     EMK_Canvas_Stroke: function() {
         emk_info.ctx.stroke();
+    },
+
+    EMK_Canvas_Stroke_Obj__deps: ['$emk_info'],
+    EMK_Canvas_Stroke_Obj: function(obj_id) {
+        emk_info.canvas.fillStrokeShape(emk_info.objs[obj_id]);
     },
 
 
@@ -328,12 +385,16 @@ mergeInto(LibraryManager.library, {
 
 
     EMK_Custom_Shape_Build__deps: ['$emk_info'],
-    EMK_Custom_Shape_Build: function(draw_callback) {
+    EMK_Custom_Shape_Build: function(_x, _y, draw_callback) {
         var obj_id = emk_info.objs.length;                   // Determine the next free id for a Kinetic object
         emk_info.objs[obj_id] = new Kinetic.Shape({          // Build the shape!
+            x: _x,
+            y: _y,
             drawFunc: function(canvas) {                     // For an arbitrary shape, we just have a draw function
+                emk_info.canvas = canvas;
                 emk_info.ctx = canvas._context;              // WTF??  This should be canvas.getContext();
                 emkJSDoCallback(draw_callback, 0);
+                emk_info.canvas = null;
                 emk_info.ctx = null;
             }
         });

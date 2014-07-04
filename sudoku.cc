@@ -1,11 +1,14 @@
 #include <emscripten.h>
 
-#include <vector>
-#include <iostream>
+#include <algorithm>
 #include <cmath>
+#include <iostream>
 #include <stdlib.h>
+#include <vector>
 
 #include "Kinetic.h"
+
+#include "tools/const.h"
 
 using namespace std;
 
@@ -65,7 +68,7 @@ public:
 
   int ToID(int col, int row) const { return row*grid_x + col; }
   int ToCol(int id) const { return id % grid_x; }
-  int toRow(int id) const { return id / grid_x; }
+  int ToRow(int id) const { return id / grid_x; }
 };
 
 
@@ -73,6 +76,7 @@ class SudokuCell {
 private:
   int state;
   vector<bool> notes;
+  bool warn;
   bool lock;
   vector<int> region_ids;
 public:
@@ -86,6 +90,7 @@ public:
   int GetState() const { return state; }
   const vector<bool> & GetNotes() { return notes; }
   bool GetNote(int id) const { return notes[id]; }
+  bool GetWarn() const { return warn; }
   bool GetLock() const { return lock; }
   int GetNumRegions() const { return (int) region_ids.size(); }
   const vector<int> & GetRegionIDs() { return region_ids; }
@@ -94,6 +99,7 @@ public:
   void SetState(int _state) { state = _state; }
   void SetNote(int note_id, bool setting=true) { notes[note_id] = setting; }
   void ToggleNote(int note_id) { notes[note_id] = !notes[note_id]; }
+  void SetWarn(bool setting=true) { warn = setting; }
   void SetLock(bool setting=true) { lock = setting; }
 
   void AddRegion(int id) { region_ids.push_back(id); }
@@ -135,9 +141,11 @@ public:
 
   ~SudokuPuzzle() { ; }
 
-
+  const SudokuLayout & GetLayout() { return layout; }
   int GetState(int cell_id) const { return cell_array[cell_id].GetState(); }
   int GetState(int col, int row) const { return GetState(layout.ToID(col, row)); }
+  bool GetWarn(int cell_id) const { return cell_array[cell_id].GetWarn(); }
+  bool GetWarn(int col, int row) const { return GetWarn(layout.ToID(col, row)); }
   bool GetLock(int cell_id) const { return cell_array[cell_id].GetLock(); }
   bool GetLock(int col, int row) const { return GetLock(layout.ToID(col, row)); }
   bool GetNote(int cell_id, int value) const { return cell_array[cell_id].GetNote(value); }
@@ -205,7 +213,6 @@ private:
   SudokuPuzzle puzzle;
 
   // Configurable info
-  int puzzle_size;   // Default xy pixels for puzzle
   int min_size;      // Minimum puzzle size with resizing
   int cell_padding;  // Pedding between edge of cell and internal number.
   int border;        // Thickness of outer border.
@@ -213,88 +220,251 @@ private:
   int thin_width;    // Thickness of normal cell walls.
 
   // Calculated info
-  int cell_width;    // Width (and height) of an individual grid cell.
-  int region_width;  // Width (and height) of a 3x3 region
-  int board_width;   // Width (and height) of the entire board
+  int puzzle_size;    // Wdith (and height) for overall puzzle
+  int cell_width;     // Width (and height) of an individual grid cell.
+  int region_width;   // Width (and height) of a 3x3 region
+  int board_width;    // Width (and height) of the entire board
+  int full_width;     // Overall width of entire board, include borders.
+
+  int puz_text_pt;    // Font size for text filling a cell.
+  int puz_note_width; // Space for smaller (note) characters in each cell
+  int puz_note_pt;    // Font size for note characters
+
+  int button_w;           // Width of buttons.
+  int button_r;           // Corner radious of buttons.
+  vector<int> buttons_x;  // X position of buttons.
+  int buttons_y;          // All buttons have the same y.
 
   // Graphical elements
-  emkStage stage;
+  emkCustomShape puzzle_board; // @CAO Should this be an emkRect to capture mouse clicks?
   emkLayer layer_main;
   emkLayer layer_buttons;
+  emkLayer layer_tooltips;
+  emkStage stage;
 
-  emkCustomShape test_shape;
-
-  const int cols;
-  const int rows;
-  const int num_cells;
-  vector<string> colors;
-
+  // Current state
+  int cell_id;                   // Current cell in focus
+  int highlight_id;              // Is there a cell we should be highlighting?
+  int hover_val;                 // The note value being hovered over...
+  int bm_level;                  // Number of bookmarks set so far.
+  vector<vector<int> > bm_touch; // How many times has each cell been touched in each bookmark level?
+  bool do_warnings;              // Should we warn when there is an obvious error?
+  bool do_autonotes;             // Should we automatically provide notes?
+  bool toggle_click;             // Should clicks be for autonotes by default?
+    
 public:
   SudokuInterface(const SudokuPuzzle & _puzzle)
     : puzzle(_puzzle)
-    , puzzle_size(500), min_size(500), cell_padding(5), border(8), mid_width(4), thin_width(2)
-    , cell_width(0), region_width(0), board_width(0) // @CAO Cut line since these get calculate later?
+    , min_size(500), cell_padding(5), border(8), mid_width(4), thin_width(2)
+    , buttons_x(9)
+    , puzzle_board(border, border, this, &SudokuInterface::DrawGrid)
     , stage(1200, 600, "container")
-    , test_shape(100, 100, this, &SudokuInterface::DrawGrid)
-    , cols(60), rows(60), num_cells(cols * rows), colors(num_cells)
+    , cell_id(0), highlight_id(-1), hover_val(-1), bm_level(0), bm_touch(81)
+    , do_warnings(false), do_autonotes(false), toggle_click(false)
   {
     stage.ResizeMax(min_size, min_size);
+    ResizeBoard();
 
-    /////// TEST //////
-    for (int i = 0; i < num_cells; i++) {
-      int col_id = rand() % 7;
-      switch (col_id) {
-      case 0:
-        colors[i] = "red";
-        break;
-      case 1:
-        colors[i] = "green";
-        break;
-      case 2:
-        colors[i] = "blue";
-        break;
-      case 3:
-        colors[i] = "yellow";
-        break;
-      case 4:
-        colors[i] = "purple";
-        break;
-      case 5:
-        colors[i] = "orange";
-        break;
-      case 6:
-        colors[i] = "brown";
-        break;
-      }
+    puzzle_board.On("click", this, &SudokuInterface::OnClick);
 
-      if (i < 4) EMK_Alert(std::to_string(rand()).c_str()); 
-    }
-
-    layer_main.Add(test_shape);
+    layer_main.Add(puzzle_board);
     stage.Add(layer_main);
+    stage.Add(layer_buttons);
+    stage.Add(layer_tooltips);
   }
   ~SudokuInterface() { ; }
 
+  void OnClick() {
+    emkAlert("Click!");
+  }
+
+  void ResizeBoard() {
+    int win_size = std::min((int)(stage.GetX() * 1.25), stage.GetY()); // Use the window size.
+    win_size = std::max(win_size, min_size); // However, don't let puzzle get too small.
+    puzzle_size = win_size * 0.8;
+
+    // These are dynamically sized numbers.
+    cell_width = (puzzle_size - border*2)/9;
+    region_width = cell_width * 3;
+    board_width = cell_width * 9;
+
+    puz_text_pt = cell_width - 2 * cell_padding;     // Font size for text filling a cell.
+    puz_note_width = cell_width / 3 - 1;             // Space for note characters in each cell
+    puz_note_pt = puz_note_width - 1;           // Font size for smaller characters
+    full_width = board_width + border*2;
+
+    button_w = full_width/10;     // Width of each button
+    button_r = button_w/5;        // Corner radius of each button
+    const int offset = 3;
+
+    buttons_x[0] = offset;
+    buttons_x[1] = offset + button_w;
+    buttons_x[2] = offset + button_w * 2;
+    buttons_x[3] = offset + button_w * 3;
+    buttons_x[4] = offset + button_w * 4;
+    buttons_x[5] = button_w * 5.5;
+    buttons_x[6] = button_w * 7 - offset;
+    buttons_x[7] = button_w * 8 - offset;
+    buttons_x[8] = button_w * 9 - offset;
+    buttons_y = puzzle_size + 2;    // Y-value of main button bar    
+  }
+
   void DrawGrid(emkCanvas & canvas) {
-    const int x_offset = 10;
-    const int y_offset = 10;
-    const int size = 9;
-    const int border = 1;
-    const int step = size + border;
-    const int max_x = x_offset + step * cols;
-    const int max_y = y_offset + step * rows;
+    const int offset = border; // @CAO Technically we should deal with an x & y here...
 
-    int pos = 0;
+    const int active_col = puzzle.GetLayout().ToCol(cell_id);
+    const int active_row = puzzle.GetLayout().ToRow(cell_id);
+    const int cell_x = offset + cell_width * active_col;
+    const int cell_y = offset + cell_width * active_row;
 
-    for (int x = x_offset; x < max_x; x += step) {
-      for (int y = y_offset; y < max_y; y += step) {
-        if (pos < 2) EMK_Alert(colors[pos].c_str());
-        canvas.SetFillStyle(colors[pos].c_str());
-        canvas.Rect(x, y, 9, 9, true);
-        pos++;
+    // Clear out the background
+    canvas.SetFillStyle(emk::Color(255,250,245));
+    canvas.Rect(offset, offset, board_width, board_width, true);
+
+    // Highlight the regions affected.
+    if (active_row != -1 && active_col != -1) {
+      canvas.SetFillStyle(emk::Color(200, 200, 250, 0.5));  // Highlight color
+      canvas.Rect(cell_x, offset, cell_width, board_width, true);
+      canvas.Rect(offset, cell_y, board_width, cell_width, true);
+ 	 
+      const int region_x = active_col / 3;
+      const int region_y = active_row / 3;
+      canvas.Rect(offset + region_x*region_width, offset + region_y*region_width, region_width, region_width, true);
+
+      canvas.SetFillStyle(emk::Color(250, 250, 250));     // Target (white)
+      canvas.Rect(cell_x, cell_y, cell_width, cell_width, true);
+        
+      // If there is a cell to highlight, do so.
+      if (highlight_id != -1) {
+        const int h_col = puzzle.GetLayout().ToCol(highlight_id);
+        const int h_row = puzzle.GetLayout().ToRow(highlight_id);
+        const int hx = offset + cell_width * h_col;
+        const int hy = offset + cell_width * h_row;
+        canvas.SetFillStyle("yellow");
+        canvas.Rect(hx, hy, cell_width, cell_width, true);
       }
     }
-    canvas.Draw();
+
+    // Setup drawing the actual grid.
+    canvas.BeginPath();
+    canvas.SetFillStyle("black");
+    canvas.SetLineJoin("round");
+    canvas.SetLineWidth(mid_width);
+      
+    // Draw region borders
+    canvas.Rect(offset + region_width, offset/2, region_width, board_width+offset);
+    canvas.Rect(offset/2, offset + region_width, board_width+offset, region_width);
+
+    // Draw thin lines
+    canvas.SetLineWidth(thin_width);
+    for (int i = 1; i < 9; i++) {
+      const int x = i*cell_width + offset;
+      const int y = i*cell_width + offset;
+      canvas.MoveTo(x, offset);
+      canvas.LineTo(x, offset + board_width);	  
+      canvas.MoveTo(offset, y);
+      canvas.LineTo(offset + board_width, y);	  
+    }
+    canvas.Stroke();
+ 
+    // Outer box
+    canvas.SetLineWidth(border);
+	    
+    const int corner_radius = 10;
+    const int dist1 = offset/2 + corner_radius;
+    const int dist2 = board_width + 3 * offset/2 - corner_radius;
+
+    canvas.BeginPath();
+    canvas.MoveTo(dist1 - corner_radius, dist1);
+    canvas.Arc(dist1, dist1, corner_radius, emk::PI, 3*emk::PI/2, false);
+    canvas.Arc(dist2, dist1, corner_radius, 3*emk::PI/2, 0, false);
+    canvas.Arc(dist2, dist2, corner_radius, 0, emk::PI/2, false);
+    canvas.Arc(dist1, dist2, corner_radius, emk::PI/2, emk::PI, false);
+    canvas.ClosePath();
+    canvas.Stroke();
+
+    canvas.BeginPath();
+
+    // Setup this bookmark level for coloring.
+    const vector<int> & bm_touch_cur = bm_touch[bm_level];
+
+    // Fill in the values
+    canvas.SetTextAlign("center");
+    for (int i = 0; i < 9; i++) {
+      for (int j = 0; j < 9; j++) {
+        if (puzzle.GetState(i,j) == 0) { // No value, so print notes!
+          const int cur_x = offset + cell_width * i;
+          const int cur_y = offset + cell_width * j;
+
+          canvas.SetFont(std::to_string(puz_note_pt) + "pt Calibri");
+          // Print the values from 1 to 9.
+          for (int mi = 0; mi < 3; mi++) {
+            const int text_x = cur_x + cell_width * (0.30 * (double) mi + 0.20);
+            for (int mj = 0; mj < 3; mj++) {
+              const int val = mi + 1 + (mj*3);
+              if (puzzle.GetNote(i,j,val) == false) continue;
+          	  
+              if (do_autonotes) canvas.SetFillStyle("#00AA00");
+              else canvas.SetFillStyle("#006600");
+              const int text_y = cur_y + puz_note_width * (mj+1);
+              canvas.Text(to_string(val), text_x, text_y);
+            }
+          }	  
+        }
+        else { // This cell has a value, so we should draw it!
+          canvas.SetFont(std::to_string(puz_text_pt) + "pt Calibri");
+          if (puzzle.GetLock(i,j) != 0) canvas.SetFillStyle("black");    // This number is locked! (original in puzzle)
+          else {                                                         // Changeable cell.
+            const int cur_id = puzzle.GetLayout().ToID(i, j);
+
+            if (puzzle.GetWarn(cur_id) == true) {                        // Are warnings on for this cell?
+              // ...Has cell changed on the current bookmark level?
+              if (bm_touch_cur[cur_id] > 0) canvas.SetFillStyle("#880000");
+              else canvas.SetFillStyle("#AA6666");
+            }
+            else {                                                       // No warnings
+              // ...Has cell changed on the current bookmark level?
+              if (bm_touch_cur[cur_id] > 0) canvas.SetFillStyle("#0000FF");
+              else canvas.SetFillStyle("#6666AA");
+            }
+          }
+          canvas.Text(std::to_string(puzzle.GetState(i,j)),
+                      offset + cell_width * i + cell_width/2,
+                      offset + cell_width * (j+1) - cell_padding);
+        }
+      }
+    }
+
+
+      // Give options for target cell.
+      if (cell_id != -1 && puzzle.GetState(cell_id) == 0) {
+        canvas.SetFont(std::to_string(puz_text_pt) + "pt Calibri");
+        // Print the values from 1 to 9.
+        for (int i = 0; i < 3; i++) {
+          const int text_x = cell_x + cell_width * (0.30 * i + 0.20);
+          for (int j = 0; j < 3; j++) {
+            const int val = i + 1 + (j*3);
+            if (puzzle.GetNote(cell_id, val) == false) {
+              if (val == hover_val) canvas.SetFillStyle("#FF8800");
+              else canvas.SetFillStyle("#888888");
+            } else {
+              if (val == hover_val) canvas.SetFillStyle("#884400");
+              else canvas.SetFillStyle("#008800");
+            }
+            const int text_y = cell_y + puz_note_width * (j+1);
+            canvas.Text(std::to_string(val), text_x, text_y);
+          }
+        }	  
+      }
+
+      // Mark this region as being click-on-able.
+      canvas.BeginPath();
+      canvas.MoveTo(offset, offset);
+      canvas.LineTo(offset + board_width, offset);
+      canvas.LineTo(offset + board_width, offset + board_width);
+      canvas.LineTo(offset, offset + board_width);
+      canvas.ClosePath();
+      canvas.Stroke(puzzle_board);
   }
 };
 
@@ -305,199 +475,15 @@ public:
   // Track the basic puzzle information.
   this.info = {
 
-    // Button sizing
-    buttons_x: {},    // Map of button x-values
-    buttons_y: 0,     // Y-value of main button bar
-    buttons_w: 0,     // Width of each button
-    buttons_h: 0,     // Height of each button
-    buttons_r: 10,    // Corner radius of end-buttons
- 
     // Undo/redo stacks
     undo_stack: [],
     redo_stack: [],
     
-    // Bookmark info.
-    bm_level: 0,      // Number of bookmarks set so far.
-    bm_touch: [],     // Has each cell been touched in the current bookmark level?
-    
-    // Toggle button status
-    do_warnings: false,
-    do_autonotes: false,
-    toggle_click: false,
-    
-    // Highlight info
-    highlight_id: -1,
+
   };
-  this.info.interface = this; // Let the info point back to the interface.
 
 
-  // &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
-
-  // Build the object to manage the visual board.
-  this.puzzle_board = new Kinetic.Shape({
-    drawFunc: function(canvas) {
-      var ctx = canvas.getContext();
-      var offset = this.info.border;
-
-      var active_col = this.puzzle.layout.ToCol(this.cell_id);
-      var active_row = this.puzzle.layout.ToRow(this.cell_id);
-      var cell_x = offset + this.info.cell_width * active_col;
-      var cell_y = offset + this.info.cell_width * active_row;
-  
-      // Clear out the background
-      ctx.fillStyle = "rgb(255,250,245)";
-      ctx.fillRect(offset, offset, this.info.board_width, this.info.board_width);
-
-      // Highlight the regions affected.
-      if (active_row != -1 && active_col != -1) {
-        ctx.fillStyle = "rgba(200, 200, 250, 0.5)";  // Highlight color
-//        ctx.fillStyle = "rgba(255, 255, 200, 0.9)";  // Col (yellow)
-        ctx.fillRect(cell_x, offset, this.info.cell_width, this.info.board_width)
-
-//        ctx.fillStyle = "rgba(255, 220, 220, 0.5)";     // Row (red)
-        ctx.fillRect(offset, cell_y, this.info.board_width, this.info.cell_width)
- 	 
-//        ctx.fillStyle = "rgba(200, 200, 255, 0.5)";    // Square Region (blue)
-        var region_x = Math.floor(active_col / 3);
-        var region_y = Math.floor(active_row / 3);
-        ctx.fillRect(offset + region_x * this.info.region_width, offset + region_y * this.info.region_width,
-                     this.info.region_width, this.info.region_width)
-
-        ctx.fillStyle = "rgb(250, 250, 250)";     // Target (white)
-        ctx.fillRect(cell_x, cell_y, this.info.cell_width, this.info.cell_width);
-        
-        // If there is a cell to highlight, do so.
-        if (this.info.highlight_id != -1) {
-          var h_col = this.puzzle.layout.ToCol(this.info.highlight_id);
-          var h_row = this.puzzle.layout.ToRow(this.info.highlight_id);
-          var hx = offset + this.info.cell_width * h_col;
-          var hy = offset + this.info.cell_width * h_row;
-          ctx.fillStyle = "yellow";
-          ctx.fillRect(hx, hy, this.info.cell_width, this.info.cell_width);
-        }
-      }
-  
-      // Setup drawing the actual grid.
-      ctx.beginPath();
-      ctx.fillStyle = "black";
-      ctx.lineJoin = "round";
-      ctx.lineWidth = this.info.mid_width;
-      
-      // Draw region borders
-      ctx.strokeRect(offset + this.info.region_width, offset/2, this.info.region_width, this.info.board_width+offset);
-      ctx.strokeRect(offset/2, offset + this.info.region_width, this.info.board_width+offset, this.info.region_width);
-
-      // Draw thin lines
-      ctx.lineWidth = this.info.thin_width;
-      for (var i = 1; i < 9; i++) {
-	      x = i*this.info.cell_width + offset;
-	      y = i*this.info.cell_width + offset;
-	      ctx.moveTo(x, offset);
-	      ctx.lineTo(x, offset + this.info.board_width);	  
-	      ctx.moveTo(offset, y);
-	      ctx.lineTo(offset + this.info.board_width, y);	  
-	    }
-	    ctx.stroke();
-
-	    // Outer box
-	    ctx.lineWidth = this.info.border;
-	    
-	    var corner_radius = 10;
-	    var dist1 = offset/2 + corner_radius;
-	    var dist2 = this.info.board_width + 3 * offset/2 - corner_radius;
-
-	    ctx.beginPath();
-	    ctx.moveTo(dist1 - corner_radius, dist1);
-	    ctx.arc(dist1, dist1, corner_radius, Math.PI, 3*Math.PI/2, false);
-	    ctx.arc(dist2, dist1, corner_radius, 3*Math.PI/2, 0, false);
-	    ctx.arc(dist2, dist2, corner_radius, 0, Math.PI/2, false);
-	    ctx.arc(dist1, dist2, corner_radius, Math.PI/2, Math.PI, false);
-	    ctx.closePath();
-	    ctx.stroke();
-
-	    ctx.beginPath();
-
-	    // Setup this bookmark level for coloring.
-	    var bm_level = this.info.bm_touch[this.info.bm_level];
-
-	    // Fill in the values
-	    ctx.textAlign = 'center';
-	    for (var i = 0; i < 9; i++) {
-  	    for (var j = 0; j < 9; j++) {
-    	    if (this.puzzle.GetStateCR(i,j) == 0) {
-        	  // No value, so print notes!
-       	    var cur_x = offset + this.info.cell_width * i;
-       	    var cur_y = offset + this.info.cell_width * j;
-
-      	    ctx.font = this.mini_text_pt.toString() + 'pt Calibri';
-      	    // Print the values from 1 to 9.
-      	    for (var mi = 0; mi < 3; mi++) {
-        	    var text_x = Math.floor(cur_x + this.info.cell_width * (0.30 * mi + 0.20));
-        	    for (mj = 0; mj < 3; mj++) {
-          	    var val = mi + 1 + (mj*3);
-          	    if (this.puzzle.GetNoteCR(i,j,val) == false) continue;
-          	  
-           	    if (this.interface.auto_notes) ctx.fillStyle = "#00AA00";
-          	    else ctx.fillStyle = "#006600";
-          	    var text_y = cur_y + this.mini_char_width * (mj+1);
-          	    ctx.fillText(val.toString(), text_x, text_y);
-              }
-            }	  
-    	    }
-    	    else {
-      	    ctx.font = this.text_pt.toString() + 'pt Calibri';
-      	    if (this.puzzle.GetLockCR(i,j) != 0) ctx.fillStyle = "black"; // This number is locked!
-      	    else {                                                      // Changeable cell.
-              var cur_id = this.puzzle.layout.ToID(i, j);
-              if (this.puzzle.cell_array[cur_id].warn == true) {        // Are warnings on for this cell?
-                if (bm_level[cur_id] > 0) ctx.fillStyle = "#880000";    // ...Has cell changed on the current bookmark level?
-                else ctx.fillStyle = "#AA6666";                         // ...From before current bookmark
-              }
-              else {                                                    // No warnings
-                if (bm_level[cur_id] > 0) ctx.fillStyle = "#0000FF";    // ...Has cell changed on the current bookmark level?
-                else ctx.fillStyle = "#6666AA";                         // ...From before current bookmark
-              }
-      	    }
-      	    ctx.fillText(this.puzzle.GetStateCR(i,j).toString(),
-      	                 offset + this.info.cell_width * i + this.info.cell_width/2,
-      	                 offset + this.info.cell_width * (j+1) - this.info.cell_padding);
-          }
-        }
-      }
-
-      // Give options for target cell.
-      if (this.cell_id != -1 && this.puzzle.GetState(this.cell_id) == 0) {
-        ctx.font = this.mini_text_pt.toString() + 'pt Calibri';
-        // Print the values from 1 to 9.
-        for (var i = 0; i < 3; i++) {
-          var text_x = Math.floor(cell_x + this.info.cell_width * (0.30 * i + 0.20));
-          for (j = 0; j < 3; j++) {
-            var val = i + 1 + (j*3);
-            if (this.puzzle.GetNote(this.cell_id, val) == false) {
-              if (val == this.hover_val) ctx.fillStyle = "#FF8800";
-              else ctx.fillStyle = "#888888";
-            } else {
-              if (val == this.hover_val) ctx.fillStyle = "#884400";
-              else ctx.fillStyle = "#008800";              
-            }
-            var text_y = cell_y + this.mini_char_width * (j+1);
-            ctx.fillText(val.toString(), text_x, text_y);
-          }
-        }	  
-      }
-
-      // Mark this region as being click-on-able.
-      ctx.beginPath();
-      ctx.moveTo(offset, offset);
-      ctx.lineTo(offset + this.info.board_width, offset);
-      ctx.lineTo(offset + this.info.board_width, offset + this.info.board_width);
-      ctx.lineTo(offset, offset + this.info.board_width);
-      ctx.closePath();
-      canvas.fillStroke(this);
-    }
-  });
-  
   this.puzzle_board.info = this.info;
 
   this.puzzle_board.on('mousedown', function(evt) {
@@ -757,77 +743,77 @@ public:
   for (cur_button in this.button_names) {
     this.button_bar[cur_button] = new Kinetic.Shape({
       drawFunc: function(canvas) {
-        this.ctx = canvas.getContext();
+        this.canvas = canvas.getContext();
  
         this.x = this.info.buttons_x[this.name];
         this.y = this.info.buttons_y;
-        this.x2 = this.x + this.info.buttons_w;
-        this.y2 = this.y + this.info.buttons_h;
+        this.x2 = this.x + this.info.button_w;
+        this.y2 = this.y + this.info.button_w;
         this.x_in = this.x + this.info.buttons_r;
         this.y_in = this.y + this.info.buttons_r;
         this.x2_in = this.x2 - this.info.buttons_r;
         this.y2_in = this.y2 - this.info.buttons_r;
   
         // Set the button color
-        if (this.mouse_down == true) this.ctx.fillStyle = 'blue';
+        if (this.mouse_down == true) this.canvas.fillStyle = 'blue';
   	    else if (this.mouse_over == true) {
-  	      if (this.toggle_on == true) this.ctx.fillStyle = 'rgb(250,250,200)';
-  	      else this.ctx.fillStyle = 'rgb(240,240,255)';
+  	      if (this.toggle_on == true) this.canvas.fillStyle = 'rgb(250,250,200)';
+  	      else this.canvas.fillStyle = 'rgb(240,240,255)';
   	    }
   	    else {
-  	      if (this.toggle_on == true) this.ctx.fillStyle = 'rgb(255,255,100)';
-  	      else this.ctx.fillStyle = 'rgb(255,250,245)';
+  	      if (this.toggle_on == true) this.canvas.fillStyle = 'rgb(255,255,100)';
+  	      else this.canvas.fillStyle = 'rgb(255,250,245)';
   	    }
   
-  	    this.ctx.beginPath();
-  	    if (this.toggle_on == true) this.ctx.lineWidth = 4;
-  	    else this.ctx.lineWidth = 2;
+  	    this.canvas.beginPath();
+  	    if (this.toggle_on == true) this.canvas.lineWidth = 4;
+  	    else this.canvas.lineWidth = 2;
   	    if (this.round_corners.ul == true) {
-    	    this.ctx.moveTo(this.x, this.y_in);
-    	    this.ctx.arc(this.x_in, this.y_in, this.info.buttons_r, Math.PI, 3*Math.PI/2, false);
-    	  } else this.ctx.moveTo(this.x, this.y);
+    	    this.canvas.moveTo(this.x, this.y_in);
+    	    this.canvas.arc(this.x_in, this.y_in, this.info.buttons_r, emk::PI, 3*emk::PI/2, false);
+    	  } else this.canvas.moveTo(this.x, this.y);
     	  if (this.round_corners.ur == true) {
-    	    this.ctx.arc(this.x2_in, this.y_in, this.info.buttons_r, 3*Math.PI/2, 0, false);      	  
-    	  } else this.ctx.lineTo(this.x2, this.y);
+    	    this.canvas.arc(this.x2_in, this.y_in, this.info.buttons_r, 3*emk::PI/2, 0, false);      	  
+    	  } else this.canvas.lineTo(this.x2, this.y);
     	  if (this.round_corners.lr == true) {
-    	    this.ctx.arc(this.x2_in, this.y2_in, this.info.buttons_r, 0, Math.PI/2, false);      	  
-  	    } else this.ctx.lineTo(this.x2, this.y2);
+    	    this.canvas.arc(this.x2_in, this.y2_in, this.info.buttons_r, 0, emk::PI/2, false);      	  
+  	    } else this.canvas.lineTo(this.x2, this.y2);
     	  if (this.round_corners.ll == true) {
-    	    this.ctx.arc(this.x_in, this.y2_in, this.info.buttons_r, Math.PI/2, Math.PI, false);
-  	    } else this.ctx.lineTo(this.x, this.y2);
-  	    this.ctx.closePath();
-  	    this.ctx.fill();
-  	    this.ctx.stroke();
+    	    this.canvas.arc(this.x_in, this.y2_in, this.info.buttons_r, emk::PI/2, emk::PI, false);
+  	    } else this.canvas.lineTo(this.x, this.y2);
+  	    this.canvas.closePath();
+  	    this.canvas.fill();
+  	    this.canvas.stroke();
   
       	// Draw the appropriate icon.
       	// First, shift the icon to be on a 100x100 grid, and shift back afterward.
-      	this.ctx.save();
-        this.ctx.translate(this.x+5, this.y+5);
-        this.ctx.scale((this.info.buttons_w - 10)/100, (this.info.buttons_h - 10)/100);    
+      	this.canvas.save();
+        this.canvas.translate(this.x+5, this.y+5);
+        this.canvas.scale((this.info.button_w - 10)/100, (this.info.button_w - 10)/100);    
   	    this.DrawIcon();
-  	    //this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-  	    this.ctx.restore();
+  	    //this.canvas.setTransform(1, 0, 0, 1, 0, 0);
+  	    this.canvas.restore();
   
   	    // Make the button clickable (or grayed out!)
-  	    this.ctx.beginPath();
-  	    this.ctx.lineWidth = 2;
+  	    this.canvas.beginPath();
+  	    this.canvas.lineWidth = 2;
   	    if (this.round_corners.ul == true) {
-    	    this.ctx.moveTo(this.x, this.y_in);
-    	    this.ctx.arc(this.x_in, this.y_in, this.info.buttons_r, Math.PI, 3*Math.PI/2, false);
-    	  } else this.ctx.moveTo(this.x, this.y);
+    	    this.canvas.moveTo(this.x, this.y_in);
+    	    this.canvas.arc(this.x_in, this.y_in, this.info.buttons_r, emk::PI, 3*emk::PI/2, false);
+    	  } else this.canvas.moveTo(this.x, this.y);
     	  if (this.round_corners.ur == true) {
-    	    this.ctx.arc(this.x2_in, this.y_in, this.info.buttons_r, 3*Math.PI/2, 0, false);      	  
-    	  } else this.ctx.lineTo(this.x2, this.y);
+    	    this.canvas.arc(this.x2_in, this.y_in, this.info.buttons_r, 3*emk::PI/2, 0, false);      	  
+    	  } else this.canvas.lineTo(this.x2, this.y);
     	  if (this.round_corners.lr == true) {
-    	    this.ctx.arc(this.x2_in, this.y2_in, this.info.buttons_r, 0, Math.PI/2, false);      	  
-  	    } else this.ctx.lineTo(this.x2, this.y2);
+    	    this.canvas.arc(this.x2_in, this.y2_in, this.info.buttons_r, 0, emk::PI/2, false);      	  
+  	    } else this.canvas.lineTo(this.x2, this.y2);
     	  if (this.round_corners.ll == true) {
-    	    this.ctx.arc(this.x_in, this.y2_in, this.info.buttons_r, Math.PI/2, Math.PI, false);
-  	    } else this.ctx.lineTo(this.x, this.y2);
-  	    this.ctx.closePath();
+    	    this.canvas.arc(this.x_in, this.y2_in, this.info.buttons_r, emk::PI/2, emk::PI, false);
+  	    } else this.canvas.lineTo(this.x, this.y2);
+  	    this.canvas.closePath();
   	    if (this.inactive == true) {
-    	    this.ctx.fillStyle = 'rgba(200,200,200,0.5)';
-    	    this.ctx.fill();
+    	    this.canvas.fillStyle = 'rgba(200,200,200,0.5)';
+    	    this.canvas.fill();
   	    }
   	    canvas.fillStroke(this);
       }
@@ -996,87 +982,87 @@ public:
   
   this.button_bar.rewind.DrawIcon = function() {
     // Draw the bookmark
-    this.ctx.beginPath();
-    this.ctx.lineWidth = 3;
-    this.ctx.fillStyle = '#F5DEB3';
-    this.ctx.moveTo(5, 100);
-    this.ctx.arc(15, 10, 10, Math.PI, Math.PI*1.5);
-    this.ctx.arc(35, 10, 10, Math.PI*1.5, 0);
-    this.ctx.lineTo(45, 100);
-    this.ctx.lineTo(25, 90);
-    this.ctx.closePath();
-    this.ctx.shadowColor = "#999";
-    this.ctx.shadowBlur = 4;
-    this.ctx.shadowOffsetX = 3;
-    this.ctx.shadowOffsetY = 3;
-    this.ctx.fill();
-    this.ctx.shadowColor = "transparent";
-    this.ctx.stroke();
+    this.canvas.beginPath();
+    this.canvas.lineWidth = 3;
+    this.canvas.fillStyle = '#F5DEB3';
+    this.canvas.moveTo(5, 100);
+    this.canvas.arc(15, 10, 10, emk::PI, emk::PI*1.5);
+    this.canvas.arc(35, 10, 10, emk::PI*1.5, 0);
+    this.canvas.lineTo(45, 100);
+    this.canvas.lineTo(25, 90);
+    this.canvas.closePath();
+    this.canvas.shadowColor = "#999";
+    this.canvas.shadowBlur = 4;
+    this.canvas.shadowOffsetX = 3;
+    this.canvas.shadowOffsetY = 3;
+    this.canvas.fill();
+    this.canvas.shadowColor = "transparent";
+    this.canvas.stroke();
 
     // Draw Arrow 1
-    this.ctx.beginPath();
-    this.ctx.lineWidth = 2;
-    this.ctx.fillStyle = 'white';
-    this.ctx.moveTo(45, 30);
-    this.ctx.lineTo(65, 10);
-    this.ctx.lineTo(65, 20);
-    this.ctx.lineTo(95, 20);
-    this.ctx.lineTo(95, 40);
-    this.ctx.lineTo(65, 40);
-    this.ctx.lineTo(65, 50);
-    this.ctx.closePath();
-    this.ctx.shadowColor = "#999";
-    this.ctx.shadowBlur = 4;
-    this.ctx.shadowOffsetX = 3;
-    this.ctx.shadowOffsetY = 3;
-    this.ctx.fill();
-    this.ctx.shadowColor = "transparent";
-    this.ctx.stroke();
+    this.canvas.beginPath();
+    this.canvas.lineWidth = 2;
+    this.canvas.fillStyle = 'white';
+    this.canvas.moveTo(45, 30);
+    this.canvas.lineTo(65, 10);
+    this.canvas.lineTo(65, 20);
+    this.canvas.lineTo(95, 20);
+    this.canvas.lineTo(95, 40);
+    this.canvas.lineTo(65, 40);
+    this.canvas.lineTo(65, 50);
+    this.canvas.closePath();
+    this.canvas.shadowColor = "#999";
+    this.canvas.shadowBlur = 4;
+    this.canvas.shadowOffsetX = 3;
+    this.canvas.shadowOffsetY = 3;
+    this.canvas.fill();
+    this.canvas.shadowColor = "transparent";
+    this.canvas.stroke();
     
     // Draw Arrow 2  
-    this.ctx.beginPath();
-    this.ctx.lineWidth = 2;
-    this.ctx.fillStyle = 'white';
-    this.ctx.moveTo(45, 75);
-    this.ctx.lineTo(65, 55);
-    this.ctx.lineTo(65, 65);
-    this.ctx.lineTo(95, 65);
-    this.ctx.lineTo(95, 85);
-    this.ctx.lineTo(65, 85);
-    this.ctx.lineTo(65, 95);
-    this.ctx.closePath();
-    this.ctx.shadowColor = "#999";
-    this.ctx.shadowBlur = 4;
-    this.ctx.shadowOffsetX = 3;
-    this.ctx.shadowOffsetY = 3;
-    this.ctx.fill();
-    this.ctx.shadowColor = "transparent";
-    this.ctx.stroke();
+    this.canvas.beginPath();
+    this.canvas.lineWidth = 2;
+    this.canvas.fillStyle = 'white';
+    this.canvas.moveTo(45, 75);
+    this.canvas.lineTo(65, 55);
+    this.canvas.lineTo(65, 65);
+    this.canvas.lineTo(95, 65);
+    this.canvas.lineTo(95, 85);
+    this.canvas.lineTo(65, 85);
+    this.canvas.lineTo(65, 95);
+    this.canvas.closePath();
+    this.canvas.shadowColor = "#999";
+    this.canvas.shadowBlur = 4;
+    this.canvas.shadowOffsetX = 3;
+    this.canvas.shadowOffsetY = 3;
+    this.canvas.fill();
+    this.canvas.shadowColor = "transparent";
+    this.canvas.stroke();
   }
 
   this.button_bar.undo.DrawIcon = function() {
-    this.ctx.beginPath();
-    this.ctx.fillStyle = 'white';
-    this.ctx.moveTo(30,95);              // Arrow point
-    this.ctx.lineTo(50,75);               // Angle up on right side of arrow
-    this.ctx.lineTo(40,75);               // Back in to base of arrow head
-    this.ctx.lineTo(40,45);               // Up to bend in arrow
-    this.ctx.arc(55, 45, 15, Math.PI, 0); // Lower bend
-    this.ctx.lineTo(70,95);
-    this.ctx.lineTo(90,95);
-    this.ctx.lineTo(90,45);
-    this.ctx.arc(55, 45, 35, 0, Math.PI, true);
-    this.ctx.lineTo(20,75);
-    this.ctx.lineTo(10,75);
+    this.canvas.beginPath();
+    this.canvas.fillStyle = 'white';
+    this.canvas.moveTo(30,95);              // Arrow point
+    this.canvas.lineTo(50,75);               // Angle up on right side of arrow
+    this.canvas.lineTo(40,75);               // Back in to base of arrow head
+    this.canvas.lineTo(40,45);               // Up to bend in arrow
+    this.canvas.arc(55, 45, 15, emk::PI, 0); // Lower bend
+    this.canvas.lineTo(70,95);
+    this.canvas.lineTo(90,95);
+    this.canvas.lineTo(90,45);
+    this.canvas.arc(55, 45, 35, 0, emk::PI, true);
+    this.canvas.lineTo(20,75);
+    this.canvas.lineTo(10,75);
 
-    this.ctx.closePath();
-    this.ctx.shadowColor = "#999";
-    this.ctx.shadowBlur = 4;
-    this.ctx.shadowOffsetX = 2;
-    this.ctx.shadowOffsetY = 2;
-    this.ctx.fill();
-    this.ctx.shadowColor = "transparent";
-    this.ctx.stroke();    
+    this.canvas.closePath();
+    this.canvas.shadowColor = "#999";
+    this.canvas.shadowBlur = 4;
+    this.canvas.shadowOffsetX = 2;
+    this.canvas.shadowOffsetY = 2;
+    this.canvas.fill();
+    this.canvas.shadowColor = "transparent";
+    this.canvas.stroke();    
   }
   
   this.button_bar.bookmark.DrawIcon = function() {
@@ -1091,217 +1077,217 @@ public:
     var gridx2 = gridx + gridw;
     var gridy2 = gridy + gridh;
     
-    this.ctx.beginPath();
-    this.ctx.lineWidth = 3;
-    this.ctx.fillStyle = 'white';
-    this.ctx.rect(gridx, gridy, gridw, gridh);
-    this.ctx.fill();
+    this.canvas.beginPath();
+    this.canvas.lineWidth = 3;
+    this.canvas.fillStyle = 'white';
+    this.canvas.rect(gridx, gridy, gridw, gridh);
+    this.canvas.fill();
     for (var i = 0; i < grid_lines; i++) {
-	    this.ctx.moveTo(gridx,             gridy+grid_step*i);
-	    this.ctx.lineTo(gridx2,            gridy+grid_step*i);
-	    this.ctx.moveTo(gridx+grid_step*i, gridy);
-	    this.ctx.lineTo(gridx+grid_step*i, gridy2);
+	    this.canvas.moveTo(gridx,             gridy+grid_step*i);
+	    this.canvas.lineTo(gridx2,            gridy+grid_step*i);
+	    this.canvas.moveTo(gridx+grid_step*i, gridy);
+	    this.canvas.lineTo(gridx+grid_step*i, gridy2);
     }
-    this.ctx.stroke();    
+    this.canvas.stroke();    
 
-    this.ctx.beginPath();
-    this.ctx.lineWidth = 3;
-    this.ctx.fillStyle = '#F5DEB3';
-    this.ctx.moveTo(15, 100);
-    this.ctx.arc(25, 10, 10, Math.PI, Math.PI*1.5);
-    this.ctx.arc(45, 10, 10, Math.PI*1.5, 0);
-    this.ctx.lineTo(55, 100);
-    this.ctx.lineTo(35, 90);
-    this.ctx.closePath();
-    this.ctx.shadowColor = "#999";
-    this.ctx.shadowBlur = 4;
-    this.ctx.shadowOffsetX = 3;
-    this.ctx.shadowOffsetY = 3;
-    this.ctx.fill();
-    this.ctx.shadowColor = "transparent";
-    this.ctx.stroke();
+    this.canvas.beginPath();
+    this.canvas.lineWidth = 3;
+    this.canvas.fillStyle = '#F5DEB3';
+    this.canvas.moveTo(15, 100);
+    this.canvas.arc(25, 10, 10, emk::PI, emk::PI*1.5);
+    this.canvas.arc(45, 10, 10, emk::PI*1.5, 0);
+    this.canvas.lineTo(55, 100);
+    this.canvas.lineTo(35, 90);
+    this.canvas.closePath();
+    this.canvas.shadowColor = "#999";
+    this.canvas.shadowBlur = 4;
+    this.canvas.shadowOffsetX = 3;
+    this.canvas.shadowOffsetY = 3;
+    this.canvas.fill();
+    this.canvas.shadowColor = "transparent";
+    this.canvas.stroke();
   }
 
   this.button_bar.redo.DrawIcon = function() {
-    this.ctx.beginPath();
-    this.ctx.fillStyle = 'white';
-    this.ctx.moveTo(70,95);              // Arrow point
-    this.ctx.lineTo(50,75);               // Angle up on right side of arrow
-    this.ctx.lineTo(60,75);               // Back in to base of arrow head
-    this.ctx.lineTo(60,45);               // Up to bend in arrow
-    this.ctx.arc(45, 45, 15, 0, Math.PI, true); // Lower bend
-    this.ctx.lineTo(30,95);
-    this.ctx.lineTo(10,95);
-    this.ctx.lineTo(10,45);
-    this.ctx.arc(45, 45, 35, Math.PI, 0, false);
-    this.ctx.lineTo(80,75);
-    this.ctx.lineTo(90,75);
+    this.canvas.beginPath();
+    this.canvas.fillStyle = 'white';
+    this.canvas.moveTo(70,95);              // Arrow point
+    this.canvas.lineTo(50,75);               // Angle up on right side of arrow
+    this.canvas.lineTo(60,75);               // Back in to base of arrow head
+    this.canvas.lineTo(60,45);               // Up to bend in arrow
+    this.canvas.arc(45, 45, 15, 0, emk::PI, true); // Lower bend
+    this.canvas.lineTo(30,95);
+    this.canvas.lineTo(10,95);
+    this.canvas.lineTo(10,45);
+    this.canvas.arc(45, 45, 35, emk::PI, 0, false);
+    this.canvas.lineTo(80,75);
+    this.canvas.lineTo(90,75);
 
-    this.ctx.closePath();
-    this.ctx.shadowColor = "#999";
-    this.ctx.shadowBlur = 4;
-    this.ctx.shadowOffsetX = 2;
-    this.ctx.shadowOffsetY = 2;
-    this.ctx.fill();
-    this.ctx.shadowColor = "transparent";
-    this.ctx.stroke();    
+    this.canvas.closePath();
+    this.canvas.shadowColor = "#999";
+    this.canvas.shadowBlur = 4;
+    this.canvas.shadowOffsetX = 2;
+    this.canvas.shadowOffsetY = 2;
+    this.canvas.fill();
+    this.canvas.shadowColor = "transparent";
+    this.canvas.stroke();    
   }
   
   this.button_bar.redoall.DrawIcon = function() {
     // Arrow 1
-    this.ctx.beginPath();
-    this.ctx.lineWidth = 2;
-    this.ctx.fillStyle = 'white';
-    this.ctx.moveTo(70, 30);
-    this.ctx.lineTo(50, 10);
-    this.ctx.lineTo(50, 20);
-    this.ctx.lineTo(5, 20);
-    this.ctx.lineTo(5, 40);
-    this.ctx.lineTo(50, 40);
-    this.ctx.lineTo(50, 50);
-    this.ctx.closePath();
-    this.ctx.shadowColor = "#999";
-    this.ctx.shadowBlur = 4;
-    this.ctx.shadowOffsetX = 2;
-    this.ctx.shadowOffsetY = 2;
-    this.ctx.fill();
-    this.ctx.shadowColor = "transparent";
-    this.ctx.stroke();
+    this.canvas.beginPath();
+    this.canvas.lineWidth = 2;
+    this.canvas.fillStyle = 'white';
+    this.canvas.moveTo(70, 30);
+    this.canvas.lineTo(50, 10);
+    this.canvas.lineTo(50, 20);
+    this.canvas.lineTo(5, 20);
+    this.canvas.lineTo(5, 40);
+    this.canvas.lineTo(50, 40);
+    this.canvas.lineTo(50, 50);
+    this.canvas.closePath();
+    this.canvas.shadowColor = "#999";
+    this.canvas.shadowBlur = 4;
+    this.canvas.shadowOffsetX = 2;
+    this.canvas.shadowOffsetY = 2;
+    this.canvas.fill();
+    this.canvas.shadowColor = "transparent";
+    this.canvas.stroke();
 
     // Arrow 2
-    this.ctx.beginPath();
-    this.ctx.lineWidth = 2;
-    this.ctx.fillStyle = 'white';
-    this.ctx.moveTo(70, 75);
-    this.ctx.lineTo(50, 55);
-    this.ctx.lineTo(50, 65);
-    this.ctx.lineTo(5, 65);
-    this.ctx.lineTo(5, 85);
-    this.ctx.lineTo(50, 85);
-    this.ctx.lineTo(50, 95);
-    this.ctx.closePath();
-    this.ctx.shadowColor = "#999";
-    this.ctx.shadowBlur = 4;
-    this.ctx.shadowOffsetX = 2;
-    this.ctx.shadowOffsetY = 2;
-    this.ctx.fill();
-    this.ctx.shadowColor = "transparent";
-    this.ctx.stroke();
+    this.canvas.beginPath();
+    this.canvas.lineWidth = 2;
+    this.canvas.fillStyle = 'white';
+    this.canvas.moveTo(70, 75);
+    this.canvas.lineTo(50, 55);
+    this.canvas.lineTo(50, 65);
+    this.canvas.lineTo(5, 65);
+    this.canvas.lineTo(5, 85);
+    this.canvas.lineTo(50, 85);
+    this.canvas.lineTo(50, 95);
+    this.canvas.closePath();
+    this.canvas.shadowColor = "#999";
+    this.canvas.shadowBlur = 4;
+    this.canvas.shadowOffsetX = 2;
+    this.canvas.shadowOffsetY = 2;
+    this.canvas.fill();
+    this.canvas.shadowColor = "transparent";
+    this.canvas.stroke();
 
     // Wall
-    this.ctx.beginPath();
-    this.ctx.rect(75, 0, 10, 100);
-    this.ctx.fillStyle = '#999';
-    this.ctx.shadowColor = "#999";
-    this.ctx.shadowBlur = 4;
-    this.ctx.shadowOffsetX = 2;
-    this.ctx.shadowOffsetY = 2;
-    this.ctx.fill();
-    this.ctx.shadowColor = "transparent";
-    this.ctx.stroke();
+    this.canvas.beginPath();
+    this.canvas.rect(75, 0, 10, 100);
+    this.canvas.fillStyle = '#999';
+    this.canvas.shadowColor = "#999";
+    this.canvas.shadowBlur = 4;
+    this.canvas.shadowOffsetX = 2;
+    this.canvas.shadowOffsetY = 2;
+    this.canvas.fill();
+    this.canvas.shadowColor = "transparent";
+    this.canvas.stroke();
   }
   
   this.button_bar.hint.DrawIcon = function() {
-    this.ctx.font = '95pt Helvetica';
-    this.ctx.fillStyle = 'green';
-    this.ctx.textAlign = 'center';
-    this.ctx.shadowColor = "#999";
-    this.ctx.shadowBlur = 4;
-    this.ctx.shadowOffsetX = 2;
-    this.ctx.shadowOffsetY = 2;
-    this.ctx.fillText('?', 50, 95);
-    this.ctx.shadowColor = "transparent";
-    this.ctx.stroke();
+    this.canvas.font = '95pt Helvetica';
+    this.canvas.fillStyle = 'green';
+    this.canvas.textAlign = 'center';
+    this.canvas.shadowColor = "#999";
+    this.canvas.shadowBlur = 4;
+    this.canvas.shadowOffsetX = 2;
+    this.canvas.shadowOffsetY = 2;
+    this.canvas.fillText('?', 50, 95);
+    this.canvas.shadowColor = "transparent";
+    this.canvas.stroke();
   }
   
   this.button_bar.warnings.DrawIcon = function() {
-    this.ctx.font = '95pt Helvetica';
-    this.ctx.fillStyle = '#800';
-    this.ctx.textAlign = 'center';
-    this.ctx.shadowColor = "#999";
-    this.ctx.shadowBlur = 4;
-    this.ctx.shadowOffsetX = 2;
-    this.ctx.shadowOffsetY = 2;
-    this.ctx.fillText('!', 45, 95);
-    this.ctx.shadowColor = "transparent";
-    this.ctx.stroke();
+    this.canvas.font = '95pt Helvetica';
+    this.canvas.fillStyle = '#800';
+    this.canvas.textAlign = 'center';
+    this.canvas.shadowColor = "#999";
+    this.canvas.shadowBlur = 4;
+    this.canvas.shadowOffsetX = 2;
+    this.canvas.shadowOffsetY = 2;
+    this.canvas.fillText('!', 45, 95);
+    this.canvas.shadowColor = "transparent";
+    this.canvas.stroke();
   }
   
   this.button_bar.autonotes.DrawIcon = function() {
     // Board
-    this.ctx.beginPath();
-    this.ctx.lineWidth = 2;
-    this.ctx.moveTo(10, 0);
-    this.ctx.lineTo(10, 100);
-    this.ctx.moveTo(90, 0);
-    this.ctx.lineTo(90, 100);
-    this.ctx.moveTo(0, 10);
-    this.ctx.lineTo(100, 10);
-    this.ctx.moveTo(0, 90);
-    this.ctx.lineTo(100, 90);
-    this.ctx.stroke();
+    this.canvas.beginPath();
+    this.canvas.lineWidth = 2;
+    this.canvas.moveTo(10, 0);
+    this.canvas.lineTo(10, 100);
+    this.canvas.moveTo(90, 0);
+    this.canvas.lineTo(90, 100);
+    this.canvas.moveTo(0, 10);
+    this.canvas.lineTo(100, 10);
+    this.canvas.moveTo(0, 90);
+    this.canvas.lineTo(100, 90);
+    this.canvas.stroke();
 
     // Pencil marks    
-    this.ctx.font = '20pt Helvetica';
-    this.ctx.fillStyle = '#008800';
-    this.ctx.textAlign = 'center';
-    this.ctx.fillText('?', 25, 35);
-    this.ctx.fillText('?', 50, 35);
-    this.ctx.fillText('?', 75, 35);
-    this.ctx.fillText('?', 25, 60);
-    this.ctx.fillText('?', 50, 60);
-    this.ctx.fillText('?', 75, 60);
-    this.ctx.fillText('?', 25, 85);
-    this.ctx.fillText('?', 50, 85);
-    this.ctx.fillText('?', 75, 85);
-    this.ctx.stroke();
+    this.canvas.font = '20pt Helvetica';
+    this.canvas.fillStyle = '#008800';
+    this.canvas.textAlign = 'center';
+    this.canvas.fillText('?', 25, 35);
+    this.canvas.fillText('?', 50, 35);
+    this.canvas.fillText('?', 75, 35);
+    this.canvas.fillText('?', 25, 60);
+    this.canvas.fillText('?', 50, 60);
+    this.canvas.fillText('?', 75, 60);
+    this.canvas.fillText('?', 25, 85);
+    this.canvas.fillText('?', 50, 85);
+    this.canvas.fillText('?', 75, 85);
+    this.canvas.stroke();
   }
   
   this.button_bar.toggleclick.DrawIcon = function() {
     // Board
-    this.ctx.beginPath();
-    this.ctx.lineWidth = 2;
-    this.ctx.moveTo(10, 0);
-    this.ctx.lineTo(10, 100);
-    this.ctx.moveTo(90, 0);
-    this.ctx.lineTo(90, 100);
-    this.ctx.moveTo(0, 10);
-    this.ctx.lineTo(100, 10);
-    this.ctx.moveTo(0, 90);
-    this.ctx.lineTo(100, 90);
-    this.ctx.stroke();
+    this.canvas.beginPath();
+    this.canvas.lineWidth = 2;
+    this.canvas.moveTo(10, 0);
+    this.canvas.lineTo(10, 100);
+    this.canvas.moveTo(90, 0);
+    this.canvas.lineTo(90, 100);
+    this.canvas.moveTo(0, 10);
+    this.canvas.lineTo(100, 10);
+    this.canvas.moveTo(0, 90);
+    this.canvas.lineTo(100, 90);
+    this.canvas.stroke();
 
     // Pencil marks    
-    this.ctx.font = '25pt Helvetica';
-    this.ctx.fillStyle = 'blue';
-    this.ctx.textAlign = 'center';
-    this.ctx.fillText('1', 25, 40);
-    this.ctx.fillText('4', 75, 62);
-    this.ctx.fillText('7', 25, 85);
-    this.ctx.stroke();
+    this.canvas.font = '25pt Helvetica';
+    this.canvas.fillStyle = 'blue';
+    this.canvas.textAlign = 'center';
+    this.canvas.fillText('1', 25, 40);
+    this.canvas.fillText('4', 75, 62);
+    this.canvas.fillText('7', 25, 85);
+    this.canvas.stroke();
 
     // Pencil
-    this.ctx.beginPath();
-    this.ctx.lineWidth = 2;
-    this.ctx.fillStyle = '#F5DEB3';
-    this.ctx.moveTo(30, 85);
-    this.ctx.lineTo(30, 70);
-    this.ctx.lineTo(60, 0);
-    this.ctx.lineTo(70, 5);
-    this.ctx.lineTo(40, 75);
-    this.ctx.closePath();
-    this.ctx.shadowColor = "#999";
-    this.ctx.shadowBlur = 4;
-    this.ctx.shadowOffsetX = 2;
-    this.ctx.shadowOffsetY = 2;
-    this.ctx.fill();
-    this.ctx.shadowColor = "transparent";
-    this.ctx.stroke();    
-    this.ctx.beginPath();
-    this.ctx.lineWidth = 1;
-    this.ctx.moveTo(30,70);
-    this.ctx.lineTo(40,75);
-    this.ctx.stroke();
+    this.canvas.beginPath();
+    this.canvas.lineWidth = 2;
+    this.canvas.fillStyle = '#F5DEB3';
+    this.canvas.moveTo(30, 85);
+    this.canvas.lineTo(30, 70);
+    this.canvas.lineTo(60, 0);
+    this.canvas.lineTo(70, 5);
+    this.canvas.lineTo(40, 75);
+    this.canvas.closePath();
+    this.canvas.shadowColor = "#999";
+    this.canvas.shadowBlur = 4;
+    this.canvas.shadowOffsetX = 2;
+    this.canvas.shadowOffsetY = 2;
+    this.canvas.fill();
+    this.canvas.shadowColor = "transparent";
+    this.canvas.stroke();    
+    this.canvas.beginPath();
+    this.canvas.lineWidth = 1;
+    this.canvas.moveTo(30,70);
+    this.canvas.lineTo(40,75);
+    this.canvas.stroke();
   }
   
   
@@ -1607,40 +1593,6 @@ public:
   this.puzzle_board.puzzle = this.puzzle;
   this.puzzle_board.interface = this;
 
-  this.Resize = function() {
-    var info = this.info;
-    var pb = this.puzzle_board;  // @CAO Move these to info??
-  
-    var win_size = Math.min(window.innerWidth * 1.25, window.innerHeight)
-    win_size = Math.max(win_size, info.min_size);
-    info.puzzle_size = win_size * 0.8;
-
-    // These are dynamically sized numbers.
-    info.cell_width = Math.floor( (info.puzzle_size - info.border*2)/9 );  
-    info.region_width = info.cell_width * 3;                                
-    info.board_width = info.cell_width * 9;                                 
-    pb.text_pt = info.cell_width - 2 * info.cell_padding;                 // Font size for text filling a cell.
-    pb.mini_char_width = Math.floor(info.cell_width / 3) - 1;             // Space for smaller characters in each cell
-    pb.mini_text_pt = pb.mini_char_width - 1;                           // Font size for smaller characters
-    info.full_width = info.board_width + info.border*2;
-
-    info.buttons_w = info.full_width/10;     // Width of each button
-    info.buttons_h = info.buttons_w;          // Height of each button (for now, keep them square)
-    var offset = 3;
-    info.buttons_x['rewind']      = offset;
-    info.buttons_x['undo']        = offset + info.buttons_w;
-    info.buttons_x['bookmark']    = offset + info.buttons_w * 2;
-    info.buttons_x['redo']        = offset + info.buttons_w * 3;
-    info.buttons_x['redoall']     = offset + info.buttons_w * 4;
-    info.buttons_x['hint']        = info.buttons_w * 5.5;
-    info.buttons_x['warnings']    = info.buttons_w * 7 - offset;
-    info.buttons_x['autonotes']   = info.buttons_w * 8 - offset;
-    info.buttons_x['toggleclick'] = info.buttons_w * 9 - offset;
-    info.buttons_y = info.puzzle_size + 2;    // Y-value of main button bar
-  }
-
-  this.Resize();
-
 
 //////////////////////////
 //  Construct the Layers
@@ -1649,20 +1601,20 @@ public:
   // Setup the puzzle layer.
 //!
   this.layer_main.add(this.puzzle_board);
-  this.stage.add(this.layer_main);
+//!  this.stage.add(this.layer_main);
 
   // Setup the button layer
 //!  this.layer_buttons = new Kinetic.Layer();
   for (cur_but in this.button_bar) {
     this.layer_buttons.add(this.button_bar[cur_but]);
   }
-  this.stage.add(this.layer_buttons);
+//!  this.stage.add(this.layer_buttons);
 
   // Setup the tooltip layer
-  this.layer_tooltips = new Kinetic.Layer();
+//!
   this.layer_tooltips.add(this.tooltip_box);
   this.layer_tooltips.add(this.tooltip_text);
-  this.stage.add(this.layer_tooltips);
+//!  this.stage.add(this.layer_tooltips);
 }
 
 

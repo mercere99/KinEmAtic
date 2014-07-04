@@ -14,13 +14,26 @@ extern "C" {
   extern void EMK_Alert(const char * in_msg);
   extern void EMK_Setup_OnEvent(int obj_id, const char * trigger, int callback_ptr);
 
+  extern int EMK_Object_GetX(int obj_id);
+  extern int EMK_Object_GetY(int obj_id);
+  extern int EMK_Object_GetWidth(int obj_id);
+  extern int EMK_Object_GetHeight(int obj_id);
+  extern bool EMK_Object_GetVisible(int obj_id);
+  extern double EMK_Object_GetOpacity(int obj_id);
+  extern bool EMK_Object_GetListening(int obj_id);
+  extern double EMK_Object_GetScaleX(int obj_id);
+  extern double EMK_Object_GetScaleY(int obj_id);
+  extern int EMK_Object_GetOffsetX(int obj_id);
+  extern int EMK_Object_GetOffsetY(int obj_id);
+  extern int EMK_Object_GetRotation(int obj_id);
+  extern int EMK_Object_GetDraggable(int obj_id);
   extern void EMK_Object_Draw(int obj_id);
   extern void EMK_Object_DrawLayer(int obj_id);
   extern void EMK_Object_MoveToTop(int obj_id);
 
   extern void EMK_Canvas_SetFillStyle(const char * fs);
   extern void EMK_Canvas_SetLineJoin(const char * lj);
-  extern void EMK_Canvas_SetLineWidth(const char * lw);
+  extern void EMK_Canvas_SetLineWidth(int lw);
   extern void EMK_Canvas_SetFont(const char * font);
   extern void EMK_Canvas_SetTextAlign(const char * ta);
   extern void EMK_Canvas_SetShadowColor(const char * sc);
@@ -42,6 +55,7 @@ extern "C" {
   extern void EMK_Canvas_Scale(double x, double y);
   extern void EMK_Canvas_Translate(int x, int y);
   extern void EMK_Canvas_Stroke();
+  extern void EMK_Canvas_Stroke_Obj(int obj_id);
 
   extern int EMK_Image_Load(const char * file, int callback_ptr);
   extern int EMK_Image_AllLoaded();
@@ -65,7 +79,6 @@ extern "C" {
   extern int EMK_Animation_Build_NoFrame(int callback_ptr, int layer_id);
   extern void EMK_Animation_Start(int obj_id);
 
-  extern int EMK_Custom_Shape_Build(int draw_callback);
   extern void EMK_Shape_SetCornerRadius(int obj_id, int radius);
   extern void EMK_Shape_SetFillPatternImage(int obj_id, int img_id);
   extern void EMK_Shape_SetFillPatternScale(int obj_id, double scale);
@@ -82,6 +95,8 @@ extern "C" {
   extern void EMK_Shape_DoRotate(int obj_id, double rot);
   extern void EMK_Shape_SetDrawFunction(int obj_id, int new_callback);
 
+  extern int EMK_Custom_Shape_Build(int x, int y, int draw_callback);
+
   // These may already be in HTML5
   extern void EMK_Cursor_Set(const char * type);
 }
@@ -89,6 +104,11 @@ extern "C" {
 // Pre-declarations of some classes...
 class emkLayer;
 class emkStage;
+
+
+void emkAlert(const std::string & msg) { EMK_Alert(msg.c_str()); }
+void emkAlert(int val) { EMK_Alert(std::to_string(val).c_str()); }
+void emkAlert(double val) { EMK_Alert(std::to_string(val).c_str()); }
 
 
 // All emscripten-wrapped Kinetic objects should be derived from this base class.
@@ -100,6 +120,21 @@ protected:
   emkObject() : obj_id(-1) {;}  // Protected so that you can't make a direct emkObject.
 public:
   int GetID() const { return obj_id; }
+
+  // Retrieve info from JS Kinetic::Node objects
+  int GetX() const { return EMK_Object_GetX(obj_id); }
+  int GetY() const { return EMK_Object_GetY(obj_id); }
+  int GetWidth() const { return EMK_Object_GetWidth(obj_id); }
+  int GetHeight() const { return EMK_Object_GetHeight(obj_id); }
+  bool GetVisible() const { return EMK_Object_GetVisible(obj_id); }
+  double GetOpacity() const { return EMK_Object_GetOpacity(obj_id); }
+  bool GetListening() const { return EMK_Object_GetListening(obj_id); }
+  double GetScaleX() const { return EMK_Object_GetScaleX(obj_id); }
+  double GetScaleY() const { return EMK_Object_GetScaleY(obj_id); }
+  int GetOffsetX() const { return EMK_Object_GetOffsetX(obj_id); }
+  int GetOffsetY() const { return EMK_Object_GetOffsetY(obj_id); }
+  int GetRotation() const { return EMK_Object_GetRotation(obj_id); }
+  int GetDraggable() const { return EMK_Object_GetDraggable(obj_id); }
 
   void SetLayer(emkObject * _layer) { layer = _layer; }
 
@@ -123,7 +158,7 @@ public:
   // Setting values
   inline static void SetFillStyle(const emk::Color & color) { EMK_Canvas_SetFillStyle(color.AsString().c_str()); }
   inline static void SetLineJoin(const std::string & lj) { EMK_Canvas_SetLineJoin(lj.c_str()); }
-  inline static void SetLineWidth(const std::string & lw) { EMK_Canvas_SetLineWidth(lw.c_str()); }
+  inline static void SetLineWidth(int width) { EMK_Canvas_SetLineWidth(width); }
 
   inline static void SetFont(const std::string & font) { EMK_Canvas_SetFont(font.c_str()); }
   inline static void SetTextAlign(const std::string & align) { EMK_Canvas_SetTextAlign(align.c_str()); }
@@ -163,7 +198,8 @@ public:
  
 
   // Finsihing
-  inline static void Draw() { EMK_Canvas_Stroke(); }
+  inline static void Stroke() { EMK_Canvas_Stroke(); }
+  inline static void Stroke(const emkObject & obj) { EMK_Canvas_Stroke_Obj(obj.GetID()); }
 };
 
 // Mediator for handling callbacks from JS.
@@ -283,20 +319,13 @@ public:
 
 // Build your own shape!
 class emkCustomShape : public emkShape {
-protected:
-  int x;
-  int y;
 public:
   template <class T> emkCustomShape(int _x, int _y, T * target, void (T::*draw_ptr)(emkCanvas &))
-    : x(_x), y(_y)
   {
     emkDrawCallback<T> * new_callback = new emkDrawCallback<T>(target, draw_ptr);
-    obj_id = EMK_Custom_Shape_Build((int) new_callback);
+    obj_id = EMK_Custom_Shape_Build(_x, _y, (int) new_callback);
   }
   virtual ~emkCustomShape() { ; }
-
-  int GetX() const { return x; }
-  int GetY() const { return y; }
 };
 
 

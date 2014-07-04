@@ -25,7 +25,7 @@ public:
   GridExample()
     : stage(1200, 800, "container")
     , title(10, 10, "Grid viewer test!", "30", "Calibri", "black")
-    , grid(50, 50, 600, 600, 60, 60)
+    , grid(50, 50, 600, 600, 60, 60, 60)
   {
     layer.Add(grid);
     layer.Add(title);
