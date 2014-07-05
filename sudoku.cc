@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <stack>
 #include <stdlib.h>
 #include <vector>
 
@@ -252,12 +253,15 @@ private:
   bool do_autonotes;             // Should we automatically provide notes?
   bool toggle_click;             // Should clicks be for autonotes by default?
     
+  std::stack<PuzzleMove> undo_stack;
+  std::stack<PuzzleMove> redo_stack;
+
 public:
   SudokuInterface(const SudokuPuzzle & _puzzle)
     : puzzle(_puzzle)
     , min_size(500), cell_padding(5), border(8), mid_width(4), thin_width(2)
     , buttons_x(9)
-    , puzzle_board(border, border, this, &SudokuInterface::DrawGrid)
+    , puzzle_board(0, 0, this, &SudokuInterface::DrawGrid)
     , stage(1200, 600, "container")
     , cell_id(0), highlight_id(-1), hover_val(-1), bm_level(0), bm_touch(81)
     , do_warnings(false), do_autonotes(false), toggle_click(false)
@@ -265,7 +269,9 @@ public:
     stage.ResizeMax(min_size, min_size);
     ResizeBoard();
 
-    puzzle_board.On("click", this, &SudokuInterface::OnClick);
+    // puzzle_board.On("click", this, &SudokuInterface::OnClick);
+    puzzle_board.On("mousedown", this, &SudokuInterface::OnMousedown);
+    puzzle_board.On("mousemove", this, &SudokuInterface::OnMousemove);
 
     layer_main.Add(puzzle_board);
     stage.Add(layer_main);
@@ -274,9 +280,49 @@ public:
   }
   ~SudokuInterface() { ; }
 
-  void OnClick(const emkEventInfo & info) {
-    emkAlert(info.shift_key);
+  // void OnClick(const emkEventInfo & info) { emkAlert(info.shift_key); }
+
+  void OnMousedown(const emkEventInfo & info)
+  {
+    // @CAO Check to make sure we're in a cell?  Or must we be to trigger this event?
+
+    // If this cell is locked, stop here -- there's nothing to do.
+    if (puzzle.GetLock(cell_id) == true) return;
+
+    // If this cell was previously set, clear its current state.
+    if (puzzle.GetState(cell_id) > 0) puzzle.SetState(cell_id, 0);      
+
+    // Otherwise, see which value is being clicked on and set the state.
+    else {
+      // Shift indicates that pencil-marks should be done instead of setting the value.
+      if (info.shift_key ^ toggle_click) {
+        puzzle.ToggleNote(cell_id, hover_val);
+      } else {
+        puzzle.SetState(cell_id, hover_val);
+      }
+    }
+    
+    layer_main.Draw();
   }
+
+  void OnMousemove(const emkEventInfo & info)
+  {
+    const double rel_x = ((double) (info.layer_x - border)) / (double) cell_width;
+    const double rel_y = ((double) (info.layer_y - border)) / (double) cell_width;
+    const int cur_col = rel_x;
+    const int cur_row = rel_y;
+
+    cell_id = puzzle.GetLayout().ToID(cur_col, cur_row);
+    
+    double cell_x = rel_x - (double) cur_col;
+    double cell_y = rel_y - (double) cur_row;
+
+    hover_val = ((int) (cell_x * 3.0)) + 3 * ((int) (cell_y * 3.0)) + 1;
+
+    layer_main.Draw();
+  }
+
+
 
   void ResizeBoard() {
     int win_size = std::min((int)(stage.GetX() * 1.25), stage.GetY()); // Use the window size.
@@ -290,7 +336,7 @@ public:
 
     puz_text_pt = cell_width - 2 * cell_padding;     // Font size for text filling a cell.
     puz_note_width = cell_width / 3 - 1;             // Space for note characters in each cell
-    puz_note_pt = puz_note_width - 1;           // Font size for smaller characters
+    puz_note_pt = puz_note_width - 1;                // Font size for smaller characters
     full_width = board_width + border*2;
 
     button_w = full_width/10;     // Width of each button
@@ -438,7 +484,7 @@ public:
 
       // Give options for target cell.
       if (cell_id != -1 && puzzle.GetState(cell_id) == 0) {
-        canvas.SetFont(std::to_string(puz_text_pt) + "pt Calibri");
+        canvas.SetFont(std::to_string(puz_note_pt) + "pt Calibri");
         // Print the values from 1 to 9.
         for (int i = 0; i < 3; i++) {
           const int text_x = cell_x + cell_width * (0.30 * i + 0.20);
@@ -471,56 +517,6 @@ public:
 
 /////@@@@@@@@@@@@@@@@@@
 /*
-
-  // Track the basic puzzle information.
-  this.info = {
-
-    // Undo/redo stacks
-    undo_stack: [],
-    redo_stack: [],
-    
-
-  };
-
-
-  this.puzzle_board.on('mousedown', function(evt) {
-    // If this cell is locked, stop here -- there's nothing to do.
-    if (this.puzzle.GetLock(this.cell_id) == 1) return;
-
-    // If this cell was previously set, clear its current state.
-    if (this.puzzle.GetState(this.cell_id) > 0) {
-      this.info.interface.SetState(this.cell_id, 0);      
-    }
-
-    // Otherwise, see which value is being clicked on and set the state.
-    else {
-      // Shift indicates that pencil-marks should be done instead of setting the value.
-      shift_key = evt.shiftKey;
-      if (this.info.toggle_click == true) shift_key = !shift_key;
-
-      if (shift_key == false) {
-        this.info.interface.SetState(this.cell_id, this.hover_val);
-      } else {
-        this.info.interface.ToggleNote(this.cell_id, this.hover_val);
-      }
-    }
-    
-    this.getLayer().draw();  
-  });
-
-  this.puzzle_board.on('mousemove', function(evt) {    
-    var rel_x = (evt.layerX - this.info.border)/this.info.cell_width;
-    var rel_y = (evt.layerY - this.info.border)/this.info.cell_width;
-
-    this.cell_id = this.puzzle.layout.ToID(Math.floor(rel_x), Math.floor(rel_y));
-    
-    var cell_x = rel_x - Math.floor(rel_x);
-    var cell_y = rel_y - Math.floor(rel_y);
-
-    this.hover_val = Math.floor(cell_x * 3) + 3*Math.floor(cell_y * 3) + 1;
-
-    this.getLayer().draw();
-  });
 
 
 ////////////////////////////////////

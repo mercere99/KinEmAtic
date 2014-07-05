@@ -262,6 +262,8 @@ public:
   void DoCallback(int * arg_ptr) {
     emkEventInfo info(arg_ptr[0], arg_ptr[1], arg_ptr[2], arg_ptr[3], arg_ptr[4], arg_ptr[5], arg_ptr[6], arg_ptr[7]);
     (target->*(method_ptr))(info);
+    
+    // (target->*(method_ptr))( *((emkEventInfo *) arg_ptr) );
   }
 };
 
