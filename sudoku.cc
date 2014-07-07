@@ -10,6 +10,7 @@
 #include "Kinetic.h"
 
 #include "tools/const.h"
+#include "utils/Button.h"
 
 using namespace std;
 
@@ -188,16 +189,15 @@ class PuzzleMove {
 public:
   enum Type { VALUE, NOTE, AUTONOTES, BOOKMARK };
 
-private:
   Type type;      // What type of move was this?
   int id;         // ID of cell affected.
   int new_state;  // New state of affected cell, if relevant.
   int prev_state; // Previous state of affected cell, if relevant.
-  bool next;      // Is this move clustered with others for a single undo?
+  PuzzleMove * next;      // Is this move clustered with others for a single undo?
 
 public:
   PuzzleMove(Type _type, int _id, int _new_state, int _prev_state)
-    : type(_type), id(_id), new_state(_new_state), prev_state(_prev_state) { ; }
+    : type(_type), id(_id), new_state(_new_state), prev_state(_prev_state), next(NULL) { ; }
   ~PuzzleMove() { ; }
 };
 
@@ -238,6 +238,15 @@ private:
 
   // Graphical elements
   emkCustomShape puzzle_board; // @CAO Should this be an emkRect to capture mouse clicks?
+  emk::Button button_rewind;
+  emk::Button button_undo;
+  emk::Button button_bookmark;
+  emk::Button button_redo;
+  emk::Button button_redoall;
+  emk::Button button_hint;
+  emk::ToggleButton button_warnings;
+  emk::ToggleButton button_autonotes;
+  emk::ToggleButton button_toggleclick;
   emkLayer layer_main;
   emkLayer layer_buttons;
   emkLayer layer_tooltips;
@@ -253,8 +262,8 @@ private:
   bool do_autonotes;             // Should we automatically provide notes?
   bool toggle_click;             // Should clicks be for autonotes by default?
     
-  std::stack<PuzzleMove> undo_stack;
-  std::stack<PuzzleMove> redo_stack;
+  std::stack<PuzzleMove *> undo_stack;
+  std::stack<PuzzleMove *> redo_stack;
 
 public:
   SudokuInterface(const SudokuPuzzle & _puzzle)
@@ -263,9 +272,10 @@ public:
     , buttons_x(9)
     , puzzle_board(0, 0, this, &SudokuInterface::DrawGrid)
     , stage(1200, 600, "container")
-    , cell_id(0), highlight_id(-1), hover_val(-1), bm_level(0), bm_touch(81)
+    , cell_id(0), highlight_id(-1), hover_val(-1), bm_level(0), bm_touch(1)
     , do_warnings(false), do_autonotes(false), toggle_click(false)
   {
+    bm_touch[0].resize(81);
     stage.ResizeMax(min_size, min_size);
     ResizeBoard();
 
@@ -512,25 +522,20 @@ public:
       canvas.ClosePath();
       canvas.SetupTarget(puzzle_board);
   }
-};
-
-
-/////@@@@@@@@@@@@@@@@@@
-/*
 
 
 ////////////////////////////////////
 //  Button Callbacks
 ////////////////////////////////////
 
-  this.DoRewind = function() {
-    var step = 0, bm_index = -1, last_move;
-    for (var i=this.info.undo_stack.length - 1; i >= 0; i--) {
-      if (my_sudoku.info.undo_stack[i].type == 'bookmark') {
-        bm_index = i;
-        break;
-      }
-      last_move = my_sudoku.info.undo_stack[i];
+  void DoRewind() {
+    /*
+    int step = 0;
+    PuzzleMove * last_move;
+    while (undo_stack.size() > 0) {
+      if (undo_stack.top()->type == PuzzleMove::BOOKMARK) break;
+      last_move = undo_stack.top();
+
       window.setTimeout(function(){ if (my_sudoku.info.undo_stack.length > 0) my_sudoku.DoUndo();},100*step);      
       step++;
     }
@@ -540,79 +545,70 @@ public:
     window.setTimeout(function(){ if (my_sudoku.info.undo_stack.length > 0) my_sudoku.DoRedo();},100*(step+6));
     window.setTimeout(function(){ if (my_sudoku.info.undo_stack.length > 0) my_sudoku.DoUndo();},100*(step+8));
     window.setTimeout(function(){ if (my_sudoku.info.undo_stack.length > 0) my_sudoku.DoUndo();},100*(step+10));
+    */
   }
 
-  this.DoUndo = function() {
-    // DEBUG!
-    if (this.info.undo_stack.length == 0) {
-      alert('Error! Undo called with no actions available!');
-      return;
-    }
-    
+/////@@@@@@@@@@@@@@@@@@
+
+
+  void DoUndo() {
     // Grab the last action done.
-    var undo_item = this.info.undo_stack.pop();
-    var value_id = -1;
+    PuzzleMove * undo_item = undo_stack.top();
 
     // Move it to the redo stack
-    this.info.redo_stack.push(undo_item);
+    undo_stack.pop();
+    redo_stack.push(undo_item);
 
     // Undo each associated action.
-    while (undo_item !== undefined) {
+    while (undo_item != NULL) {
       // Reverse this item.
-      if (undo_item.type == 'value') {
-        touched_id = undo_item.id;
-        this.puzzle.SetState(undo_item.id, undo_item.prev_state);
-      } else if (undo_item.type == 'note') {
-        this.puzzle.ToggleNote(undo_item.id, undo_item.new_state);
-      } else if (undo_item.type == 'bookmark') {
-        this.info.bm_level--;
-      } else if (undo_item.type == 'autonotes') {
-        this.info.do_autonotes = !this.info.do_autonotes;
-        this.button_bar.autonotes.toggle_on = !this.button_bar.autonotes.toggle_on;
-      } else {
-        alert('Error: Unknown type "' + undo_item.type + '" in undo stack!');
-      }
+      if (undo_item->type == PuzzleMove::VALUE) {
+        puzzle.SetState(undo_item->id, undo_item->prev_state);        
+        bm_touch[bm_level][undo_item->id]--;                  // Update bookmark tracking...
+      } else if (undo_item->type == PuzzleMove::NOTE) {
+        puzzle.ToggleNote(undo_item->id, undo_item->new_state);
+      } else if (undo_item->type == PuzzleMove::BOOKMARK) {
+        bm_level--;
+      } else if (undo_item->type == PuzzleMove::AUTONOTES) {
+        do_autonotes = !do_autonotes;
+        button_autonotes.Toggle();
+      } 
 
-      undo_item = undo_item.next;
+      undo_item = undo_item->next;
     }
     
     // Update buttons that have to do with the undo and redo stacks.
-    if (this.info.undo_stack.length == 0) {      // If the undo stack is empty, gray-out related buttons
-      this.button_bar.rewind.inactive = true;
-      this.button_bar.undo.inactive = true;
-      this.button_bar.bookmark.inactive = true;
+    if (undo_stack.size() == 0) {      // If the undo stack is empty, gray-out related buttons
+      button_rewind.SetActive(false);
+      button_undo.SetActive(false);
+      button_bookmark.SetActive(false);
     }
-    else if (this.info.undo_stack.slice(-1)[0].type == 'bookmark') {
-      this.button_bar.bookmark.inactive = true;    // Gray-out the bookmark button
+    else if (undo_stack.top()->type == PuzzleMove::BOOKMARK) {
+      button_bookmark.SetActive(false);
     }
     else {
-      this.button_bar.bookmark.inactive = false;   // Make sure bookmark button is usable.
+      button_bookmark.SetActive(true);
     }
 
-    this.button_bar.redo.inactive = false;
-    this.button_bar.redoall.inactive = false;
-    
-    // Update bookmark tracking...
-    if (value_id != -1) {
-      var bm_level = this.info.bm_touch[this.info.bm_level];
-      bm_level[value_id]--;
-    }
+    button_redo.SetActive(false);
+    button_redoall.SetActive(false);
     
     // Update Warnings
-    if (this.info.do_warnings == true) this.UpdateWarnings();
+    if (do_warnings == true) UpdateWarnings();
 
     // And redraw everything that's changed.
-    this.layer_main.draw();
-    this.layer_buttons.draw();
+    layer_main.Draw();
+    layer_buttons.Draw();
   }
 
+/*
   this.DoBookmark = function() {
-    this.info.bm_level++;
-    this.SetupBookmarkLevel(this.info.bm_level);
+    bm_level++;
+    this.SetupBookmarkLevel(bm_level);
 
     // Put this move into the undo stack.
-    var move_info = new cPuzzleMove('bookmark', -1, -1, -1, -1);
-    this.info.undo_stack.push(move_info);
+    var move_info = new cPuzzleMove(PuzzleMove::BOOKMARK, -1, -1, -1, -1);
+    undo_stack.push(move_info);
 
     // Gray-out the bookmark
     this.button_bar.bookmark.inactive = true;
@@ -622,17 +618,17 @@ public:
 
   this.DoRedo = function() {
     // DEBUG!
-    if (this.info.redo_stack.length == 0) {
+    if (redo_stack.length == 0) {
       alert('Error! Redo called with no actions available.  Canceling');
       return;
     }
     
-    var redo_item = this.info.redo_stack.pop();
+    var redo_item = redo_stack.pop();
     var value_id = -1;
     var is_bookmark = false;
     
     // Move it to the undo stack
-    this.info.undo_stack.push(redo_item);
+    undo_stack.push(redo_item);
 
     // Redo each item in this group.
     while (redo_item !== undefined) {
@@ -641,12 +637,12 @@ public:
         value_id = redo_item.id;
       } else if (redo_item.type == 'note') {
         this.puzzle.ToggleNote(redo_item.id, redo_item.new_state);      
-      } else if (redo_item.type == 'bookmark') {
-        this.info.bm_level++;
+      } else if (redo_item.type == PuzzleMove::BOOKMARK) {
+        bm_level++;
         is_bookmark = true;
-        this.SetupBookmarkLevel(this.info.bm_level);
+        this.SetupBookmarkLevel(bm_level);
       } else if (redo_item.type == 'autonotes') {
-        this.info.do_autonotes = !this.info.do_autonotes;
+        do_autonotes = !do_autonotes;
         this.button_bar.autonotes.toggle_on = !this.button_bar.autonotes.toggle_on;
       } else {
         alert('Error: Unknown type "' + undo_item.type + '" in undo stack!');
@@ -659,14 +655,14 @@ public:
     this.button_bar.rewind.inactive = false;
     this.button_bar.undo.inactive = false;
     this.button_bar.bookmark.inactive = false;
-    if (this.info.redo_stack.length == 0) {
+    if (redo_stack.length == 0) {
       this.button_bar.redo.inactive = true;
       this.button_bar.redoall.inactive = true;
     }
     
     // Track with this bookmark info.
     if (value_id != -1) {
-      var bm_level = this.info.bm_touch[this.info.bm_level];
+      var bm_level = bm_touch[bm_level];
       bm_level[value_id]++;
     }
     
@@ -676,7 +672,7 @@ public:
     }
 
     // Update Warnings
-    if (this.info.do_warnings == true) this.UpdateWarnings();
+    if (do_warnings == true) this.UpdateWarnings();
 
     // And redraw everything that's changed.
     this.layer_main.draw();
@@ -684,7 +680,7 @@ public:
   }
 
   this.DoRedoall = function() {
-    for (var i=0; i < this.info.redo_stack.length; i++) {
+    for (var i=0; i < redo_stack.length; i++) {
       window.setTimeout(function(){ if (my_sudoku.info.redo_stack.length > 0) my_sudoku.DoRedo();},100*i);
     }
   }
@@ -695,22 +691,22 @@ public:
   }
 
   this.DoWarnings = function() {
-    this.info.do_warnings = !this.info.do_warnings;
-    if (this.info.do_warnings == true) this.UpdateWarnings();
+    do_warnings = !do_warnings;
+    if (do_warnings == true) this.UpdateWarnings();
     else this.ClearWarnings();
     this.layer_main.draw();
   }
 
   this.DoAutonotes = function() {
     var move_info = new cPuzzleMove('autonotes', -1, -1, -1, -1);
-    this.info.undo_stack.push(move_info);
-    this.info.do_autonotes = !this.info.do_autonotes;
-    if (this.info.do_autonotes == true) this.UpdateAutonotes();
+    undo_stack.push(move_info);
+    do_autonotes = !do_autonotes;
+    if (do_autonotes == true) this.UpdateAutonotes();
     this.layer_main.draw();
   }
 
   this.DoToggleclick = function() {
-    this.info.toggle_click = !(this.info.toggle_click);
+    toggle_click = !(toggle_click);
   }
 
 
@@ -738,14 +734,14 @@ public:
       drawFunc: function(canvas) {
         this.canvas = canvas.getContext();
  
-        this.x = this.info.buttons_x[this.name];
-        this.y = this.info.buttons_y;
-        this.x2 = this.x + this.info.button_w;
-        this.y2 = this.y + this.info.button_w;
-        this.x_in = this.x + this.info.buttons_r;
-        this.y_in = this.y + this.info.buttons_r;
-        this.x2_in = this.x2 - this.info.buttons_r;
-        this.y2_in = this.y2 - this.info.buttons_r;
+        this.x = buttons_x[this.name];
+        this.y = buttons_y;
+        this.x2 = this.x + button_w;
+        this.y2 = this.y + button_w;
+        this.x_in = this.x + buttons_r;
+        this.y_in = this.y + buttons_r;
+        this.x2_in = this.x2 - buttons_r;
+        this.y2_in = this.y2 - buttons_r;
   
         // Set the button color
         if (this.mouse_down == true) this.canvas.fillStyle = 'blue';
@@ -763,16 +759,16 @@ public:
   	    else this.canvas.lineWidth = 2;
   	    if (this.round_corners.ul == true) {
     	    this.canvas.moveTo(this.x, this.y_in);
-    	    this.canvas.arc(this.x_in, this.y_in, this.info.buttons_r, emk::PI, 3*emk::PI/2, false);
+    	    this.canvas.arc(this.x_in, this.y_in, buttons_r, emk::PI, 3*emk::PI/2, false);
     	  } else this.canvas.moveTo(this.x, this.y);
     	  if (this.round_corners.ur == true) {
-    	    this.canvas.arc(this.x2_in, this.y_in, this.info.buttons_r, 3*emk::PI/2, 0, false);      	  
+    	    this.canvas.arc(this.x2_in, this.y_in, buttons_r, 3*emk::PI/2, 0, false);      	  
     	  } else this.canvas.lineTo(this.x2, this.y);
     	  if (this.round_corners.lr == true) {
-    	    this.canvas.arc(this.x2_in, this.y2_in, this.info.buttons_r, 0, emk::PI/2, false);      	  
+    	    this.canvas.arc(this.x2_in, this.y2_in, buttons_r, 0, emk::PI/2, false);      	  
   	    } else this.canvas.lineTo(this.x2, this.y2);
     	  if (this.round_corners.ll == true) {
-    	    this.canvas.arc(this.x_in, this.y2_in, this.info.buttons_r, emk::PI/2, emk::PI, false);
+    	    this.canvas.arc(this.x_in, this.y2_in, buttons_r, emk::PI/2, emk::PI, false);
   	    } else this.canvas.lineTo(this.x, this.y2);
   	    this.canvas.closePath();
   	    this.canvas.fill();
@@ -782,7 +778,7 @@ public:
       	// First, shift the icon to be on a 100x100 grid, and shift back afterward.
       	this.canvas.save();
         this.canvas.translate(this.x+5, this.y+5);
-        this.canvas.scale((this.info.button_w - 10)/100, (this.info.button_w - 10)/100);    
+        this.canvas.scale((button_w - 10)/100, (button_w - 10)/100);    
   	    this.DrawIcon();
   	    //this.canvas.setTransform(1, 0, 0, 1, 0, 0);
   	    this.canvas.restore();
@@ -792,16 +788,16 @@ public:
   	    this.canvas.lineWidth = 2;
   	    if (this.round_corners.ul == true) {
     	    this.canvas.moveTo(this.x, this.y_in);
-    	    this.canvas.arc(this.x_in, this.y_in, this.info.buttons_r, emk::PI, 3*emk::PI/2, false);
+    	    this.canvas.arc(this.x_in, this.y_in, buttons_r, emk::PI, 3*emk::PI/2, false);
     	  } else this.canvas.moveTo(this.x, this.y);
     	  if (this.round_corners.ur == true) {
-    	    this.canvas.arc(this.x2_in, this.y_in, this.info.buttons_r, 3*emk::PI/2, 0, false);      	  
+    	    this.canvas.arc(this.x2_in, this.y_in, buttons_r, 3*emk::PI/2, 0, false);      	  
     	  } else this.canvas.lineTo(this.x2, this.y);
     	  if (this.round_corners.lr == true) {
-    	    this.canvas.arc(this.x2_in, this.y2_in, this.info.buttons_r, 0, emk::PI/2, false);      	  
+    	    this.canvas.arc(this.x2_in, this.y2_in, buttons_r, 0, emk::PI/2, false);      	  
   	    } else this.canvas.lineTo(this.x2, this.y2);
     	  if (this.round_corners.ll == true) {
-    	    this.canvas.arc(this.x_in, this.y2_in, this.info.buttons_r, emk::PI/2, emk::PI, false);
+    	    this.canvas.arc(this.x_in, this.y2_in, buttons_r, emk::PI/2, emk::PI, false);
   	    } else this.canvas.lineTo(this.x, this.y2);
   	    this.canvas.closePath();
   	    if (this.inactive == true) {
@@ -841,25 +837,25 @@ public:
       this.Trigger();
       this.UpdateHover();
       this.getLayer().draw();
-      this.info.interface.layer_main.draw();
-      this.info.interface.UpdateTooltip(this.x, this.y, this.tooltip);
+      interface.layer_main.draw();
+      interface.UpdateTooltip(this.x, this.y, this.tooltip);
     });
     
     this.button_bar[cur_button].on('mouseenter', function(evt) {
       this.mouse_over = true;
       this.UpdateHover();
       this.getLayer().draw();
-      this.info.interface.layer_main.draw();
-      this.info.interface.UpdateTooltip(this.x, this.y, this.tooltip);
+      interface.layer_main.draw();
+      interface.UpdateTooltip(this.x, this.y, this.tooltip);
     });
   
     this.button_bar[cur_button].on('mouseleave', function(evt) {
       this.mouse_over = false;
       this.mouse_down = false;
-      this.info.highlight_id = -1;
+      highlight_id = -1;
       this.getLayer().draw();
-      this.info.interface.layer_main.draw();
-      this.info.interface.HideTooltip();
+      interface.layer_main.draw();
+      interface.HideTooltip();
     });
   }
 
@@ -899,36 +895,36 @@ public:
 
   // Setup hover tooltips and highlights.
   this.button_bar.undo.UpdateHover = function() {
-    if (this.info.undo_stack.length == 0) {
-      this.info.highlight_id = -1;
+    if (undo_stack.length == 0) {
+      highlight_id = -1;
       this.tooltip = "Nothing to UNDO";
       return;
     }
-    var stack_top = this.info.undo_stack.slice(-1)[0];
+    var stack_top = undo_stack.slice(-1)[0];
     if (stack_top.type == 'value') {
-      this.info.highlight_id = stack_top.id;
+      highlight_id = stack_top.id;
       this.tooltip = "UNDO value = " + stack_top.new_state;
     }
     if (stack_top.type == 'note') {
-      this.info.highlight_id = stack_top.id;
+      highlight_id = stack_top.id;
       this.tooltip = "UNDO pencilmark toggle " + stack_top.new_state;
     }
-    if (stack_top.type == 'bookmark') {
+    if (stack_top.type == PuzzleMove::BOOKMARK) {
       this.tooltip = "UNDO bookmark";      
-      this.info.highlight_id = -1;
+      highlight_id = -1;
     }
     if (stack_top.type == 'autonotes') {
       this.tooltip = "UNDO pencil marks";      
-      this.info.highlight_id = -1;
+      highlight_id = -1;
     }
   }
 
   this.button_bar.bookmark.UpdateHover = function() {
-    if (this.info.undo_stack.length == 0) {
+    if (undo_stack.length == 0) {
       this.tooltip = "Start already has BOOKMARK";
       return;
     }  
-    if (this.info.undo_stack.slice(-1)[0].type == 'bookmark') {      
+    if (undo_stack.slice(-1)[0].type == PuzzleMove::BOOKMARK) {      
       this.tooltip = "Already at BOOKMARK";
       return;
     }
@@ -936,39 +932,39 @@ public:
   }
 
   this.button_bar.redo.UpdateHover = function() {
-    if (this.info.redo_stack.length == 0) {
-      this.info.highlight_id = -1;
+    if (redo_stack.length == 0) {
+      highlight_id = -1;
       this.tooltip = "Nothing to REDO";
       return;
     }
-    var stack_top = this.info.redo_stack.slice(-1)[0];
+    var stack_top = redo_stack.slice(-1)[0];
     if (stack_top.type == 'value') {
-      this.info.highlight_id = stack_top.id;
+      highlight_id = stack_top.id;
       this.tooltip = "REDO value = " + stack_top.new_state;
     }
     if (stack_top.type == 'note') {
-      this.info.highlight_id = stack_top.id;
+      highlight_id = stack_top.id;
       this.tooltip = "REDO pencilmark toggle " + stack_top.new_state;
     }
-    if (stack_top.type == 'bookmark') {
+    if (stack_top.type == PuzzleMove::BOOKMARK) {
       this.tooltip = "REDO bookmark";      
-      this.info.highlight_id = -1;
+      highlight_id = -1;
     }
     if (stack_top.type == 'autonotes') {
       this.tooltip = "REDO pencil marks";      
-      this.info.highlight_id = -1;
+      highlight_id = -1;
     }
   }
   // Setup function calls
-  this.button_bar.rewind.Trigger      = function() { this.info.interface.DoRewind(); }
-  this.button_bar.undo.Trigger        = function() { this.info.interface.DoUndo(); }
-  this.button_bar.bookmark.Trigger    = function() { this.info.interface.DoBookmark(); }
-  this.button_bar.redo.Trigger        = function() { this.info.interface.DoRedo(); }
-  this.button_bar.redoall.Trigger     = function() { this.info.interface.DoRedoall(); }
-  this.button_bar.hint.Trigger        = function() { this.info.interface.DoHint(); }
-  this.button_bar.warnings.Trigger    = function() { this.info.interface.DoWarnings(); }
-  this.button_bar.autonotes.Trigger   = function() { this.info.interface.DoAutonotes(); }
-  this.button_bar.toggleclick.Trigger = function() { this.info.interface.DoToggleclick(); }
+  this.button_bar.rewind.Trigger      = function() { interface.DoRewind(); }
+  this.button_bar.undo.Trigger        = function() { interface.DoUndo(); }
+  this.button_bar.bookmark.Trigger    = function() { interface.DoBookmark(); }
+  this.button_bar.redo.Trigger        = function() { interface.DoRedo(); }
+  this.button_bar.redoall.Trigger     = function() { interface.DoRedoall(); }
+  this.button_bar.hint.Trigger        = function() { interface.DoHint(); }
+  this.button_bar.warnings.Trigger    = function() { interface.DoWarnings(); }
+  this.button_bar.autonotes.Trigger   = function() { interface.DoAutonotes(); }
+  this.button_bar.toggleclick.Trigger = function() { interface.DoToggleclick(); }
 
   // Setup icons
   // Note: All icons are adjusted to be on a 100x100 grid.
@@ -1347,11 +1343,11 @@ public:
     // Setup the undo information
     var old_state = this.puzzle.GetState(id);
     var move_info = new cPuzzleMove('value', id, new_state, old_state);
-    this.info.undo_stack.push(move_info);
+    undo_stack.push(move_info);
 
     // Clear the redo stack, since current state information has changed.
-    while (this.info.redo_stack.length > 0) {
-      this.info.redo_stack.pop();
+    while (redo_stack.length > 0) {
+      redo_stack.pop();
     }
 
     // Update buttons that have to do with there being an undo stack.
@@ -1363,15 +1359,15 @@ public:
     this.layer_buttons.draw();
 
     // Track with this bookmark.
-    var bm_level = this.info.bm_touch[this.info.bm_level];
+    var bm_level = bm_touch[bm_level];
     bm_level[id]++;
 
     // Change the actual state of the puzzle.
     this.puzzle.SetState(id, new_state);
 
     // See if this new state causes changes with warnings or autonotes.
-    if (this.info.do_warnings == true) this.UpdateWarnings();
-    if (this.info.do_autonotes == true) this.UpdateAutonotes(id, old_state);
+    if (do_warnings == true) this.UpdateWarnings();
+    if (do_autonotes == true) this.UpdateAutonotes(id, old_state);
   }
 
   this.SetStateCR = function(col, row, new_state)
@@ -1386,16 +1382,16 @@ public:
     // Setup the undo information
     var move_info = new cPuzzleMove('note', id, value);
     if (with_last == false) {
-      this.info.undo_stack.push(move_info);
+      undo_stack.push(move_info);
     } else {
-      var prev_move = this.info.undo_stack.slice(-1)[0];
+      var prev_move = undo_stack.slice(-1)[0];
       move_info.next = prev_move.next;
       prev_move.next = move_info;
     }
 
     // Clear the redo stack, since current state information has changed.
-    while (this.info.redo_stack.length > 0) {
-      this.info.redo_stack.pop();
+    while (redo_stack.length > 0) {
+      redo_stack.pop();
     }
 
     // Update buttons that have to do with there being an undo stack.
@@ -1407,7 +1403,7 @@ public:
     this.layer_buttons.draw();
 
     // Track with this bookmark.
-    var bm_level = this.info.bm_touch[this.info.bm_level];
+    var bm_level = bm_touch[bm_level];
     bm_level[id]++;
 
     // And change the actual state of the puzzle.
@@ -1415,9 +1411,9 @@ public:
   }
   
   this.SetupBookmarkLevel = function(level) {
-    this.info.bm_level = level;
-    this.info.bm_touch[level] = [];
-    var cur_level = this.info.bm_touch[level];
+    bm_level = level;
+    bm_touch[level] = [];
+    var cur_level = bm_touch[level];
     for (var i = 0; i < this.puzzle.layout.num_cells; i++) {
       cur_level[i] = 0;
     }
@@ -1432,9 +1428,12 @@ public:
     }
   }
   this.ClearWarnings(); // Start with no warnings.
+*/
 
-  this.UpdateWarnings = function()
+
+  void UpdateWarnings()
   {
+    /*
     // First clear existing warnings, then determine where they should be.
     this.ClearWarnings();
 
@@ -1459,8 +1458,12 @@ public:
         this.puzzle.cell_array[cur_id].warn = true;
       }
     }
+    */
   }
   
+};
+
+/*
   this.UpdateAllAutonotes = function()
   {    
     // Loop through and turn all cells on to begin with.
@@ -1513,7 +1516,7 @@ public:
 
   this.DoKeypress = function(cur_key, shift_key)
   {
-    if (this.info.toggle_click == true) shift_key = !shift_key;
+    if (toggle_click == true) shift_key = !shift_key;
     if (shift_key == true) cur_key += 1000;
   
     switch (cur_key) {
