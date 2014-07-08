@@ -270,16 +270,16 @@ public:
     : puzzle(_puzzle)
     , min_size(500), cell_padding(5), border(8), mid_width(4), thin_width(2)
     , puzzle_board(0, 0, this, &SudokuInterface::DrawGrid)
-
-    , button_rewind(this, DoRewind)
-    , button_undo(this, DoUndo)
-    , button_bookmark(this, DoBookmark)
-    , button_redo(this, DoRedo)
-    , button_redoall(this, DoRedoall)
-    , button_hint(this, DoHint)
-    , button_warnings(this, DoWarnings)
-    , button_autonotes(this, DoAutonotes)
-    , button_toggleclick(this, Toggleclick)
+      
+    , button_rewind(this, &SudokuInterface::DoRewind)
+    , button_undo(this, &SudokuInterface::DoUndo)
+    , button_bookmark(this, &SudokuInterface::DoBookmark)
+    , button_redo(this, &SudokuInterface::DoRedo)
+    , button_redoall(this, &SudokuInterface::DoRedoall)
+    , button_hint(this, &SudokuInterface::DoHint)
+    , button_warnings(this, &SudokuInterface::DoWarnings)
+    , button_autonotes(this, &SudokuInterface::DoAutonotes)
+    , button_toggleclick(this, &SudokuInterface::DoToggleclick)
 
     , stage(1200, 600, "container")
     , cell_id(0), highlight_id(-1), hover_val(-1), bm_level(-1), bm_touch(0)
@@ -693,6 +693,10 @@ public:
     layer_main.Draw();
   }
 
+  void DoToggleclick() {
+    toggle_click = !toggle_click;
+  }
+  
 /*
 
 ////////////////////////////////////////
