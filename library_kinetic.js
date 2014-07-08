@@ -520,5 +520,12 @@ mergeInto(LibraryManager.library, {
     EMK_Cursor_Set: function(cur_type) {
         cur_type  = Pointer_stringify(cur_type);
         document.body.style.cursor = cur_type;
+    },
+
+
+    // Stand-alone functions
+    EMK_ScheduleCallback__deps: ['$emk_info'],
+    EMK_ScheduleCallback: function(callback_ptr, delay) {
+        window.setTimeout(function() { emkJSDoCallback(callback_ptr); }, delay);
     }
 });

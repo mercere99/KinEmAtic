@@ -206,16 +206,22 @@ public:
 };
 
 // Mediator for handling callbacks from JS.
-class emkJSCallback : public emkObject {
+class emkCallback : public emkObject {
+private:
+  bool is_disposible;
 public:
-  emkJSCallback() { ; }
-  virtual ~emkJSCallback() { ; }
+  emkCallback() { ; }
+  virtual ~emkCallback() { ; }
 
   virtual void DoCallback(int * arg_ptr) = 0;
+
+  bool IsDisposible() const { return is_disposible; }
+
+  void SetDisposible(bool _in=true) { is_disposible = _in; }
 };
 
 
-template <class T> class emkMethodCallback : public emkJSCallback {
+template <class T> class emkMethodCallback : public emkCallback {
 private:
   T * target;
   void (T::*method_ptr)();
@@ -247,7 +253,7 @@ public:
     , alt_key(alt), ctrl_key(ctrl), meta_key(meta), shift_key(shift) { ; }
 };
 
-template <class T> class emkMethodCallback_Event : public emkJSCallback {
+template <class T> class emkMethodCallback_Event : public emkCallback {
 private:
   T * target;
   void (T::*method_ptr)(const emkEventInfo &);
@@ -268,7 +274,7 @@ public:
 };
 
 
-template <class T> class emkDrawCallback : public emkJSCallback {
+template <class T> class emkDrawCallback : public emkCallback {
 private:
   T * target;
   void (T::*method_ptr)(emkCanvas &);
@@ -304,11 +310,14 @@ template<class T> void emkObject::On(const std::string & trigger, T * target,
 
 extern "C" void emkJSDoCallback(int cb_ptr, int arg_ptr)
 {
-  ((emkJSCallback *) cb_ptr)->DoCallback((int *) arg_ptr);
+  emkCallback * const cb_obj = (emkCallback *) cb_ptr;
+  cb_obj->DoCallback((int *) arg_ptr);
+  if (cb_obj->IsDisposible()) delete cb_obj;
+  // ((emkCallback *) cb_ptr)->DoCallback((int *) arg_ptr);
 }
 
 
-class emkImage : public emkJSCallback {
+class emkImage : public emkCallback {
 private:
   const std::string filename;
   mutable bool has_loaded;
@@ -330,8 +339,9 @@ public:
 class emkShape : public emkObject {
 protected:
   const emkImage * image;  // If we are drawing an image, keep track of it to make sure it loads.
+  emkCallback * draw_callback; // If we override the draw callback, keep track of it here.
 
-  emkShape() : image(NULL) { ; } // The default Shape constructor should only be called from derived classes.
+  emkShape() : image(NULL), draw_callback(NULL) { ; } // The default Shape constructor should only be called from derived classes.
 public:
   virtual ~emkShape() { ; }
 
@@ -356,8 +366,9 @@ public:
 
   // Override the drawing of this shape.
   template<class T> void SetDrawFunction(T * target, void (T::*draw_ptr)(emkCanvas &) ) {
-    emkDrawCallback<T> * new_callback = new emkDrawCallback<T>(target, draw_ptr);
-    EMK_Shape_SetDrawFunction(obj_id, (int) new_callback);
+    if (draw_callback != NULL) delete draw_callback;
+    draw_callback = new emkDrawCallback<T>(target, draw_ptr);
+    EMK_Shape_SetDrawFunction(obj_id, (int) draw_callback);
   }
 
   void DoRotate(double rot) { EMK_Shape_DoRotate(obj_id, rot); }
@@ -369,6 +380,11 @@ public:
 // Build your own shape!
 class emkCustomShape : public emkShape {
 public:
+  template <class T> emkCustomShape(T * target, void (T::*draw_ptr)(emkCanvas &))
+  {
+    draw_callback = new emkDrawCallback<T>(target, draw_ptr);
+    obj_id = EMK_Custom_Shape_Build(0, 0, (int) draw_callback);
+  }
   template <class T> emkCustomShape(int _x, int _y, T * target, void (T::*draw_ptr)(emkCanvas &))
   {
     emkDrawCallback<T> * new_callback = new emkDrawCallback<T>(target, draw_ptr);
@@ -478,7 +494,7 @@ public:
 };
 
 
-template <class T> class emkAnimation : public emkJSCallback {
+template <class T> class emkAnimation : public emkCallback {
 private:
   T * target;
   void (T::*method_ptr)(const emkAnimationFrame &);

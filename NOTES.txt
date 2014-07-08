@@ -15,6 +15,10 @@ Optimizations:
 * Grid class would be faster if it only did updates rather than full redraws with every change.
 * When we pass back an object from JS, can we just plug in the memory block rather than copying it?
 
+Cleanup:
+* Setup a map<string, emkJSCallback *> to keep track of "On" callbacks and replace them properly (i.e., deleting the
+  older ones) when needed.
+
 
 Other libraries to think about:
 d3.js
