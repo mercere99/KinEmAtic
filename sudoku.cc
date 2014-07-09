@@ -13,15 +13,13 @@
 #include "tools/functions.h"
 #include "utils/Button.h"
 
-using namespace std;
-
 class SudokuLayout {
 private:
   const int grid_x;
   const int grid_y;
   const int num_symbols;
   const int num_cells;
-  vector<int *> region_array;
+  std::vector<int *> region_array;
 public:
   SudokuLayout(int _x, int _y, int _s) : grid_x(_x), grid_y(_y), num_symbols(_s), num_cells(_x*_y)
   {
@@ -78,10 +76,10 @@ public:
 class SudokuCell {
 private:
   int state;
-  vector<bool> notes;
+  std::vector<bool> notes;
   bool warn;
   bool lock;
-  vector<int> region_ids;
+  std::vector<int> region_ids;
 public:
   SudokuCell() : state(0), notes(10), lock(false) {
     for (int i = 1; i <= 9; i++) notes[i] = false;
@@ -91,12 +89,12 @@ public:
   ~SudokuCell() { ; }
   
   int GetState() const { return state; }
-  const vector<bool> & GetNotes() { return notes; }
+  const std::vector<bool> & GetNotes() { return notes; }
   bool GetNote(int id) const { return notes[id]; }
   bool GetWarn() const { return warn; }
   bool GetLock() const { return lock; }
   int GetNumRegions() const { return (int) region_ids.size(); }
-  const vector<int> & GetRegionIDs() { return region_ids; }
+  const std::vector<int> & GetRegionIDs() { return region_ids; }
   int GetRegionID(int pos) { return region_ids[pos]; }
   
   void SetState(int _state) { state = _state; }
@@ -112,8 +110,8 @@ public:
 class SudokuPuzzle {
 private:
   const SudokuLayout & layout;
-  vector<SudokuCell> cell_array;      // Info about the state of each cell in the puzzle
-  vector<vector<int> > region_track; // Which values are set in each region?
+  std::vector<SudokuCell> cell_array;      // Info about the state of each cell in the puzzle
+  std::vector<std::vector<int> > region_track; // Which values are set in each region?
 
 public:
   SudokuPuzzle(const SudokuLayout & _layout)
@@ -257,7 +255,7 @@ private:
   int highlight_id;              // Is there a cell we should be highlighting?
   int hover_val;                 // The note value being hovered over...
   int bm_level;                  // Number of bookmarks set so far.
-  vector<vector<int> > bm_touch; // How many times has each cell been touched in each bookmark level?
+  std::vector<std::vector<int> > bm_touch; // How many times has each cell been touched in each bookmark level?
   bool do_warnings;              // Should we warn when there is an obvious error?
   bool do_autonotes;             // Should we automatically provide notes?
   bool toggle_click;             // Should clicks be for autonotes by default?
@@ -269,7 +267,7 @@ public:
   SudokuInterface(const SudokuPuzzle & _puzzle)
     : puzzle(_puzzle)
     , min_size(500), cell_padding(5), border(8), mid_width(4), thin_width(2)
-    , puzzle_board(0, 0, this, &SudokuInterface::DrawGrid)
+    , puzzle_board(this, &SudokuInterface::DrawGrid)
       
     , button_rewind(this, &SudokuInterface::DoRewind)
     , button_undo(this, &SudokuInterface::DoUndo)
@@ -290,11 +288,52 @@ public:
     stage.ResizeMax(min_size, min_size);
     ResizeBoard();
 
+    // Setup rounded corners on buttons... Layout: { | | | | } { } { | | }
+    button_rewind.SetRoundCorners(true, false, false, true);
+    button_undo.SetRoundCorners(false, false, false, false);
+    button_bookmark.SetRoundCorners(false, false, false, false);
+    button_redo.SetRoundCorners(false, false, false, false);
+    button_redoall.SetRoundCorners(false, true, true, false);
+    button_hint.SetRoundCorners(true, true, true, true);
+    button_warnings.SetRoundCorners(true, false, false, true);
+    button_autonotes.SetRoundCorners(false, false, false, false);
+    button_toggleclick.SetRoundCorners(false, true, true, false);
+
+    // Some buttons start out inactive.
+    button_rewind.SetActive(false);
+    button_undo.SetActive(false);
+    button_bookmark.SetActive(false);
+    button_redo.SetActive(false);
+    button_redoall.SetActive(false);
+
+    // Setup button tooltips
+    button_rewind.SetToolTip("Rewind to bookmark");
+    button_undo.SetToolTip("Undo");
+    button_bookmark.SetToolTip("Add bookmark");
+    button_redo.SetToolTip("Redo");
+    button_redoall.SetToolTip("Redo ALL");
+    button_hint.SetToolTip("Get HINT");
+    button_warnings.SetToolTip("Toggle highlighting of conflicts");
+    button_autonotes.SetToolTip("Toggle automatic pencilmarks");
+    button_toggleclick.SetToolTip("Toggle answers & pencilmarks");
+
+    // Setup button icons
+    button_rewind.SetupDrawIcon(this, &SudokuInterface::DrawIcon_Rewind);
+    button_undo.SetupDrawIcon(this, &SudokuInterface::DrawIcon_Undo);
+    button_bookmark.SetupDrawIcon(this, &SudokuInterface::DrawIcon_Bookmark);
+    button_redo.SetupDrawIcon(this, &SudokuInterface::DrawIcon_Redo);
+    button_redoall.SetupDrawIcon(this, &SudokuInterface::DrawIcon_Redoall);
+    button_hint.SetupDrawIcon(this, &SudokuInterface::DrawIcon_Hint);
+    button_warnings.SetupDrawIcon(this, &SudokuInterface::DrawIcon_Warnings);
+    button_autonotes.SetupDrawIcon(this, &SudokuInterface::DrawIcon_Autonotes);
+    button_toggleclick.SetupDrawIcon(this, &SudokuInterface::DrawIcon_Toggleclick);
+
     // puzzle_board.On("click", this, &SudokuInterface::OnClick);
     puzzle_board.On("mousedown", this, &SudokuInterface::OnMousedown);
     puzzle_board.On("mousemove", this, &SudokuInterface::OnMousemove);
 
     layer_main.Add(puzzle_board);
+    layer_main.Add(button_rewind);
     stage.Add(layer_main);
     stage.Add(layer_buttons);
     stage.Add(layer_tooltips);
@@ -305,8 +344,6 @@ public:
 
   void OnMousedown(const emkEventInfo & info)
   {
-    // @CAO Check to make sure we're in a cell?  Or must we be to trigger this event?
-
     // If this cell is locked, stop here -- there's nothing to do.
     if (puzzle.GetLock(cell_id) == true) return;
 
@@ -452,7 +489,7 @@ public:
     canvas.BeginPath();
 
     // Setup this bookmark level for coloring.
-    const vector<int> & bm_touch_cur = bm_touch[bm_level];
+    const std::vector<int> & bm_touch_cur = bm_touch[bm_level];
 
     // Fill in the values
     canvas.SetTextAlign("center");
@@ -473,7 +510,7 @@ public:
               if (do_autonotes) canvas.SetFillStyle("#00AA00");
               else canvas.SetFillStyle("#006600");
               const int text_y = cur_y + puz_note_width * (mj+1);
-              canvas.Text(to_string(val), text_x, text_y);
+              canvas.Text(std::to_string(val), text_x, text_y);
             }
           }	  
         }
@@ -697,565 +734,388 @@ public:
     toggle_click = !toggle_click;
   }
   
-/*
-
-////////////////////////////////////////
-//  Build the button bar INFASTRUCTURE
-////////////////////////////////////////
-
-  for (cur_button in this.button_names) {
-    this.button_bar[cur_button] = new Kinetic.Shape({
-      drawFunc: function(canvas) {
-
-        const int buttons_r = button_w/5;        // Corner radius of each button
-
-        this.canvas = canvas.getContext();
- 
-        this.x = buttons_x[this.name];
-        this.y = buttons_y;
-        this.x2 = this.x + button_w;
-        this.y2 = this.y + button_w;
-        this.x_in = this.x + buttons_r;
-        this.y_in = this.y + buttons_r;
-        this.x2_in = this.x2 - buttons_r;
-        this.y2_in = this.y2 - buttons_r;
-  
-        // Set the button color
-        if (this.mouse_down == true) this.canvas.fillStyle = 'blue';
-  	    else if (this.mouse_over == true) {
-  	      if (this.toggle_on == true) this.canvas.fillStyle = 'rgb(250,250,200)';
-  	      else this.canvas.fillStyle = 'rgb(240,240,255)';
-  	    }
-  	    else {
-  	      if (this.toggle_on == true) this.canvas.fillStyle = 'rgb(255,255,100)';
-  	      else this.canvas.fillStyle = 'rgb(255,250,245)';
-  	    }
-  
-  	    this.canvas.beginPath();
-  	    if (this.toggle_on == true) this.canvas.lineWidth = 4;
-  	    else this.canvas.lineWidth = 2;
-  	    if (this.round_corners.ul == true) {
-    	    this.canvas.moveTo(this.x, this.y_in);
-    	    this.canvas.arc(this.x_in, this.y_in, buttons_r, emk::PI, 3*emk::PI/2, false);
-    	  } else this.canvas.moveTo(this.x, this.y);
-    	  if (this.round_corners.ur == true) {
-    	    this.canvas.arc(this.x2_in, this.y_in, buttons_r, 3*emk::PI/2, 0, false);      	  
-    	  } else this.canvas.lineTo(this.x2, this.y);
-    	  if (this.round_corners.lr == true) {
-    	    this.canvas.arc(this.x2_in, this.y2_in, buttons_r, 0, emk::PI/2, false);      	  
-  	    } else this.canvas.lineTo(this.x2, this.y2);
-    	  if (this.round_corners.ll == true) {
-    	    this.canvas.arc(this.x_in, this.y2_in, buttons_r, emk::PI/2, emk::PI, false);
-  	    } else this.canvas.lineTo(this.x, this.y2);
-  	    this.canvas.closePath();
-  	    this.canvas.fill();
-  	    this.canvas.stroke();
-  
-      	// Draw the appropriate icon.
-      	// First, shift the icon to be on a 100x100 grid, and shift back afterward.
-      	this.canvas.save();
-        this.canvas.translate(this.x+5, this.y+5);
-        this.canvas.scale((button_w - 10)/100, (button_w - 10)/100);    
-  	    this.DrawIcon();
-  	    //this.canvas.setTransform(1, 0, 0, 1, 0, 0);
-  	    this.canvas.restore();
-  
-  	    // Make the button clickable (or grayed out!)
-  	    this.canvas.beginPath();
-  	    this.canvas.lineWidth = 2;
-  	    if (this.round_corners.ul == true) {
-    	    this.canvas.moveTo(this.x, this.y_in);
-    	    this.canvas.arc(this.x_in, this.y_in, buttons_r, emk::PI, 3*emk::PI/2, false);
-    	  } else this.canvas.moveTo(this.x, this.y);
-    	  if (this.round_corners.ur == true) {
-    	    this.canvas.arc(this.x2_in, this.y_in, buttons_r, 3*emk::PI/2, 0, false);      	  
-    	  } else this.canvas.lineTo(this.x2, this.y);
-    	  if (this.round_corners.lr == true) {
-    	    this.canvas.arc(this.x2_in, this.y2_in, buttons_r, 0, emk::PI/2, false);      	  
-  	    } else this.canvas.lineTo(this.x2, this.y2);
-    	  if (this.round_corners.ll == true) {
-    	    this.canvas.arc(this.x_in, this.y2_in, buttons_r, emk::PI/2, emk::PI, false);
-  	    } else this.canvas.lineTo(this.x, this.y2);
-  	    this.canvas.closePath();
-  	    if (this.inactive == true) {
-    	    this.canvas.fillStyle = 'rgba(200,200,200,0.5)';
-    	    this.canvas.fill();
-  	    }
-  	    canvas.fillStroke(this);
-      }
-    });
-    this.button_bar[cur_button].name = cur_button;
-    
-    this.button_bar[cur_button].info = this.info;
-    this.button_bar[cur_button].mouse_down = false;
-    this.button_bar[cur_button].mouse_over = false;
-    this.button_bar[cur_button].toggle = false;
-    this.button_bar[cur_button].toggle_on = false;
-    this.button_bar[cur_button].inactive = false;
-    this.button_bar[cur_button].round_corners = {ul:false, ur:false, ll:false, lr:false};
-
-    this.button_bar[cur_button].UpdateHover = function() {
-      // This is a stub to be filled in for each button as need.
-      // In particular, you may want to adjust:
-      // * Highlight in grid (this is automatically turned off when you leave the hover)
-      // * Tool-tip message.
-    }
-    
-//!!!!    this.button_bar[cur_button].on('mousedown', function(evt) {
-//!!!!      if (this.inactive == true) return;
-//!!!!      this.mouse_down = true;
-//!!!!      this.getLayer().draw();
-//!!!!    });
-  
-//!!!!    this.button_bar[cur_button].on('mouseup', function(evt) {
-//!!!!      if (this.inactive == true) return;
-//!!!!      this.mouse_down = false;
-//!!!!      if (this.toggle) this.toggle_on = !(this.toggle_on);
-//!!!!      this.Trigger();
-//!!!!      this.UpdateHover();
-//!!!!      this.getLayer().draw();
-//!!!!      interface.layer_main.draw();
-//!!!!      interface.UpdateTooltip(this.x, this.y, this.tooltip);
-//!!!!    });
-    
-    this.button_bar[cur_button].on('mouseenter', function(evt) {
-      this.mouse_over = true;
-      this.UpdateHover();
-      this.getLayer().draw();
-      interface.layer_main.draw();
-      interface.UpdateTooltip(this.x, this.y, this.tooltip);
-    });
-  
-    this.button_bar[cur_button].on('mouseleave', function(evt) {
-      this.mouse_over = false;
-      this.mouse_down = false;
-      highlight_id = -1;
-      this.getLayer().draw();
-      interface.layer_main.draw();
-      interface.HideTooltip();
-    });
-  }
 
 ///////////////////////
 //  Button Finishing!
 ///////////////////////
 
-  // Setup rounded corners
-  button_rewind.round_corners = {ul:true, ur:false, ll:true, lr:false};
-  button_redoall.round_corners = {ul:false, ur:true, ll:false, lr:true};
-  this.button_bar.hint.round_corners = {ul:true, ur:true, ll:true, lr:true};
-  this.button_bar.warnings.round_corners = {ul:true, ur:false, ll:true, lr:false};
-  this.button_bar.toggleclick.round_corners = {ul:false, ur:true, ll:false, lr:true};
-
-  // Setup toggle buttons
-  this.button_bar.warnings.toggle = true;
-  button_autonotes.toggle = true;
-  this.button_bar.toggleclick.toggle = true;
-
-  // Setup inactive buttons
-  button_rewind.inactive = true;
-  button_undo.inactive = true;
-  button_bookmark.inactive = true;
-  button_redo.inactive = true;
-  button_redoall.inactive = true;
-
-  // Setup tooltips
-  button_rewind.tooltip = 'Rewind to bookmark';
-  button_undo.tooltip = 'Undo';
-  button_bookmark.tooltip = 'Add bookmark';
-  button_redo.tooltip = 'Redo';
-  button_redoall.tooltip = 'Redo ALL';
-  this.button_bar.hint.tooltip = 'Get HINT';
-  this.button_bar.warnings.tooltip = 'Toggle highlighting of conflicts';
-  button_autonotes.tooltip = 'Toggle automatic pencilmarks';
-  this.button_bar.toggleclick.tooltip = 'Toggle answers & pencilmarks';
-
-  // Setup hover tooltips and highlights.
-  button_undo.UpdateHover = function() {
-    if (undo_stack.length == 0) {
+  void UpdateHover_Undo() {
+    if (undo_stack.size() == 0) {
       highlight_id = -1;
-      this.tooltip = "Nothing to UNDO";
+      button_undo.SetToolTip("Nothing to UNDO");
       return;
     }
-    var stack_top = undo_stack.slice(-1)[0];
-    if (stack_top.type == 'value') {
-      highlight_id = stack_top.id;
-      this.tooltip = "UNDO value = " + stack_top.new_state;
+    PuzzleMove * stack_top = undo_stack.top();
+    if (stack_top->type == PuzzleMove::VALUE) {
+      highlight_id = stack_top->id;
+      button_undo.SetToolTip(std::string("UNDO value = ") + std::to_string(stack_top->new_state));
     }
-    if (stack_top.type == PuzzleMove::NOTE) {
-      highlight_id = stack_top.id;
-      this.tooltip = "UNDO pencilmark toggle " + stack_top.new_state;
+    if (stack_top->type == PuzzleMove::NOTE) {
+      highlight_id = stack_top->id;
+      button_undo.SetToolTip(std::string("UNDO pencilmark toggle ") + std::to_string(stack_top->new_state));
     }
-    if (stack_top.type == PuzzleMove::BOOKMARK) {
-      this.tooltip = "UNDO bookmark";      
+    if (stack_top->type == PuzzleMove::BOOKMARK) {
+      button_undo.SetToolTip("UNDO bookmark");
       highlight_id = -1;
     }
-    if (stack_top.type == PuzzleMove::AUTONOTES) {
-      this.tooltip = "UNDO pencil marks";      
+    if (stack_top->type == PuzzleMove::AUTONOTES) {
+      button_undo.SetToolTip("UNDO pencil marks");
       highlight_id = -1;
     }
   }
 
-  button_bookmark.UpdateHover = function() {
-    if (undo_stack.length == 0) {
-      this.tooltip = "Start already has BOOKMARK";
+  void UpdateHover_Bookmark() {
+    if (undo_stack.size() == 0) {
+      button_bookmark.SetToolTip("No BOOKMARK needed at start");
       return;
     }  
-    if (undo_stack.slice(-1)[0].type == PuzzleMove::BOOKMARK) {      
-      this.tooltip = "Already at BOOKMARK";
+    if (undo_stack.top()->type == PuzzleMove::BOOKMARK) {      
+      button_bookmark.SetToolTip("Already at BOOKMARK");
       return;
     }
-    this.tooltip = "Add BOOKMARK";
+    button_bookmark.SetToolTip("Add BOOKMARK");
   }
-
-  button_redo.UpdateHover = function() {
-    if (redo_stack.length == 0) {
+  
+  void UpdateHover_Redo() {
+    if (redo_stack.size() == 0) {
       highlight_id = -1;
-      this.tooltip = "Nothing to REDO";
+      button_redo.SetToolTip("Nothing to REDO");
       return;
     }
-    var stack_top = redo_stack.slice(-1)[0];
-    if (stack_top.type == 'value') {
-      highlight_id = stack_top.id;
-      this.tooltip = "REDO value = " + stack_top.new_state;
+    PuzzleMove * stack_top = redo_stack.top();
+    if (stack_top->type == PuzzleMove::VALUE) {
+      highlight_id = stack_top->id;
+      button_redo.SetToolTip(std::string("REDO value = ") + std::to_string(stack_top->new_state));
     }
-    if (stack_top.type == PuzzleMove::NOTE) {
-      highlight_id = stack_top.id;
-      this.tooltip = "REDO pencilmark toggle " + stack_top.new_state;
+    if (stack_top->type == PuzzleMove::NOTE) {
+      highlight_id = stack_top->id;
+      button_redo.SetToolTip(std::string("REDO pencilmark toggle ") + std::to_string(stack_top->new_state));
     }
-    if (stack_top.type == PuzzleMove::BOOKMARK) {
-      this.tooltip = "REDO bookmark";      
+    if (stack_top->type == PuzzleMove::BOOKMARK) {
+      button_redo.SetToolTip("REDO bookmark");
       highlight_id = -1;
     }
-    if (stack_top.type == PuzzleMove::AUTONOTES) {
-      this.tooltip = "REDO pencil marks";      
+    if (stack_top->type == PuzzleMove::AUTONOTES) {
+      button_redo.SetToolTip("REDO pencil marks");
       highlight_id = -1;
     }
   }
-  // Setup function calls
-  button_rewind.Trigger      = function() { interface.DoRewind(); }
-  button_undo.Trigger        = function() { interface.DoUndo(); }
-  button_bookmark.Trigger    = function() { interface.DoBookmark(); }
-  button_redo.Trigger        = function() { interface.DoRedo(); }
-  button_redoall.Trigger     = function() { interface.DoRedoall(); }
-  this.button_bar.hint.Trigger        = function() { interface.DoHint(); }
-  this.button_bar.warnings.Trigger    = function() { interface.DoWarnings(); }
-  button_autonotes.Trigger   = function() { interface.DoAutonotes(); }
 
   // Setup icons
   // Note: All icons are adjusted to be on a 100x100 grid.
   
-  button_rewind.DrawIcon = function() {
+  void DrawIcon_Rewind(emkCanvas & canvas) {
     // Draw the bookmark
-    this.canvas.beginPath();
-    this.canvas.lineWidth = 3;
-    this.canvas.fillStyle = '#F5DEB3';
-    this.canvas.moveTo(5, 100);
-    this.canvas.arc(15, 10, 10, emk::PI, emk::PI*1.5);
-    this.canvas.arc(35, 10, 10, emk::PI*1.5, 0);
-    this.canvas.lineTo(45, 100);
-    this.canvas.lineTo(25, 90);
-    this.canvas.closePath();
-    this.canvas.shadowColor = "#999";
-    this.canvas.shadowBlur = 4;
-    this.canvas.shadowOffsetX = 3;
-    this.canvas.shadowOffsetY = 3;
-    this.canvas.fill();
-    this.canvas.shadowColor = "transparent";
-    this.canvas.stroke();
+    canvas.BeginPath();
+    canvas.SetLineWidth(3);
+    canvas.SetFillStyle("#F5DEB3");
+    canvas.MoveTo(5, 100);
+    canvas.Arc(15, 10, 10, emk::PI, emk::PI*1.5);
+    canvas.Arc(35, 10, 10, emk::PI*1.5, 0);
+    canvas.LineTo(45, 100);
+    canvas.LineTo(25, 90);
+    canvas.ClosePath();
+    canvas.SetShadowColor("#999");
+    canvas.SetShadowBlur(4);
+    canvas.SetShadowOffsetX(3);
+    canvas.SetShadowOffsetY(3);
+    canvas.Fill();
+    canvas.SetShadowColor("transparent");
+    canvas.Stroke();
 
     // Draw Arrow 1
-    this.canvas.beginPath();
-    this.canvas.lineWidth = 2;
-    this.canvas.fillStyle = 'white';
-    this.canvas.moveTo(45, 30);
-    this.canvas.lineTo(65, 10);
-    this.canvas.lineTo(65, 20);
-    this.canvas.lineTo(95, 20);
-    this.canvas.lineTo(95, 40);
-    this.canvas.lineTo(65, 40);
-    this.canvas.lineTo(65, 50);
-    this.canvas.closePath();
-    this.canvas.shadowColor = "#999";
-    this.canvas.shadowBlur = 4;
-    this.canvas.shadowOffsetX = 3;
-    this.canvas.shadowOffsetY = 3;
-    this.canvas.fill();
-    this.canvas.shadowColor = "transparent";
-    this.canvas.stroke();
+    canvas.BeginPath();
+    canvas.SetLineWidth(2);
+    canvas.SetFillStyle("white");
+    canvas.MoveTo(45, 30);
+    canvas.LineTo(65, 10);
+    canvas.LineTo(65, 20);
+    canvas.LineTo(95, 20);
+    canvas.LineTo(95, 40);
+    canvas.LineTo(65, 40);
+    canvas.LineTo(65, 50);
+    canvas.ClosePath();
+    canvas.SetShadowColor("#999");
+    canvas.SetShadowBlur(4);
+    canvas.SetShadowOffsetX(3);
+    canvas.SetShadowOffsetY(3);
+    canvas.Fill();
+    canvas.SetShadowColor("transparent");
+    canvas.Stroke();
     
     // Draw Arrow 2  
-    this.canvas.beginPath();
-    this.canvas.lineWidth = 2;
-    this.canvas.fillStyle = 'white';
-    this.canvas.moveTo(45, 75);
-    this.canvas.lineTo(65, 55);
-    this.canvas.lineTo(65, 65);
-    this.canvas.lineTo(95, 65);
-    this.canvas.lineTo(95, 85);
-    this.canvas.lineTo(65, 85);
-    this.canvas.lineTo(65, 95);
-    this.canvas.closePath();
-    this.canvas.shadowColor = "#999";
-    this.canvas.shadowBlur = 4;
-    this.canvas.shadowOffsetX = 3;
-    this.canvas.shadowOffsetY = 3;
-    this.canvas.fill();
-    this.canvas.shadowColor = "transparent";
-    this.canvas.stroke();
+    canvas.BeginPath();
+    canvas.SetLineWidth(2);
+    canvas.SetFillStyle("white");
+    canvas.MoveTo(45, 75);
+    canvas.LineTo(65, 55);
+    canvas.LineTo(65, 65);
+    canvas.LineTo(95, 65);
+    canvas.LineTo(95, 85);
+    canvas.LineTo(65, 85);
+    canvas.LineTo(65, 95);
+    canvas.ClosePath();
+    canvas.SetShadowColor("#999");
+    canvas.SetShadowBlur(4);
+    canvas.SetShadowOffsetX(3);
+    canvas.SetShadowOffsetY(3);
+    canvas.Fill();
+    canvas.SetShadowColor("transparent");
+    canvas.Stroke();
   }
 
-  button_undo.DrawIcon = function() {
-    this.canvas.beginPath();
-    this.canvas.fillStyle = 'white';
-    this.canvas.moveTo(30,95);              // Arrow point
-    this.canvas.lineTo(50,75);               // Angle up on right side of arrow
-    this.canvas.lineTo(40,75);               // Back in to base of arrow head
-    this.canvas.lineTo(40,45);               // Up to bend in arrow
-    this.canvas.arc(55, 45, 15, emk::PI, 0); // Lower bend
-    this.canvas.lineTo(70,95);
-    this.canvas.lineTo(90,95);
-    this.canvas.lineTo(90,45);
-    this.canvas.arc(55, 45, 35, 0, emk::PI, true);
-    this.canvas.lineTo(20,75);
-    this.canvas.lineTo(10,75);
+  void DrawIcon_Undo(emkCanvas & canvas) {
+    canvas.BeginPath();
+    canvas.SetFillStyle("white");
+    canvas.MoveTo(30,95);              // Arrow point
+    canvas.LineTo(50,75);               // Angle up on right side of arrow
+    canvas.LineTo(40,75);               // Back in to base of arrow head
+    canvas.LineTo(40,45);               // Up to bend in arrow
+    canvas.Arc(55, 45, 15, emk::PI, 0); // Lower bend
+    canvas.LineTo(70,95);
+    canvas.LineTo(90,95);
+    canvas.LineTo(90,45);
+    canvas.Arc(55, 45, 35, 0, emk::PI, true);
+    canvas.LineTo(20,75);
+    canvas.LineTo(10,75);
 
-    this.canvas.closePath();
-    this.canvas.shadowColor = "#999";
-    this.canvas.shadowBlur = 4;
-    this.canvas.shadowOffsetX = 2;
-    this.canvas.shadowOffsetY = 2;
-    this.canvas.fill();
-    this.canvas.shadowColor = "transparent";
-    this.canvas.stroke();    
+    canvas.ClosePath();
+    canvas.SetShadowColor("#999");
+    canvas.SetShadowBlur(4);
+    canvas.SetShadowOffsetX(2);
+    canvas.SetShadowOffsetY(2);
+    canvas.Fill();
+    canvas.SetShadowColor("transparent");
+    canvas.Stroke();    
   }
   
-  button_bookmark.DrawIcon = function() {
+
+  void DrawIcon_Bookmark(emkCanvas & canvas) {
     // Grid
-    var gridx = 5;
-    var gridy = 10;
-    var gridw = 90;
-    var gridh = 90;
-    var grid_lines = 6;
-    var grid_step = gridw / (grid_lines - 1);
+    const int gridx = 5;
+    const int gridy = 10;
+    const int gridw = 90;
+    const int gridh = 90;
+    const int grid_lines = 6;
+    const int grid_step = gridw / (grid_lines - 1);
 
-    var gridx2 = gridx + gridw;
-    var gridy2 = gridy + gridh;
+    const int gridx2 = gridx + gridw;
+    const int gridy2 = gridy + gridh;
     
-    this.canvas.beginPath();
-    this.canvas.lineWidth = 3;
-    this.canvas.fillStyle = 'white';
-    this.canvas.rect(gridx, gridy, gridw, gridh);
-    this.canvas.fill();
-    for (var i = 0; i < grid_lines; i++) {
-	    this.canvas.moveTo(gridx,             gridy+grid_step*i);
-	    this.canvas.lineTo(gridx2,            gridy+grid_step*i);
-	    this.canvas.moveTo(gridx+grid_step*i, gridy);
-	    this.canvas.lineTo(gridx+grid_step*i, gridy2);
+    canvas.BeginPath();
+    canvas.SetLineWidth(3);
+    canvas.SetFillStyle("white");
+    canvas.Rect(gridx, gridy, gridw, gridh);
+    canvas.Fill();
+    for (int i = 0; i < grid_lines; i++) {
+	    canvas.MoveTo(gridx,             gridy+grid_step*i);
+	    canvas.LineTo(gridx2,            gridy+grid_step*i);
+	    canvas.MoveTo(gridx+grid_step*i, gridy);
+	    canvas.LineTo(gridx+grid_step*i, gridy2);
     }
-    this.canvas.stroke();    
+    canvas.Stroke();    
 
-    this.canvas.beginPath();
-    this.canvas.lineWidth = 3;
-    this.canvas.fillStyle = '#F5DEB3';
-    this.canvas.moveTo(15, 100);
-    this.canvas.arc(25, 10, 10, emk::PI, emk::PI*1.5);
-    this.canvas.arc(45, 10, 10, emk::PI*1.5, 0);
-    this.canvas.lineTo(55, 100);
-    this.canvas.lineTo(35, 90);
-    this.canvas.closePath();
-    this.canvas.shadowColor = "#999";
-    this.canvas.shadowBlur = 4;
-    this.canvas.shadowOffsetX = 3;
-    this.canvas.shadowOffsetY = 3;
-    this.canvas.fill();
-    this.canvas.shadowColor = "transparent";
-    this.canvas.stroke();
+    canvas.BeginPath();
+    canvas.SetLineWidth(3);
+    canvas.SetFillStyle("#F5DEB3");
+    canvas.MoveTo(15, 100);
+    canvas.Arc(25, 10, 10, emk::PI, emk::PI*1.5);
+    canvas.Arc(45, 10, 10, emk::PI*1.5, 0);
+    canvas.LineTo(55, 100);
+    canvas.LineTo(35, 90);
+    canvas.ClosePath();
+    canvas.SetShadowColor("#999");
+    canvas.SetShadowBlur(4);
+    canvas.SetShadowOffsetX(3);
+    canvas.SetShadowOffsetY(3);
+    canvas.Fill();
+    canvas.SetShadowColor("transparent");
+    canvas.Stroke();
   }
 
-  button_redo.DrawIcon = function() {
-    this.canvas.beginPath();
-    this.canvas.fillStyle = 'white';
-    this.canvas.moveTo(70,95);              // Arrow point
-    this.canvas.lineTo(50,75);               // Angle up on right side of arrow
-    this.canvas.lineTo(60,75);               // Back in to base of arrow head
-    this.canvas.lineTo(60,45);               // Up to bend in arrow
-    this.canvas.arc(45, 45, 15, 0, emk::PI, true); // Lower bend
-    this.canvas.lineTo(30,95);
-    this.canvas.lineTo(10,95);
-    this.canvas.lineTo(10,45);
-    this.canvas.arc(45, 45, 35, emk::PI, 0, false);
-    this.canvas.lineTo(80,75);
-    this.canvas.lineTo(90,75);
+  void DrawIcon_Redo(emkCanvas & canvas) {
+    canvas.BeginPath();
+    canvas.SetFillStyle("white");
+    canvas.MoveTo(70,95);              // Arrow point
+    canvas.LineTo(50,75);               // Angle up on right side of arrow
+    canvas.LineTo(60,75);               // Back in to base of arrow head
+    canvas.LineTo(60,45);               // Up to bend in arrow
+    canvas.Arc(45, 45, 15, 0, emk::PI, true); // Lower bend
+    canvas.LineTo(30,95);
+    canvas.LineTo(10,95);
+    canvas.LineTo(10,45);
+    canvas.Arc(45, 45, 35, emk::PI, 0, false);
+    canvas.LineTo(80,75);
+    canvas.LineTo(90,75);
 
-    this.canvas.closePath();
-    this.canvas.shadowColor = "#999";
-    this.canvas.shadowBlur = 4;
-    this.canvas.shadowOffsetX = 2;
-    this.canvas.shadowOffsetY = 2;
-    this.canvas.fill();
-    this.canvas.shadowColor = "transparent";
-    this.canvas.stroke();    
+    canvas.ClosePath();
+    canvas.SetShadowColor("#999");
+    canvas.SetShadowBlur(4);
+    canvas.SetShadowOffsetX(2);
+    canvas.SetShadowOffsetY(2);
+    canvas.Fill();
+    canvas.SetShadowColor("transparent");
+    canvas.Stroke();    
   }
   
-  button_redoall.DrawIcon = function() {
+  void DrawIcon_Redoall(emkCanvas & canvas) {
     // Arrow 1
-    this.canvas.beginPath();
-    this.canvas.lineWidth = 2;
-    this.canvas.fillStyle = 'white';
-    this.canvas.moveTo(70, 30);
-    this.canvas.lineTo(50, 10);
-    this.canvas.lineTo(50, 20);
-    this.canvas.lineTo(5, 20);
-    this.canvas.lineTo(5, 40);
-    this.canvas.lineTo(50, 40);
-    this.canvas.lineTo(50, 50);
-    this.canvas.closePath();
-    this.canvas.shadowColor = "#999";
-    this.canvas.shadowBlur = 4;
-    this.canvas.shadowOffsetX = 2;
-    this.canvas.shadowOffsetY = 2;
-    this.canvas.fill();
-    this.canvas.shadowColor = "transparent";
-    this.canvas.stroke();
+    canvas.BeginPath();
+    canvas.SetLineWidth(2);
+    canvas.SetFillStyle("white");
+    canvas.MoveTo(70, 30);
+    canvas.LineTo(50, 10);
+    canvas.LineTo(50, 20);
+    canvas.LineTo(5, 20);
+    canvas.LineTo(5, 40);
+    canvas.LineTo(50, 40);
+    canvas.LineTo(50, 50);
+    canvas.ClosePath();
+    canvas.SetShadowColor("#999");
+    canvas.SetShadowBlur(4);
+    canvas.SetShadowOffsetX(2);
+    canvas.SetShadowOffsetY(2);
+    canvas.Fill();
+    canvas.SetShadowColor("transparent");
+    canvas.Stroke();
 
     // Arrow 2
-    this.canvas.beginPath();
-    this.canvas.lineWidth = 2;
-    this.canvas.fillStyle = 'white';
-    this.canvas.moveTo(70, 75);
-    this.canvas.lineTo(50, 55);
-    this.canvas.lineTo(50, 65);
-    this.canvas.lineTo(5, 65);
-    this.canvas.lineTo(5, 85);
-    this.canvas.lineTo(50, 85);
-    this.canvas.lineTo(50, 95);
-    this.canvas.closePath();
-    this.canvas.shadowColor = "#999";
-    this.canvas.shadowBlur = 4;
-    this.canvas.shadowOffsetX = 2;
-    this.canvas.shadowOffsetY = 2;
-    this.canvas.fill();
-    this.canvas.shadowColor = "transparent";
-    this.canvas.stroke();
+    canvas.BeginPath();
+    canvas.SetLineWidth(2);
+    canvas.SetFillStyle("white");
+    canvas.MoveTo(70, 75);
+    canvas.LineTo(50, 55);
+    canvas.LineTo(50, 65);
+    canvas.LineTo(5, 65);
+    canvas.LineTo(5, 85);
+    canvas.LineTo(50, 85);
+    canvas.LineTo(50, 95);
+    canvas.ClosePath();
+    canvas.SetShadowColor("#999");
+    canvas.SetShadowBlur(4);
+    canvas.SetShadowOffsetX(2);
+    canvas.SetShadowOffsetY(2);
+    canvas.Fill();
+    canvas.SetShadowColor("transparent");
+    canvas.Stroke();
 
     // Wall
-    this.canvas.beginPath();
-    this.canvas.rect(75, 0, 10, 100);
-    this.canvas.fillStyle = '#999';
-    this.canvas.shadowColor = "#999";
-    this.canvas.shadowBlur = 4;
-    this.canvas.shadowOffsetX = 2;
-    this.canvas.shadowOffsetY = 2;
-    this.canvas.fill();
-    this.canvas.shadowColor = "transparent";
-    this.canvas.stroke();
+    canvas.BeginPath();
+    canvas.Rect(75, 0, 10, 100);
+    canvas.SetFillStyle("#999");
+    canvas.SetShadowColor("#999");
+    canvas.SetShadowBlur(4);
+    canvas.SetShadowOffsetX(2);
+    canvas.SetShadowOffsetY(2);
+    canvas.Fill();
+    canvas.SetShadowColor("transparent");
+    canvas.Stroke();
   }
   
-  this.button_bar.hint.DrawIcon = function() {
-    this.canvas.font = '95pt Helvetica';
-    this.canvas.fillStyle = 'green';
-    this.canvas.textAlign = 'center';
-    this.canvas.shadowColor = "#999";
-    this.canvas.shadowBlur = 4;
-    this.canvas.shadowOffsetX = 2;
-    this.canvas.shadowOffsetY = 2;
-    this.canvas.fillText('?', 50, 95);
-    this.canvas.shadowColor = "transparent";
-    this.canvas.stroke();
+  void DrawIcon_Hint(emkCanvas & canvas) {
+    canvas.SetFont("95pt Helvetica");
+    canvas.SetFillStyle("green");
+    canvas.SetTextAlign("center");
+    canvas.SetShadowColor("#999");
+    canvas.SetShadowBlur(4);
+    canvas.SetShadowOffsetX(2);
+    canvas.SetShadowOffsetY(2);
+    canvas.Text("?", 50, 95);
+    canvas.SetShadowColor("transparent");
+    canvas.Stroke();
   }
   
-  this.button_bar.warnings.DrawIcon = function() {
-    this.canvas.font = '95pt Helvetica';
-    this.canvas.fillStyle = '#800';
-    this.canvas.textAlign = 'center';
-    this.canvas.shadowColor = "#999";
-    this.canvas.shadowBlur = 4;
-    this.canvas.shadowOffsetX = 2;
-    this.canvas.shadowOffsetY = 2;
-    this.canvas.fillText('!', 45, 95);
-    this.canvas.shadowColor = "transparent";
-    this.canvas.stroke();
+  void DrawIcon_Warnings(emkCanvas & canvas) {
+    canvas.SetFont("95pt Helvetica");
+    canvas.SetFillStyle("#800");
+    canvas.SetTextAlign("center");
+    canvas.SetShadowColor("#999");
+    canvas.SetShadowBlur(4);
+    canvas.SetShadowOffsetX(2);
+    canvas.SetShadowOffsetY(2);
+    canvas.Text("!", 45, 95);
+    canvas.SetShadowColor("transparent");
+    canvas.Stroke();
   }
   
-  button_autonotes.DrawIcon = function() {
+  void DrawIcon_Autonotes(emkCanvas & canvas) {
     // Board
-    this.canvas.beginPath();
-    this.canvas.lineWidth = 2;
-    this.canvas.moveTo(10, 0);
-    this.canvas.lineTo(10, 100);
-    this.canvas.moveTo(90, 0);
-    this.canvas.lineTo(90, 100);
-    this.canvas.moveTo(0, 10);
-    this.canvas.lineTo(100, 10);
-    this.canvas.moveTo(0, 90);
-    this.canvas.lineTo(100, 90);
-    this.canvas.stroke();
+    canvas.BeginPath();
+    canvas.SetLineWidth(2);
+    canvas.MoveTo(10, 0);
+    canvas.LineTo(10, 100);
+    canvas.MoveTo(90, 0);
+    canvas.LineTo(90, 100);
+    canvas.MoveTo(0, 10);
+    canvas.LineTo(100, 10);
+    canvas.MoveTo(0, 90);
+    canvas.LineTo(100, 90);
+    canvas.Stroke();
 
     // Pencil marks    
-    this.canvas.font = '20pt Helvetica';
-    this.canvas.fillStyle = '#008800';
-    this.canvas.textAlign = 'center';
-    this.canvas.fillText('?', 25, 35);
-    this.canvas.fillText('?', 50, 35);
-    this.canvas.fillText('?', 75, 35);
-    this.canvas.fillText('?', 25, 60);
-    this.canvas.fillText('?', 50, 60);
-    this.canvas.fillText('?', 75, 60);
-    this.canvas.fillText('?', 25, 85);
-    this.canvas.fillText('?', 50, 85);
-    this.canvas.fillText('?', 75, 85);
-    this.canvas.stroke();
+    canvas.SetFont("20pt Helvetica");
+    canvas.SetFillStyle("#008800");
+    canvas.SetTextAlign("center");
+    canvas.Text("?", 25, 35);
+    canvas.Text("?", 50, 35);
+    canvas.Text("?", 75, 35);
+    canvas.Text("?", 25, 60);
+    canvas.Text("?", 50, 60);
+    canvas.Text("?", 75, 60);
+    canvas.Text("?", 25, 85);
+    canvas.Text("?", 50, 85);
+    canvas.Text("?", 75, 85);
+    canvas.Stroke();
   }
   
-  this.button_bar.toggleclick.DrawIcon = function() {
+  void DrawIcon_Toggleclick(emkCanvas & canvas) {
     // Board
-    this.canvas.beginPath();
-    this.canvas.lineWidth = 2;
-    this.canvas.moveTo(10, 0);
-    this.canvas.lineTo(10, 100);
-    this.canvas.moveTo(90, 0);
-    this.canvas.lineTo(90, 100);
-    this.canvas.moveTo(0, 10);
-    this.canvas.lineTo(100, 10);
-    this.canvas.moveTo(0, 90);
-    this.canvas.lineTo(100, 90);
-    this.canvas.stroke();
+    canvas.BeginPath();
+    canvas.SetLineWidth(2);
+    canvas.MoveTo(10, 0);
+    canvas.LineTo(10, 100);
+    canvas.MoveTo(90, 0);
+    canvas.LineTo(90, 100);
+    canvas.MoveTo(0, 10);
+    canvas.LineTo(100, 10);
+    canvas.MoveTo(0, 90);
+    canvas.LineTo(100, 90);
+    canvas.Stroke();
 
     // Pencil marks    
-    this.canvas.font = '25pt Helvetica';
-    this.canvas.fillStyle = 'blue';
-    this.canvas.textAlign = 'center';
-    this.canvas.fillText('1', 25, 40);
-    this.canvas.fillText('4', 75, 62);
-    this.canvas.fillText('7', 25, 85);
-    this.canvas.stroke();
+    canvas.SetFont("25pt Helvetica");
+    canvas.SetFillStyle("blue");
+    canvas.SetTextAlign("center");
+    canvas.Text("1", 25, 40);
+    canvas.Text("4", 75, 62);
+    canvas.Text("7", 25, 85);
+    canvas.Stroke();
 
     // Pencil
-    this.canvas.beginPath();
-    this.canvas.lineWidth = 2;
-    this.canvas.fillStyle = '#F5DEB3';
-    this.canvas.moveTo(30, 85);
-    this.canvas.lineTo(30, 70);
-    this.canvas.lineTo(60, 0);
-    this.canvas.lineTo(70, 5);
-    this.canvas.lineTo(40, 75);
-    this.canvas.closePath();
-    this.canvas.shadowColor = "#999";
-    this.canvas.shadowBlur = 4;
-    this.canvas.shadowOffsetX = 2;
-    this.canvas.shadowOffsetY = 2;
-    this.canvas.fill();
-    this.canvas.shadowColor = "transparent";
-    this.canvas.stroke();    
-    this.canvas.beginPath();
-    this.canvas.lineWidth = 1;
-    this.canvas.moveTo(30,70);
-    this.canvas.lineTo(40,75);
-    this.canvas.stroke();
+    canvas.BeginPath();
+    canvas.SetLineWidth(2);
+    canvas.SetFillStyle("#F5DEB3");
+    canvas.MoveTo(30, 85);
+    canvas.LineTo(30, 70);
+    canvas.LineTo(60, 0);
+    canvas.LineTo(70, 5);
+    canvas.LineTo(40, 75);
+    canvas.ClosePath();
+    canvas.SetShadowColor("#999");
+    canvas.SetShadowBlur(4);
+    canvas.SetShadowOffsetX(2);
+    canvas.SetShadowOffsetY(2);
+    canvas.Fill();
+    canvas.SetShadowColor("transparent");
+    canvas.Stroke();    
+    canvas.BeginPath();
+    canvas.SetLineWidth(1);
+    canvas.MoveTo(30,70);
+    canvas.LineTo(40,75);
+    canvas.Stroke();
   }
   
-  
+  /*
 ////////////////////
 //  ToolTip Layer
 ////////////////////
@@ -1318,11 +1178,11 @@ public:
   {
     // Setup the undo information
     var old_state = this.puzzle.GetState(id);
-    var move_info = new cPuzzleMove('value', id, new_state, old_state);
+    var move_info = new cPuzzleMove(PuzzleMove::VALUE, id, new_state, old_state);
     undo_stack.push(move_info);
 
     // Clear the redo stack, since current state information has changed.
-    while (redo_stack.length > 0) {
+    while (redo_stack.size() > 0) {
       redo_stack.pop();
     }
 
@@ -1330,8 +1190,8 @@ public:
     button_rewind.inactive = false;
     button_undo.inactive = false;
     button_bookmark.inactive = false;
-    button_redo.inactive = true;
-    button_redoall.inactive = true;
+    button_redo.SetActive(false);
+    button_redoall.SetActive(false);
     layer_buttons.Draw();
 
     // Track with this bookmark.
@@ -1360,13 +1220,13 @@ public:
     if (with_last == false) {
       undo_stack.push(move_info);
     } else {
-      var prev_move = undo_stack.slice(-1)[0];
+      var prev_move = undo_stack.top();
       move_info.next = prev_move.next;
       prev_move.next = move_info;
     }
 
     // Clear the redo stack, since current state information has changed.
-    while (redo_stack.length > 0) {
+    while (redo_stack.size() > 0) {
       redo_stack.pop();
     }
 
@@ -1374,8 +1234,8 @@ public:
     button_rewind.inactive = false;
     button_undo.inactive = false;
     button_bookmark.inactive = false;
-    button_redo.inactive = true;
-    button_redoall.inactive = true;
+    button_redo.SetActive(false);
+    button_redoall.SetActive(false);
     layer_buttons.Draw();
 
     // Track with this bookmark.

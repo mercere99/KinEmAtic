@@ -15,6 +15,7 @@ extern "C" {
   extern void EMK_Setup_OnEvent(int obj_id, const char * trigger, int callback_ptr);      
   extern void EMK_Setup_OnEvent_Info(int obj_id, const char * trigger, int callback_ptr); // Pass back event
 
+  extern void EMK_Object_Destroy(int obj_id);
   extern int EMK_Object_GetX(int obj_id);
   extern int EMK_Object_GetY(int obj_id);
   extern int EMK_Object_GetWidth(int obj_id);
@@ -28,6 +29,14 @@ extern "C" {
   extern int EMK_Object_GetOffsetY(int obj_id);
   extern int EMK_Object_GetRotation(int obj_id);
   extern int EMK_Object_GetDraggable(int obj_id);
+
+  extern void EMK_Object_SetX(int obj_id, int x);
+  extern void EMK_Object_SetY(int obj_id, int y);
+  extern void EMK_Object_SetXY(int obj_id, int x, int y);
+  extern void EMK_Object_SetWidth(int obj_id, int w);
+  extern void EMK_Object_SetHeight(int obj_id, int h);
+  extern void EMK_Object_SetSize(int obj_id, int w, int h);
+
   extern void EMK_Object_Draw(int obj_id);
   extern void EMK_Object_DrawLayer(int obj_id);
   extern void EMK_Object_MoveToTop(int obj_id);
@@ -87,16 +96,10 @@ extern "C" {
   extern void EMK_Shape_SetOffset(int obj_id, int x_offset, int y_offset);
   extern void EMK_Shape_SetScale(int obj_id, double x_scale, double y_scale);
   extern void EMK_Shape_SetStroke(int obj_id, const char * color);
-  extern void EMK_Shape_SetX(int obj_id, int x);
-  extern void EMK_Shape_SetY(int obj_id, int y);
-  extern void EMK_Shape_SetXY(int obj_id, int x, int y);
-  extern void EMK_Shape_SetWidth(int obj_id, int w);
-  extern void EMK_Shape_SetHeight(int obj_id, int h);
-  extern void EMK_Shape_SetSize(int obj_id, int w, int h);
   extern void EMK_Shape_DoRotate(int obj_id, double rot);
   extern void EMK_Shape_SetDrawFunction(int obj_id, int new_callback);
 
-  extern int EMK_Custom_Shape_Build(int x, int y, int draw_callback);
+  extern int EMK_Custom_Shape_Build(int x, int y, int w, int h, int draw_callback);
 
   // These may already be in HTML5
   extern void EMK_Cursor_Set(const char * type);
@@ -121,6 +124,9 @@ protected:
 
   emkObject() : obj_id(-1) {;}  // Protected so that you can't make a direct emkObject.
 public:
+  ~emkObject() {
+    EMK_Object_Destroy(obj_id); // Cleanup this object from Kinetic.
+  }
   int GetID() const { return obj_id; }
 
   // Retrieve info from JS Kinetic::Node objects
@@ -137,6 +143,13 @@ public:
   int GetOffsetY() const { return EMK_Object_GetOffsetY(obj_id); }
   int GetRotation() const { return EMK_Object_GetRotation(obj_id); }
   int GetDraggable() const { return EMK_Object_GetDraggable(obj_id); }
+
+  inline void SetX(int x) { EMK_Object_SetX(obj_id, x); }
+  inline void SetY(int y) { EMK_Object_SetY(obj_id, y); }
+  inline void SetXY(int x, int y) { EMK_Object_SetXY(obj_id, x, y); }
+  inline void SetWidth(int w) { EMK_Object_SetWidth(obj_id, w); }
+  inline void SetHeight(int h) { EMK_Object_SetHeight(obj_id, h); }
+  inline void SetSize(double w, double h) { EMK_Object_SetSize(obj_id, w, h); }
 
   void SetLayer(emkObject * _layer) { layer = _layer; }
 
@@ -182,7 +195,7 @@ public:
     else EMK_Canvas_StrokeRect(x, y, width, height);
   }
 
-  inline static void Arc(int x, int y, int radius, double start, double end, bool cclockwise) {
+  inline static void Arc(int x, int y, int radius, double start, double end, bool cclockwise=false) {
     EMK_Canvas_Arc(x, y, radius, start, end, cclockwise);
   }
 
@@ -213,7 +226,7 @@ public:
   emkCallback() { ; }
   virtual ~emkCallback() { ; }
 
-  virtual void DoCallback(int * arg_ptr) = 0;
+  virtual void DoCallback(int * arg_ptr=NULL) = 0;
 
   bool IsDisposible() const { return is_disposible; }
 
@@ -350,19 +363,21 @@ public:
     EMK_Shape_SetFillPatternImage(obj_id, image->GetID());
   }
 
-  void SetCornerRadius(int radius) { EMK_Shape_SetCornerRadius(obj_id, radius); }
-  void SetFillPatternScale(double scale) { EMK_Shape_SetFillPatternScale(obj_id, scale); }
-  void SetLineJoin(const char * join_type) { EMK_Shape_SetLineJoin(obj_id, join_type); }
-  void SetOffset(int _x, int _y) { EMK_Shape_SetOffset(obj_id, _x, _y); }
-  void SetScale(double _x, double _y) { EMK_Shape_SetScale(obj_id, _x, _y); }
-  void SetScale(double scale) { EMK_Shape_SetScale(obj_id, scale, scale); }
-  void SetStroke(const emk::Color & color) { EMK_Shape_SetStroke(obj_id, color.AsString().c_str()); }
-  void SetX(int x) { EMK_Shape_SetX(obj_id, x); }
-  void SetY(int y) { EMK_Shape_SetY(obj_id, y); }
-  void SetXY(int x, int y) { EMK_Shape_SetXY(obj_id, x, y); }
-  void SetWidth(int w) { EMK_Shape_SetWidth(obj_id, w); }
-  void SetHeight(int h) { EMK_Shape_SetHeight(obj_id, h); }
-  void SetSize(double w, double h) { EMK_Shape_SetSize(obj_id, w, h); }
+  /*
+  inline int GetX() const { return EMK_Shape_GetX(obj_id); }
+  inline int GetY() const { return EMK_Shape_GetY(obj_id); }
+  inline int GetWidth() const { return EMK_Shape_GetWidth(obj_id); }
+  inline int GetHeight() const { return EMK_Shape_GetHeight(obj_id); }
+  */
+
+  inline void SetCornerRadius(int radius) { EMK_Shape_SetCornerRadius(obj_id, radius); }
+  inline void SetFillPatternScale(double scale) { EMK_Shape_SetFillPatternScale(obj_id, scale); }
+  inline void SetLineJoin(const char * join_type) { EMK_Shape_SetLineJoin(obj_id, join_type); }
+  inline void SetOffset(int _x, int _y) { EMK_Shape_SetOffset(obj_id, _x, _y); }
+  inline void SetScale(double _x, double _y) { EMK_Shape_SetScale(obj_id, _x, _y); }
+  inline void SetScale(double scale) { EMK_Shape_SetScale(obj_id, scale, scale); }
+  inline void SetStroke(const emk::Color & color) { EMK_Shape_SetStroke(obj_id, color.AsString().c_str()); }
+
 
   // Override the drawing of this shape.
   template<class T> void SetDrawFunction(T * target, void (T::*draw_ptr)(emkCanvas &) ) {
@@ -383,12 +398,12 @@ public:
   template <class T> emkCustomShape(T * target, void (T::*draw_ptr)(emkCanvas &))
   {
     draw_callback = new emkDrawCallback<T>(target, draw_ptr);
-    obj_id = EMK_Custom_Shape_Build(0, 0, (int) draw_callback);
+    obj_id = EMK_Custom_Shape_Build(0, 0, 0, 0, (int) draw_callback);
   }
-  template <class T> emkCustomShape(int _x, int _y, T * target, void (T::*draw_ptr)(emkCanvas &))
+  template <class T> emkCustomShape(int _x, int _y, int _w, int _h, T * target, void (T::*draw_ptr)(emkCanvas &))
   {
-    emkDrawCallback<T> * new_callback = new emkDrawCallback<T>(target, draw_ptr);
-    obj_id = EMK_Custom_Shape_Build(_x, _y, (int) new_callback);
+    draw_callback = new emkDrawCallback<T>(target, draw_ptr);
+    obj_id = EMK_Custom_Shape_Build(_x, _y, _w, _h, (int) draw_callback);
   }
   virtual ~emkCustomShape() { ; }
 };

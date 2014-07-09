@@ -45,6 +45,12 @@ mergeInto(LibraryManager.library, {
     },
 
 
+    EMK_Object_Destroy__deps: ['$emk_info'],
+    EMK_Object_Destroy: function(obj_id) {
+        emk_info.objs[obj_id].destroy();
+    },
+
+
     EMK_Object_GetX__deps: ['$emk_info'],
     EMK_Object_GetX: function (obj_id) {
         return emk_info.objs[obj_id].x;
@@ -97,6 +103,40 @@ mergeInto(LibraryManager.library, {
     EMK_Object_GetDraggable: function (obj_id) {
         return emk_info.objs[obj_id].draggable;
     },
+
+    EMK_Object_SetX__deps: ['$emk_info'],
+    EMK_Object_SetX: function(obj_id, x) {
+        emk_info.objs[obj_id].x(x);
+    },
+
+    EMK_Object_SetY__deps: ['$emk_info'],
+    EMK_Object_SetY: function(obj_id, y) {
+        emk_info.objs[obj_id].y(y);
+    },
+ 
+    EMK_Object_SetXY__deps: ['$emk_info'],
+    EMK_Object_SetXY: function(obj_id, x, y) {
+        emk_info.objs[obj_id].x(x);
+        emk_info.objs[obj_id].y(y);
+    },
+
+    EMK_Object_SetWidth__deps: ['$emk_info'],
+    EMK_Object_SetWidth: function(obj_id, w) {
+        emk_info.objs[obj_id].width(w);
+    },
+
+    EMK_Object_SetHeight__deps: ['$emk_info'],
+    EMK_Object_SetHeight: function(obj_id, h) {
+        emk_info.objs[obj_id].height(h);
+    },
+
+    EMK_Object_SetSize__deps: ['$emk_info'],
+    EMK_Object_SetSize: function(obj_id, w, h) {
+        emk_info.objs[obj_id].width(w);
+        emk_info.objs[obj_id].height(h);
+    },
+
+
 
     EMK_Object_Draw__deps: ['$emk_info'],
     EMK_Object_Draw: function (obj_id) {
@@ -414,11 +454,13 @@ mergeInto(LibraryManager.library, {
 
 
     EMK_Custom_Shape_Build__deps: ['$emk_info'],
-    EMK_Custom_Shape_Build: function(_x, _y, draw_callback) {
+    EMK_Custom_Shape_Build: function(_x, _y, _w, _h, draw_callback) {
         var obj_id = emk_info.objs.length;                   // Determine the next free id for a Kinetic object
         emk_info.objs[obj_id] = new Kinetic.Shape({          // Build the shape!
             x: _x,
             y: _y,
+            width: _w,
+            height: _h,
             drawFunc: function(canvas) {                     // For an arbitrary shape, we just have a draw function
                 emk_info.canvas = canvas;
                 emk_info.ctx = canvas._context;              // WTF??  This should be canvas.getContext();
@@ -430,6 +472,7 @@ mergeInto(LibraryManager.library, {
         return obj_id;                                       // Return the Kinetic object id.
     },
   
+
     EMK_Shape_SetCornerRadius__deps: ['$emk_info'],
     EMK_Shape_SetCornerRadius: function(obj_id, radius) {
         emk_info.objs[obj_id].cornerRadius(radius);
@@ -469,38 +512,6 @@ mergeInto(LibraryManager.library, {
         emk_info.objs[obj_id].stroke(color);
     },
     
-    EMK_Shape_SetX__deps: ['$emk_info'],
-    EMK_Shape_SetX: function(obj_id, x) {
-        emk_info.objs[obj_id].x(x);
-    },
-
-    EMK_Shape_SetY__deps: ['$emk_info'],
-    EMK_Shape_SetY: function(obj_id, y) {
-        emk_info.objs[obj_id].y(y);
-    },
- 
-    EMK_Shape_SetXY__deps: ['$emk_info'],
-    EMK_Shape_SetXY: function(obj_id, x, y) {
-        emk_info.objs[obj_id].x(x);
-        emk_info.objs[obj_id].y(y);
-    },
-
-    EMK_Shape_SetWidth__deps: ['$emk_info'],
-    EMK_Shape_SetWidth: function(obj_id, w) {
-        emk_info.objs[obj_id].width(w);
-    },
-
-    EMK_Shape_SetHeight__deps: ['$emk_info'],
-    EMK_Shape_SetHeight: function(obj_id, h) {
-        emk_info.objs[obj_id].height(h);
-    },
-
-    EMK_Shape_SetSize__deps: ['$emk_info'],
-    EMK_Shape_SetSize: function(obj_id, w, h) {
-        emk_info.objs[obj_id].width(w);
-        emk_info.objs[obj_id].height(h);
-    },
-
     EMK_Shape_DoRotate__deps: ['$emk_info'],
     EMK_Shape_DoRotate: function(obj_id, rot) {
         emk_info.objs[obj_id].rotate(rot);
