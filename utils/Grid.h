@@ -2,6 +2,7 @@
 #define EMK_GRID_H
 
 #include "../tools/Colors.h"
+#include "../tools/ProbSchedule.h"
 #include "../Kinetic.h"
 
 #include <vector>
