@@ -16,6 +16,7 @@ namespace emk {
     emkCallback * trigger_cb;
     emkCallback * draw_icon_cb;
 
+    std::string name;
     std::string tooltip;
 
     // By default, this will be a square button with optionally rounded corners, but the draw function can be replaced.
@@ -24,11 +25,12 @@ namespace emk {
     bool ll_round;
     bool lr_round;
   public:
-    template<class T> Button(T * in_target, void (T::*in_method_ptr)())
-      : emkCustomShape(this, &Button::Default_Draw), is_active(true), mouse_down(false), mouse_over(false)
+    template<class T> Button(T * _target, void (T::*_method_ptr)(), const std::string & _name="")
+      : emkCustomShape(this, &Button::Default_Draw)
+      , is_active(true), mouse_down(false), mouse_over(false), name(_name)
       , ul_round(true), ur_round(true), ll_round(true), lr_round(true)
     {
-      trigger_cb = new emkMethodCallback<T>(in_target, in_method_ptr);
+      trigger_cb = new emkMethodCallback<T>(_target, _method_ptr);
       draw_icon_cb = NULL;
       On("mousedown", this, &Button::Default_OnMouseDown);
       On("mouseup", this, &Button::Default_OnMouseUp);
@@ -39,13 +41,13 @@ namespace emk {
 
     void SetActive(bool _in=true) { is_active = _in; }
     void SetToolTip(const std::string & msg) { tooltip = msg; }
-    void SetRoundCorners(bool _ul, bool _ur, bool _ll, bool _lr) {
+    void SetRoundCorners(bool _ul, bool _ur, bool _lr, bool _ll) {
       ul_round = _ul;      ur_round = _ur;
       ll_round = _ll;      lr_round = _lr;
     }
 
-    template<class T> void SetupDrawIcon(T * in_target, void (T::*in_method_ptr)(emkCanvas &)) {
-      draw_icon_cb = new emkDrawCallback<T>(in_target, in_method_ptr);
+    template<class T> void SetupDrawIcon(T * _target, void (T::*_method_ptr)(emkCanvas &)) {
+      draw_icon_cb = new emkDrawCallback<T>(_target, _method_ptr);
     }
 
     virtual void Toggle() { ; }  // If this is a toggle button, switch its state.
@@ -56,8 +58,8 @@ namespace emk {
     // A few default behaviors...
     void Default_Draw(emkCanvas & canvas)
     {
-      const int x = GetX();
-      const int y = GetY();
+      const int x = 0; // GetX();
+      const int y = 0; // GetY();
       const int width = GetWidth();
       const int height = GetHeight();
 
@@ -178,8 +180,8 @@ namespace emk {
     bool is_pressed;
 
   public:
-    template<class T> ToggleButton(T * in_target, void (T::*in_method_ptr)())
-      : Button(in_target, in_method_ptr), is_pressed(false) { ; }
+    template<class T> ToggleButton(T * _target, void (T::*_method_ptr)(), const std::string & _name="")
+      : Button(_target, _method_ptr, _name), is_pressed(false) { ; }
     ~ToggleButton() { ; }
 
     void Toggle() { is_pressed = !is_pressed; }

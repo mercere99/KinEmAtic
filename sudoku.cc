@@ -269,15 +269,15 @@ public:
     , min_size(500), cell_padding(5), border(8), mid_width(4), thin_width(2)
     , puzzle_board(this, &SudokuInterface::DrawGrid)
       
-    , button_rewind(this, &SudokuInterface::DoRewind)
-    , button_undo(this, &SudokuInterface::DoUndo)
-    , button_bookmark(this, &SudokuInterface::DoBookmark)
-    , button_redo(this, &SudokuInterface::DoRedo)
-    , button_redoall(this, &SudokuInterface::DoRedoall)
-    , button_hint(this, &SudokuInterface::DoHint)
-    , button_warnings(this, &SudokuInterface::DoWarnings)
-    , button_autonotes(this, &SudokuInterface::DoAutonotes)
-    , button_toggleclick(this, &SudokuInterface::DoToggleclick)
+    , button_rewind(this, &SudokuInterface::DoRewind, "Rewind")
+    , button_undo(this, &SudokuInterface::DoUndo, "Undo")
+    , button_bookmark(this, &SudokuInterface::DoBookmark, "Bookmark")
+    , button_redo(this, &SudokuInterface::DoRedo, "Redo")
+    , button_redoall(this, &SudokuInterface::DoRedoall, "Redoall")
+    , button_hint(this, &SudokuInterface::DoHint, "Hint")
+    , button_warnings(this, &SudokuInterface::DoWarnings, "Warnings")
+    , button_autonotes(this, &SudokuInterface::DoAutonotes, "Autonotes")
+    , button_toggleclick(this, &SudokuInterface::DoToggleclick, "Toggleclick")
 
     , stage(1200, 600, "container")
     , cell_id(0), highlight_id(-1), hover_val(-1), bm_level(-1), bm_touch(0)
@@ -333,7 +333,15 @@ public:
     puzzle_board.On("mousemove", this, &SudokuInterface::OnMousemove);
 
     layer_main.Add(puzzle_board);
-    layer_main.Add(button_rewind);
+    layer_buttons.Add(button_rewind);
+    layer_buttons.Add(button_undo);
+    layer_buttons.Add(button_bookmark);
+    layer_buttons.Add(button_redo);
+    layer_buttons.Add(button_redoall);
+    layer_buttons.Add(button_hint);
+    layer_buttons.Add(button_warnings);
+    layer_buttons.Add(button_autonotes);
+    layer_buttons.Add(button_toggleclick);
     stage.Add(layer_main);
     stage.Add(layer_buttons);
     stage.Add(layer_tooltips);
@@ -381,9 +389,8 @@ public:
   }
 
 
-
   void ResizeBoard() {
-    int win_size = std::min((int)(stage.GetX() * 1.25), stage.GetY()); // Use the window size.
+    int win_size = std::min((int)(stage.GetWidth() * 1.25), stage.GetHeight()); // Use the window size.
     win_size = std::max(win_size, min_size); // However, don't let puzzle get too small.
     puzzle_size = win_size * 0.8;
 
@@ -401,15 +408,15 @@ public:
     const int x_offset = 3;
     const int y_offset = puzzle_size + 2;
 
-    button_rewind.SetXY(x_offset, y_offset);
-    button_undo.SetXY(x_offset + button_w, y_offset);
-    button_bookmark.SetXY(x_offset + button_w*2, y_offset);
-    button_redo.SetXY(x_offset + button_w*3, y_offset);
-    button_redoall.SetXY(x_offset + button_w*4, y_offset);
-    button_hint.SetXY(button_w*5.5, y_offset);
-    button_warnings.SetXY(button_w*7 - x_offset, y_offset);
-    button_autonotes.SetXY(button_w*8 - x_offset, y_offset);
-    button_toggleclick.SetXY(button_w*9 - x_offset, y_offset);
+    button_rewind.SetLayout(x_offset, y_offset, button_w, button_w);
+    button_undo.SetLayout(x_offset + button_w, y_offset, button_w, button_w);
+    button_bookmark.SetLayout(x_offset + button_w*2, y_offset, button_w, button_w);
+    button_redo.SetLayout(x_offset + button_w*3, y_offset, button_w, button_w);
+    button_redoall.SetLayout(x_offset + button_w*4, y_offset, button_w, button_w);
+    button_hint.SetLayout(button_w*5.5, y_offset, button_w, button_w);
+    button_warnings.SetLayout(button_w*7 - x_offset, y_offset, button_w, button_w);
+    button_autonotes.SetLayout(button_w*8 - x_offset, y_offset, button_w, button_w);
+    button_toggleclick.SetLayout(button_w*9 - x_offset, y_offset, button_w, button_w);
   }
 
   void DrawGrid(emkCanvas & canvas) {

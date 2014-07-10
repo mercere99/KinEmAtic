@@ -115,6 +115,8 @@ void emkAlert(const std::string & msg) { EMK_Alert(msg.c_str()); }
 void emkAlert(int val) { EMK_Alert(std::to_string(val).c_str()); }
 void emkAlert(double val) { EMK_Alert(std::to_string(val).c_str()); }
 
+#define emkAlertVar(VAR) emkAlert(std::string(#VAR) + std::string("=") + std::to_string(VAR))
+
 
 // All emscripten-wrapped Kinetic objects should be derived from this base class.
 class emkObject {
@@ -128,6 +130,8 @@ public:
     EMK_Object_Destroy(obj_id); // Cleanup this object from Kinetic.
   }
   int GetID() const { return obj_id; }
+
+  virtual std::string GetType() { return "emkObject"; }
 
   // Retrieve info from JS Kinetic::Node objects
   int GetX() const { return EMK_Object_GetX(obj_id); }
@@ -149,7 +153,11 @@ public:
   inline void SetXY(int x, int y) { EMK_Object_SetXY(obj_id, x, y); }
   inline void SetWidth(int w) { EMK_Object_SetWidth(obj_id, w); }
   inline void SetHeight(int h) { EMK_Object_SetHeight(obj_id, h); }
-  inline void SetSize(double w, double h) { EMK_Object_SetSize(obj_id, w, h); }
+  inline void SetSize(int w, int h) { EMK_Object_SetSize(obj_id, w, h); }
+  inline void SetLayout(int x, int y, int w, int h) {
+    EMK_Object_SetXY(obj_id, x, y);
+    EMK_Object_SetSize(obj_id, w, h);
+  }
 
   void SetLayer(emkObject * _layer) { layer = _layer; }
 
@@ -223,8 +231,10 @@ class emkCallback : public emkObject {
 private:
   bool is_disposible;
 public:
-  emkCallback() { ; }
+  emkCallback() : is_disposible(false) { obj_id = -2; }
   virtual ~emkCallback() { ; }
+
+  virtual std::string GetType() { return "emkCallback"; }
 
   virtual void DoCallback(int * arg_ptr=NULL) = 0;
 
@@ -245,6 +255,8 @@ public:
   { ; }
 
   ~emkMethodCallback() { ; }
+
+  virtual std::string GetType() { return "emkMethodCallback"; }
 
   void DoCallback(int * arg_ptr) { (void) arg_ptr; (target->*(method_ptr))(); }
 };
@@ -278,6 +290,8 @@ public:
 
   ~emkMethodCallback_Event() { ; }
 
+  virtual std::string GetType() { return "emkCallback_Event"; }
+
   void DoCallback(int * arg_ptr) {
     emkEventInfo info(arg_ptr[0], arg_ptr[1], arg_ptr[2], arg_ptr[3], arg_ptr[4], arg_ptr[5], arg_ptr[6], arg_ptr[7]);
     (target->*(method_ptr))(info);
@@ -298,6 +312,8 @@ public:
   { ; }
 
   ~emkDrawCallback() { ; }
+
+  virtual std::string GetType() { return "emkDrawCallback"; }
 
   void DoCallback(int * arg_ptr) {
     emkCanvas canvas; // @CAO For now, all canvas objects are alike; we should allow them to coexist.
@@ -325,7 +341,9 @@ extern "C" void emkJSDoCallback(int cb_ptr, int arg_ptr)
 {
   emkCallback * const cb_obj = (emkCallback *) cb_ptr;
   cb_obj->DoCallback((int *) arg_ptr);
-  if (cb_obj->IsDisposible()) delete cb_obj;
+  if (cb_obj->IsDisposible()) {
+    delete cb_obj;
+  }
   // ((emkCallback *) cb_ptr)->DoCallback((int *) arg_ptr);
 }
 
@@ -339,6 +357,8 @@ public:
   emkImage(const std::string & _filename) : filename(_filename), has_loaded(false) {
     obj_id = EMK_Image_Load(filename.c_str(), (int) this);   // Start loading the image.
   }
+
+  virtual std::string GetType() { return "emkImage"; }
 
   bool HasLoaded() const { return has_loaded; }
 
@@ -354,9 +374,11 @@ protected:
   const emkImage * image;  // If we are drawing an image, keep track of it to make sure it loads.
   emkCallback * draw_callback; // If we override the draw callback, keep track of it here.
 
-  emkShape() : image(NULL), draw_callback(NULL) { ; } // The default Shape constructor should only be called from derived classes.
+  emkShape() : image(NULL), draw_callback(NULL) { obj_id = -3; } // The default Shape constructor should only be called from derived classes.
 public:
   virtual ~emkShape() { ; }
+
+  virtual std::string GetType() { return "emkShape"; }
 
   void SetFillPatternImage(const emkImage & _image) {
     image = &_image;
@@ -406,6 +428,8 @@ public:
     obj_id = EMK_Custom_Shape_Build(_x, _y, _w, _h, (int) draw_callback);
   }
   virtual ~emkCustomShape() { ; }
+
+  virtual std::string GetType() { return "emkCustomShape"; }
 };
 
 
@@ -416,6 +440,8 @@ public:
 public:
   emkLayer() { obj_id = EMK_Layer_Build(); }
   ~emkLayer() { ; }
+
+  virtual std::string GetType() { return "emkLayer"; }
 
   // Add other types of stage objects; always place them in the current layer.
   emkLayer & Add(emkShape & in_obj) {
@@ -438,22 +464,16 @@ public:
 class emkStage : public emkObject {
 private:
   std::string m_container;      // Name of this stage.
-  int m_width;
-  int m_height;
 
 public:
   emkStage(int _w, int _h, std::string name="container") 
     : m_container(name)
-    , m_width(_w)
-    , m_height(_h)
   {
-    obj_id = EMK_Stage_Build(m_width, m_height, m_container.c_str());
+    obj_id = EMK_Stage_Build(_w, _h, m_container.c_str());
   }
   ~emkStage() { ; }
 
-  // Accessors
-  int GetWidth() { return m_width; }
-  int GetHeight() { return m_height; }
+  virtual std::string GetType() { return "emkStage"; }
 
   // Sizing
   void ResizeMax(int min_width=0, int min_height=0) { EMK_Stage_ResizeMax(obj_id, min_width, min_height); }
@@ -474,6 +494,8 @@ public:
     obj_id = EMK_Text_Build(x, y, text.c_str(), font_size.c_str(), font_family.c_str(), fill.c_str());
   }
   ~emkText() { ; }
+
+  virtual std::string GetType() { return "emkText"; }
 };
 
 // The rectangle object from Kinetic...
@@ -483,6 +505,8 @@ public:
   {
     obj_id = EMK_Rect_Build(x, y, w, h, fill.c_str(), stroke.c_str(), stroke_width, draggable);
   }
+
+  virtual std::string GetType() { return "emkRect"; }
 };
 
 // The regular polygon object from Kinetic...
@@ -492,6 +516,8 @@ public:
   {
     obj_id = EMK_RegularPolygon_Build(x, y, sides, radius, fill.c_str(), stroke.c_str(), stroke_width, draggable);
   }
+
+  virtual std::string GetType() { return "emkRegularPolygon"; }
 };
 
 
@@ -517,6 +543,8 @@ private:
 public:
   emkAnimation() : target(NULL), method_ptr(NULL), method_ptr_nf(NULL) { ; }
   ~emkAnimation() { ; }
+
+  virtual std::string GetType() { return "emkAnimation"; }
 
   // Setup this animation object to know what class it will be working with, which update method it should use,
   // and what Stage layer it is in.  The method pointed to may, optionally, take a frame object.

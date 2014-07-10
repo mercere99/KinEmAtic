@@ -47,25 +47,25 @@ mergeInto(LibraryManager.library, {
 
     EMK_Object_Destroy__deps: ['$emk_info'],
     EMK_Object_Destroy: function(obj_id) {
-        emk_info.objs[obj_id].destroy();
+        if (obj_id >= 0) emk_info.objs[obj_id].destroy();
     },
 
 
     EMK_Object_GetX__deps: ['$emk_info'],
     EMK_Object_GetX: function (obj_id) {
-        return emk_info.objs[obj_id].x;
+        return emk_info.objs[obj_id].x();
     },
     EMK_Object_GetY__deps: ['$emk_info'],
     EMK_Object_GetY: function (obj_id) {
-        return emk_info.objs[obj_id].y;
+        return emk_info.objs[obj_id].y();
     },
     EMK_Object_GetWidth__deps: ['$emk_info'],
     EMK_Object_GetWidth: function (obj_id) {
-        return emk_info.objs[obj_id].width;
+        return emk_info.objs[obj_id].width();
     },
     EMK_Object_GetHeight__deps: ['$emk_info'],
     EMK_Object_GetHeight: function (obj_id) {
-        return emk_info.objs[obj_id].height;
+        return emk_info.objs[obj_id].height();
     },
     EMK_Object_GetVisible__deps: ['$emk_info'],
     EMK_Object_GetVisible: function (obj_id) {
@@ -324,8 +324,10 @@ mergeInto(LibraryManager.library, {
 
     EMK_Stage_ResizeMax__deps: ['$emk_info'],
     EMK_Stage_ResizeMax: function(stage_obj_id, min_x, min_y) {
-        emk_info.objs[stage_obj_id].setWidth(  Math.max(window.innerWidth - 10, min_x)  );
-        emk_info.objs[stage_obj_id].setHeight( Math.max(window.innerHeight - 10, min_y) );
+        var new_width = Math.max(window.innerWidth - 10, min_x);
+        var new_height = Math.max(window.innerHeight - 10, min_y);
+        emk_info.objs[stage_obj_id].setWidth( new_width );
+        emk_info.objs[stage_obj_id].setHeight( new_height );
     },
 
 
