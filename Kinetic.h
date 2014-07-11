@@ -88,6 +88,7 @@ extern "C" {
   extern int EMK_Animation_Build(int callback_ptr, int layer_id);
   extern int EMK_Animation_Build_NoFrame(int callback_ptr, int layer_id);
   extern void EMK_Animation_Start(int obj_id);
+  extern void EMK_Animation_Stop(int obj_id);
 
   extern void EMK_Shape_SetCornerRadius(int obj_id, int radius);
   extern void EMK_Shape_SetFillPatternImage(int obj_id, int img_id);
@@ -573,6 +574,10 @@ public:
   void Start() {
     assert(obj_id >= 0); // Make sure we've setup this animation before starting it.
     EMK_Animation_Start(obj_id);
+  }
+  void Stop() {
+    assert(obj_id >= 0); // Make sure we've setup this animation before stopping it.
+    EMK_Animation_Stop(obj_id);
   }
 };
 

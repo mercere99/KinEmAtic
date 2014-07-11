@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include "../tools/const.h"
 #include "../Kinetic.h"
 
 namespace emk {

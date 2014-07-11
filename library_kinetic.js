@@ -455,6 +455,12 @@ mergeInto(LibraryManager.library, {
     },
 
 
+    EMK_Animation_Stop__deps: ['$emk_info'],
+    EMK_Animation_Stop: function(obj_id) {
+        emk_info.objs[obj_id].stop();
+    },
+
+
     EMK_Custom_Shape_Build__deps: ['$emk_info'],
     EMK_Custom_Shape_Build: function(_x, _y, _w, _h, draw_callback) {
         var obj_id = emk_info.objs.length;                   // Determine the next free id for a Kinetic object
