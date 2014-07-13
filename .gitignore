@@ -36,3 +36,9 @@ tools/cRandom.cc
 a.out
 
 *.plist
+
+*.sh~
+
+*.sh~
+
+compile.sh~
