@@ -157,6 +157,12 @@ mergeInto(LibraryManager.library, {
         emk_info.ctx.fillStyle = fs;
     },
 
+    EMK_Canvas_SetStroke__deps: ['$emk_info'],
+    EMK_Canvas_SetStroke: function(_stroke) {
+        _stroke = Pointer_stringify(_stroke);
+        emk_info.ctx.strokeStyle = _stroke;
+    },
+
     EMK_Canvas_SetLineJoin__deps: ['$emk_info'],
     EMK_Canvas_SetLineJoin: function(lj) {
         lj = Pointer_stringify(lj);
@@ -382,6 +388,11 @@ mergeInto(LibraryManager.library, {
         return obj_id;                                       // Return the Kinetic object id.
     },
 
+    EMK_Text_SetText__deps: ['$emk_info'],
+    EMK_Text_SetText: function(obj_id, in_text) {
+        in_text = Pointer_stringify(in_text);
+        emk_info.objs[obj_id].text(in_text);
+    },
 
     EMK_Rect_Build__deps: ['$emk_info'],
     EMK_Rect_Build: function(in_x, in_y, in_w, in_h, in_fill, in_stroke, in_stroke_width, in_draggable) {
@@ -517,7 +528,7 @@ mergeInto(LibraryManager.library, {
     EMK_Shape_SetStroke__deps: ['$emk_info'],
     EMK_Shape_SetStroke: function(obj_id, color) {
         color = Pointer_stringify(color);
-        emk_info.objs[obj_id].stroke(color);
+        emk_info.objs[obj_id].stroke(color); // @CAO Test!
     },
     
     EMK_Shape_DoRotate__deps: ['$emk_info'],

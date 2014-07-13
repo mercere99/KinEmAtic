@@ -48,7 +48,7 @@ namespace emk {
     }
 
     template<class T> void SetupDrawIcon(T * _target, void (T::*_method_ptr)(emkCanvas &)) {
-      draw_icon_cb = new emkDrawCallback<T>(_target, _method_ptr);
+      draw_icon_cb = new emkCallback_Canvas<T>(_target, _method_ptr);
     }
 
     virtual void Toggle() { ; }  // If this is a toggle button, switch its state.

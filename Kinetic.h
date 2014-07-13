@@ -42,6 +42,7 @@ extern "C" {
   extern void EMK_Object_MoveToTop(int obj_id);
 
   extern void EMK_Canvas_SetFillStyle(const char * fs);
+  extern void EMK_Canvas_SetStroke(const char * fs);
   extern void EMK_Canvas_SetLineJoin(const char * lj);
   extern void EMK_Canvas_SetLineWidth(int lw);
   extern void EMK_Canvas_SetFont(const char * font);
@@ -81,6 +82,8 @@ extern "C" {
   extern int EMK_Image_Build(int in_x, int in_y, int img_id, int in_w, int in_h);
 
   extern int EMK_Text_Build(int in_x, int in_y, const char * in_text, const char * in_font_size, const char * in_font_family, const char * in_fill);
+  extern void EMK_Text_SetText(int obj_id, const char * in_text);
+
   extern int EMK_Rect_Build(int in_x, int in_y, int in_w, int in_h, const char * in_fill, const char * in_stroke, int in_stroke_width, int in_draggable);
   extern int EMK_RegularPolygon_Build(int in_x, int in_y, int in_sides, int in_radius,
                                       const char * in_fill, const char * in_stroke, int in_stroke_width, int in_draggable);
@@ -182,6 +185,7 @@ class emkCanvas {
 public:
   // Setting values
   inline static void SetFillStyle(const emk::Color & color) { EMK_Canvas_SetFillStyle(color.AsString().c_str()); }
+  inline static void SetStroke(const emk::Color & color) { EMK_Canvas_SetStroke(color.AsString().c_str()); }
   inline static void SetLineJoin(const std::string & lj) { EMK_Canvas_SetLineJoin(lj.c_str()); }
   inline static void SetLineWidth(int width) { EMK_Canvas_SetLineWidth(width); }
 
@@ -302,19 +306,19 @@ public:
 };
 
 
-template <class T> class emkDrawCallback : public emkCallback {
+template <class T> class emkCallback_Canvas : public emkCallback {
 private:
   T * target;
   void (T::*method_ptr)(emkCanvas &);
 public:
-  emkDrawCallback(T * in_target, void (T::*in_method_ptr)(emkCanvas &))
+  emkCallback_Canvas(T * in_target, void (T::*in_method_ptr)(emkCanvas &))
     : target(in_target)
     , method_ptr(in_method_ptr)
   { ; }
 
-  ~emkDrawCallback() { ; }
+  ~emkCallback_Canvas() { ; }
 
-  virtual std::string GetType() { return "emkDrawCallback"; }
+  virtual std::string GetType() { return "emkCallback_Canvas"; }
 
   void DoCallback(int * arg_ptr) {
     emkCanvas canvas; // @CAO For now, all canvas objects are alike; we should allow them to coexist.
@@ -405,7 +409,7 @@ public:
   // Override the drawing of this shape.
   template<class T> void SetDrawFunction(T * target, void (T::*draw_ptr)(emkCanvas &) ) {
     if (draw_callback != NULL) delete draw_callback;
-    draw_callback = new emkDrawCallback<T>(target, draw_ptr);
+    draw_callback = new emkCallback_Canvas<T>(target, draw_ptr);
     EMK_Shape_SetDrawFunction(obj_id, (int) draw_callback);
   }
 
@@ -420,12 +424,12 @@ class emkCustomShape : public emkShape {
 public:
   template <class T> emkCustomShape(T * target, void (T::*draw_ptr)(emkCanvas &))
   {
-    draw_callback = new emkDrawCallback<T>(target, draw_ptr);
+    draw_callback = new emkCallback_Canvas<T>(target, draw_ptr);
     obj_id = EMK_Custom_Shape_Build(0, 0, 0, 0, (int) draw_callback);
   }
   template <class T> emkCustomShape(int _x, int _y, int _w, int _h, T * target, void (T::*draw_ptr)(emkCanvas &))
   {
-    draw_callback = new emkDrawCallback<T>(target, draw_ptr);
+    draw_callback = new emkCallback_Canvas<T>(target, draw_ptr);
     obj_id = EMK_Custom_Shape_Build(_x, _y, _w, _h, (int) draw_callback);
   }
   virtual ~emkCustomShape() { ; }
@@ -497,6 +501,10 @@ public:
   ~emkText() { ; }
 
   virtual std::string GetType() { return "emkText"; }
+
+  void SetText(const std::string & in_text) {
+    EMK_Text_SetText(obj_id, in_text.c_str());
+  }
 };
 
 // The rectangle object from Kinetic...

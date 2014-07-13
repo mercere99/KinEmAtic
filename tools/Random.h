@@ -9,9 +9,41 @@
 #include <unistd.h>
 #include <vector>
 
-/**
- * A versatile and fast pseudo random number generator.
- **/
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  A versatile and non-patterned pseudo-random-number generator.
+//
+//  Constructor:
+//    Random(int in_seed=-1)
+//      in_seed is the random number seed that will produce a unique pseudo-random sequence.
+//      (a value of -1 indicates that the seed should be bassed off of a combination of time and the
+//      memory position of the random number generator in case multiple ones start at the same time.)
+//
+//  Other useful functions:
+//    double GetDouble()
+//    double GetDouble(double max)
+//    double GetDouble(double min, double max)
+//      Retrive a random double in the range [min, max).  By default, min=0.0 and max=1.0.
+//
+//    int GetInt(int max)
+//    int GetInt(int min, int max)
+//    unsigned int GetUInt(unsigned int max)
+//    unsigned int GetUInt(unsigned int min, unsigned int max)
+//      Retrive a random int or uint in the range [min, max).  By default, min=0.
+//
+//    bool P(double p)
+//      Tests a random value [0,1) against a given probability p, and returns true of false.
+//
+//    bool Choose(int N, int K, std::vector<int> & choices)
+//      Chooses K random entries from N possibilities and returns the selections in the choices vector.
+//
+//    double GetRandNormal(const double mean, const double std)
+//    unsigned int GetRandPoisson(const double n, double p)
+//    unsigned int GetRandPoisson(const double mean)
+//    unsigned int GetRandBinomial(const double n, const double p)
+//      Draw a value from the given distributions
+//
+
 
 namespace emk {
   class Random {
@@ -118,8 +150,8 @@ namespace emk {
     
       if (in_seed <= 0) {
         int seed_time = (int) time(NULL);
-        int seed_pid = (int) getpid(); 
-        seed = seed_time ^ (seed_pid << 8);
+        int seed_mem = (int) this;
+        seed = seed_time ^ seed_mem;
       } else {
         seed = in_seed;
       }

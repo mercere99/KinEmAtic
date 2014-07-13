@@ -1,7 +1,6 @@
-* Implement events with pass-back info (coordinates, keypresses, etc.)
 * Implement other shapes (circles, etc.)
 * Change all in_var to just _var.
-* Split up Kinetic.h into multiple files.
+* Split up Kinetic.h into multiple files (especially for callbacks...)
 
 Once we have a first draft of the basic framework:
 * Refactor to parallel the object heirarchy of Kinetic for easier compatability.

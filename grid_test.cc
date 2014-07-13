@@ -19,11 +19,13 @@ private:
 
   emkStage stage;
   emkLayer layer;
+  emkLayer layer_highlight;
 
   emkText title;
   emk::Grid grid;
   emk::Random random;
   emk::Button pause_button;
+  emkText side_text;
 
   emkAnimation<GridExample> anim;
 
@@ -38,17 +40,23 @@ public:
     : cols(_cols), rows(_rows), num_cells(cols*rows), merits(num_cells)
     , stage(1200, 800, "container")
     , title(10, 10, "Grid viewer test!", "30", "Calibri", "black")
-    , grid(50, 50, 600, 600, cols, rows, 60)
+    , grid(50, 50, 601, 601, cols, rows, 60)
     , pause_button(this, &GridExample::PauseButton)
+    , side_text(670, 50, "Side Test!", "30", "Calibri", "black")
     , sched(num_cells)
     , frame_count(0)
     , pause(false)
   {
+    pause_button.SetLayout(335, 655, 30, 30);
+    pause_button.SetupDrawIcon(this, &GridExample::DrawPauseButton);
+
     layer.Add(grid);
     layer.Add(title);
+    layer.Add(pause_button);
+    layer.Add(side_text);
+    layer_highlight.Add(grid.GetMousePointer());
     stage.Add(layer);
-
-    pause_button.SetLayout(610, 0, 30, 30);
+    stage.Add(layer_highlight);
 
     for (int i = 0; i < num_cells; i++) {
       grid.SetColor(i, random.GetInt(60));
@@ -73,11 +81,32 @@ public:
       sched.Adjust(to, merits[from]);
       merits[to] = merits[from];
     }
+
+    side_text.SetText(std::string("Mouse Col:") + std::to_string(grid.GetMouseCol()) + std::string(" Row:") + std::to_string(grid.GetMouseRow()));
   }
 
   void PauseButton() {
     if (pause == true) { anim.Start(); pause = false; }
     else { anim.Stop(); pause = true; }
+  }
+
+  void DrawPauseButton(emkCanvas & canvas) {
+    canvas.SetStroke("black");
+    canvas.SetFillStyle("black");
+
+    if (pause == true) {
+      canvas.MoveTo(20, 10);
+      canvas.LineTo(20, 90);
+      canvas.LineTo(95, 50);
+      canvas.ClosePath();
+      canvas.Fill();
+    }
+    else {
+      canvas.Rect(20, 5, 25, 90, true);
+      canvas.Rect(60, 5, 25, 90, true);
+    }
+
+    canvas.Stroke();
   }
 };
 
