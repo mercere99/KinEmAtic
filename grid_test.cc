@@ -19,21 +19,23 @@ private:
 
   emkStage stage;
   emkLayer layer;
-  emkLayer layer_highlight;
+  emkLayer layer_gridmouse;
+  emkLayer layer_info;
 
   emkText title;
   emk::Grid grid;
   emk::Random random;
   emk::Button pause_button;
-  emkText side_text;
+  emkText update_text;  // On main layer
+  emkText mouse_text;   // On gridmouse layer
+  emkText click_text;   // On info layer
 
   emkAnimation<GridExample> anim;
 
-  emk::ProbSchedule sched;
 
-  int next_id;
-  bool color2;
-  int frame_count;
+  // Current status
+  emk::ProbSchedule sched;
+  int update;
   bool pause;
 public:
   GridExample(int _cols, int _rows)
@@ -42,21 +44,28 @@ public:
     , title(10, 10, "Grid viewer test!", "30", "Calibri", "black")
     , grid(50, 50, 601, 601, cols, rows, 60)
     , pause_button(this, &GridExample::PauseButton)
-    , side_text(670, 50, "Side Test!", "30", "Calibri", "black")
+    , update_text(670, 50, "Update: ", "30", "Calibri", "black")
+    , mouse_text(670, 90, "Move mouse over grid to test!", "30", "Calibri", "black")
+    , click_text(670, 130, "Click on grid to test!", "30", "Calibri", "black")
     , sched(num_cells)
-    , frame_count(0)
-    , pause(false)
+    , update(0), pause(false)
   {
     pause_button.SetLayout(335, 655, 30, 30);
     pause_button.SetupDrawIcon(this, &GridExample::DrawPauseButton);
 
+    grid.SetMouseMoveCallback(this, &GridExample::Draw_Gridmouse);
+    grid.SetClickCallback(this, &GridExample::Draw_Gridclick);
+
     layer.Add(grid);
     layer.Add(title);
     layer.Add(pause_button);
-    layer.Add(side_text);
-    layer_highlight.Add(grid.GetMousePointer());
+    layer_gridmouse.Add(grid.GetMousePointer());
+    layer.Add(update_text);
+    layer_gridmouse.Add(mouse_text);
+    layer_info.Add(click_text);
     stage.Add(layer);
-    stage.Add(layer_highlight);
+    stage.Add(layer_gridmouse);
+    stage.Add(layer_info);
 
     for (int i = 0; i < num_cells; i++) {
       grid.SetColor(i, random.GetInt(60));
@@ -69,7 +78,8 @@ public:
   }
 
   void Animate(const emkAnimationFrame & frame) {
-    frame_count++;
+    update++;
+    update_text.SetText(std::string("Update: ") + std::to_string(update));
     for (int i = 0; i < 100; i++) {
       // int from = random.GetInt(num_cells);
       int from = sched.NextID();
@@ -81,8 +91,15 @@ public:
       sched.Adjust(to, merits[from]);
       merits[to] = merits[from];
     }
+  }
 
-    side_text.SetText(std::string("Mouse Col:") + std::to_string(grid.GetMouseCol()) + std::string(" Row:") + std::to_string(grid.GetMouseRow()));
+  void Draw_Gridmouse() {
+    mouse_text.SetText(std::string("Mouse Col:") + std::to_string(grid.GetMouseCol()) + std::string(" Row:") + std::to_string(grid.GetMouseRow()));
+  }
+
+  void Draw_Gridclick() {
+    click_text.SetText(std::string("Click Col:") + std::to_string(grid.GetClickCol()) + std::string(" Row:") + std::to_string(grid.GetClickRow()));
+    layer_info.BatchDraw();
   }
 
   void PauseButton() {

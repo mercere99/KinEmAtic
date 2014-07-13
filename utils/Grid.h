@@ -8,17 +8,13 @@
 #include <vector>
 
 namespace emk {
-  class Grid;
-
   class GridPointer : public emkCustomShape {
   private:
-    const Grid & main_grid;
     emk::Color outer_color;
     emk::Color inner_color;
   public:
-    GridPointer(const Grid & _main, const emk::Color & _outer, const emk::Color & _inner)
+    GridPointer(const emk::Color & _outer, const emk::Color & _inner)
       : emkCustomShape(0, 0, 0, 0, this, &GridPointer::Draw)
-      , main_grid(_main)
       , outer_color(_outer), inner_color(_inner)
     { ; }
     ~GridPointer() { ; }
@@ -61,8 +57,12 @@ namespace emk {
     // UI Values
     int mouse_col;
     int mouse_row;
+    int click_col;
+    int click_row;
 
     GridPointer mouse_pointer;
+    emkCallback * mousemove_callback;
+    emkCallback * click_callback;
 
     inline int CellID(int row, int col) const { return row * num_cols + col; }
   public:
@@ -70,7 +70,8 @@ namespace emk {
       : emkCustomShape(_x, _y, _width, _height, this, &Grid::Draw)
       , num_cols(_cols), num_rows(_rows), num_cells(num_rows*num_cols)
       , num_colors(_num_colors), border_width(_border_width), grid_colors(num_cells), color_map(num_colors, true)
-      , mouse_col(-1), mouse_row(-1), mouse_pointer(*this, "yellow", "black")
+      , mouse_col(-1), mouse_row(-1), click_col(-1), click_row(-1), mouse_pointer("yellow", "black")
+      , mousemove_callback(NULL), click_callback(NULL)
     {
       SetupSize();
       for (int i = 0; i < num_cells; i++) grid_colors[i] = 0;
@@ -107,6 +108,16 @@ namespace emk {
     int GetMouseRow() const { return mouse_row; }
     int GetMouseCellID() const { return (mouse_row == -1) ? -1 : mouse_row * num_cols + mouse_col; }
     GridPointer & GetMousePointer() { return mouse_pointer; }
+    template <class T> void SetMouseMoveCallback(T * target, void (T::*method_ptr)()) {
+      mousemove_callback = new emkMethodCallback<T>(target, method_ptr);
+    }
+
+    int GetClickCol() const { return click_col; }
+    int GetClickRow() const { return click_row; }
+    int GetClickCellID() const { return (click_row == -1) ? -1 : click_row * num_cols + click_col; }
+    template <class T> void SetClickCallback(T * target, void (T::*method_ptr)()) {
+      click_callback = new emkMethodCallback<T>(target, method_ptr);
+    }
 
     inline void SetColor(int id, int color) {
       grid_colors[id] = color;
@@ -156,7 +167,9 @@ namespace emk {
     }
 
     void OnClick(const emkEventInfo & evt) {
-      emkAlert("Click!!!");
+      click_col = mouse_col;
+      click_row = mouse_row;
+      if (click_callback) click_callback->DoCallback();
     }
                                                
     void OnMousemove(const emkEventInfo & evt) {
@@ -169,6 +182,7 @@ namespace emk {
       const int x_pos = border_width + cell_x_space * mouse_col;
       const int y_pos = border_width + cell_y_space * mouse_row;
       mouse_pointer.SetXY(x_pos + GetX(), y_pos + GetY());
+      if (mousemove_callback) mousemove_callback->DoCallback();
       mouse_pointer.DrawLayer();
     }
                                                
