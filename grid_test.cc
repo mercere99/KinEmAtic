@@ -18,17 +18,19 @@ private:
   std::vector<double> merits;
 
   emkStage stage;
-  emkLayer layer;
-  emkLayer layer_gridmouse;
-  emkLayer layer_info;
+  emkLayer layer_static;     // Background layer that should never need to be updated.
+  emkLayer layer_grid;       // Main layer for the grid and anything that gets updated with it.
+  emkLayer layer_gridmouse;  // Fast updating as the mouse is moved over the grid.
+  emkLayer layer_info;       // Layer to print the side information.
+  emkLayer layer_buttons;    // Layer for all of the buttons on the screen.
 
   emkText title;
   emk::Grid grid;
   emk::Random random;
-  emk::Button pause_button;
-  emkText update_text;  // On main layer
-  emkText mouse_text;   // On gridmouse layer
-  emkText click_text;   // On info layer
+  emk::Button button_pause;
+  emkText update_text;       // On main layer
+  emkText mouse_text;        // On gridmouse layer
+  emkText click_text;        // On info layer
 
   emkAnimation<GridExample> anim;
 
@@ -43,29 +45,32 @@ public:
     , stage(1200, 800, "container")
     , title(10, 10, "Grid viewer test!", "30", "Calibri", "black")
     , grid(50, 50, 601, 601, cols, rows, 60)
-    , pause_button(this, &GridExample::PauseButton)
+    , button_pause(this, &GridExample::PauseButton)
     , update_text(670, 50, "Update: ", "30", "Calibri", "black")
     , mouse_text(670, 90, "Move mouse over grid to test!", "30", "Calibri", "black")
     , click_text(670, 130, "Click on grid to test!", "30", "Calibri", "black")
     , sched(num_cells)
     , update(0), pause(false)
   {
-    pause_button.SetLayout(335, 655, 30, 30);
-    pause_button.SetupDrawIcon(this, &GridExample::DrawPauseButton);
+    button_pause.SetLayout(335, 655, 30, 30);
+    button_pause.SetupDrawIcon(this, &GridExample::DrawPauseButton);
 
     grid.SetMouseMoveCallback(this, &GridExample::Draw_Gridmouse);
     grid.SetClickCallback(this, &GridExample::Draw_Gridclick);
 
-    layer.Add(grid);
-    layer.Add(title);
-    layer.Add(pause_button);
+    layer_static.Add(title);
+    layer_grid.Add(grid);
+    layer_grid.Add(update_text);
     layer_gridmouse.Add(grid.GetMousePointer());
-    layer.Add(update_text);
     layer_gridmouse.Add(mouse_text);
     layer_info.Add(click_text);
-    stage.Add(layer);
+    layer_buttons.Add(button_pause);
+
+    stage.Add(layer_static);
+    stage.Add(layer_grid);
     stage.Add(layer_gridmouse);
     stage.Add(layer_info);
+    stage.Add(layer_buttons);
 
     for (int i = 0; i < num_cells; i++) {
       grid.SetColor(i, random.GetInt(60));
@@ -73,7 +78,7 @@ public:
       sched.Adjust(i, merits[i]);
     }
 
-    anim.Setup(this, &GridExample::Animate, layer);
+    anim.Setup(this, &GridExample::Animate, layer_grid);
     anim.Start();
   }
 
