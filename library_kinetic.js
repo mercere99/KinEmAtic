@@ -279,6 +279,11 @@ mergeInto(LibraryManager.library, {
         emk_info.ctx.translate(x, y);
     },
 
+    EMK_Canvas_Rotate__deps: ['$emk_info'],
+    EMK_Canvas_Rotate: function(angle) {
+        emk_info.ctx.rotate(angle);
+    },
+
     EMK_Canvas_Stroke__deps: ['$emk_info'],
     EMK_Canvas_Stroke: function() {
         emk_info.ctx.stroke();

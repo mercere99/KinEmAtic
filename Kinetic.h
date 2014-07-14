@@ -65,6 +65,7 @@ extern "C" {
   extern void EMK_Canvas_Save();
   extern void EMK_Canvas_Scale(double x, double y);
   extern void EMK_Canvas_Translate(int x, int y);
+  extern void EMK_Canvas_Rotate(double angle);
   extern void EMK_Canvas_Stroke();
   extern void EMK_Canvas_SetupTarget(int obj_id);
 
@@ -224,6 +225,7 @@ public:
   inline static void Save() { EMK_Canvas_Save(); }
   inline static void Scale(double x, double y) { EMK_Canvas_Scale(x, y);  }
   inline static void Translate(int x, int y) { EMK_Canvas_Translate(x, y);  } 
+  inline static void Rotate(double angle) { EMK_Canvas_Rotate(angle);  } 
  
 
   // Finsihing
