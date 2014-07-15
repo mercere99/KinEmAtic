@@ -44,7 +44,7 @@ extern "C" {
   extern void EMK_Canvas_SetFillStyle(const char * fs);
   extern void EMK_Canvas_SetStroke(const char * fs);
   extern void EMK_Canvas_SetLineJoin(const char * lj);
-  extern void EMK_Canvas_SetLineWidth(int lw);
+  extern void EMK_Canvas_SetLineWidth(double lw);
   extern void EMK_Canvas_SetFont(const char * font);
   extern void EMK_Canvas_SetTextAlign(const char * ta);
   extern void EMK_Canvas_SetShadowColor(const char * sc);
@@ -56,6 +56,8 @@ extern "C" {
   extern void EMK_Canvas_FillRect(int x, int y, int width, int height);
   extern void EMK_Canvas_StrokeRect(int x, int y, int width, int height);
   extern void EMK_Canvas_Arc(int x, int y, int radius, double start, double end, int cclockwise);
+  extern void EMK_Canvas_DrawImage(int image_id, int x, int y);
+  extern void EMK_Canvas_DrawImage_Size(int image_id, int x, int y, int w, int h);
   extern void EMK_Canvas_BeginPath();
   extern void EMK_Canvas_ClosePath();
   extern void EMK_Canvas_Fill();
@@ -181,6 +183,44 @@ public:
 };
 
 
+// Mediator for handling callbacks from JS.
+class emkCallback : public emkObject {
+private:
+  bool is_disposible;
+public:
+  emkCallback() : is_disposible(false) { obj_id = -2; }
+  virtual ~emkCallback() { ; }
+
+  virtual std::string GetType() { return "emkCallback"; }
+
+  virtual void DoCallback(int * arg_ptr=NULL) = 0;
+
+  bool IsDisposible() const { return is_disposible; }
+
+  void SetDisposible(bool _in=true) { is_disposible = _in; }
+};
+
+
+class emkImage : public emkCallback {
+private:
+  const std::string filename;
+  mutable bool has_loaded;
+  mutable std::list<emkLayer *> layers_waiting;
+public:
+  emkImage(const std::string & _filename) : filename(_filename), has_loaded(false) {
+    obj_id = EMK_Image_Load(filename.c_str(), (int) this);   // Start loading the image.
+  }
+
+  virtual std::string GetType() { return "emkImage"; }
+
+  bool HasLoaded() const { return has_loaded; }
+
+  void DrawOnLoad(emkLayer * in_layer) const { layers_waiting.push_back(in_layer); }
+
+  void DoCallback(int * arg_ptr); // Called back when image is loaded
+};
+
+
 // Manual control over the canvas...  For the moment, we're going to keep the canvas info on the JS side of things.
 class emkCanvas {
 public:
@@ -188,7 +228,7 @@ public:
   inline static void SetFillStyle(const emk::Color & color) { EMK_Canvas_SetFillStyle(color.AsString().c_str()); }
   inline static void SetStroke(const emk::Color & color) { EMK_Canvas_SetStroke(color.AsString().c_str()); }
   inline static void SetLineJoin(const std::string & lj) { EMK_Canvas_SetLineJoin(lj.c_str()); }
-  inline static void SetLineWidth(int width) { EMK_Canvas_SetLineWidth(width); }
+  inline static void SetLineWidth(double width) { EMK_Canvas_SetLineWidth(width); }
 
   inline static void SetFont(const std::string & font) { EMK_Canvas_SetFont(font.c_str()); }
   inline static void SetTextAlign(const std::string & align) { EMK_Canvas_SetTextAlign(align.c_str()); }
@@ -213,6 +253,14 @@ public:
     EMK_Canvas_Arc(x, y, radius, start, end, cclockwise);
   }
 
+  inline static void DrawImage(const emkImage & image, int x, int y) {
+    EMK_Canvas_DrawImage(image.GetID(), x, y);
+  }
+
+  inline static void DrawImage(const emkImage & image, int x, int y, int w, int h) {
+    EMK_Canvas_DrawImage_Size(image.GetID(), x, y, w, h);
+  }
+
   // Paths
   inline static void BeginPath() { EMK_Canvas_BeginPath(); }
   inline static void ClosePath() { EMK_Canvas_ClosePath(); }
@@ -231,23 +279,6 @@ public:
   // Finsihing
   inline static void Stroke() { EMK_Canvas_Stroke(); }
   inline static void SetupTarget(const emkObject & obj) { EMK_Canvas_SetupTarget(obj.GetID()); }
-};
-
-// Mediator for handling callbacks from JS.
-class emkCallback : public emkObject {
-private:
-  bool is_disposible;
-public:
-  emkCallback() : is_disposible(false) { obj_id = -2; }
-  virtual ~emkCallback() { ; }
-
-  virtual std::string GetType() { return "emkCallback"; }
-
-  virtual void DoCallback(int * arg_ptr=NULL) = 0;
-
-  bool IsDisposible() const { return is_disposible; }
-
-  void SetDisposible(bool _in=true) { is_disposible = _in; }
 };
 
 
@@ -355,26 +386,6 @@ extern "C" void emkJSDoCallback(int cb_ptr, int arg_ptr)
 }
 
 
-class emkImage : public emkCallback {
-private:
-  const std::string filename;
-  mutable bool has_loaded;
-  mutable std::list<emkLayer *> layers_waiting;
-public:
-  emkImage(const std::string & _filename) : filename(_filename), has_loaded(false) {
-    obj_id = EMK_Image_Load(filename.c_str(), (int) this);   // Start loading the image.
-  }
-
-  virtual std::string GetType() { return "emkImage"; }
-
-  bool HasLoaded() const { return has_loaded; }
-
-  void DrawOnLoad(emkLayer * in_layer) const { layers_waiting.push_back(in_layer); }
-
-  void DoCallback(int * arg_ptr); // Called back when image is loaded
-};
-
-
 // The subclass of object that may be placed in a layer.
 class emkShape : public emkObject {
 protected:
@@ -387,17 +398,10 @@ public:
 
   virtual std::string GetType() { return "emkShape"; }
 
-  void SetFillPatternImage(const emkImage & _image) {
+  virtual void SetFillPatternImage(const emkImage & _image) {
     image = &_image;
     EMK_Shape_SetFillPatternImage(obj_id, image->GetID());
   }
-
-  /*
-  inline int GetX() const { return EMK_Shape_GetX(obj_id); }
-  inline int GetY() const { return EMK_Shape_GetY(obj_id); }
-  inline int GetWidth() const { return EMK_Shape_GetWidth(obj_id); }
-  inline int GetHeight() const { return EMK_Shape_GetHeight(obj_id); }
-  */
 
   inline void SetCornerRadius(int radius) { EMK_Shape_SetCornerRadius(obj_id, radius); }
   inline void SetFillPatternScale(double scale) { EMK_Shape_SetFillPatternScale(obj_id, scale); }

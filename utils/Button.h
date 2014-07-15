@@ -42,9 +42,14 @@ namespace emk {
 
     void SetActive(bool _in=true) { is_active = _in; }
     void SetToolTip(const std::string & msg) { tooltip = msg; }
-    void SetRoundCorners(bool _ul, bool _ur, bool _lr, bool _ll) {
+    void SetRoundCorners(bool _ul=true, bool _ur=true, bool _lr=true, bool _ll=true) {
       ul_round = _ul;      ur_round = _ur;
       ll_round = _ll;      lr_round = _lr;
+    }
+
+    void SetFillPatternImage(const emkImage & _image) {
+      // Don't automatically draw the image here, just record it.
+      image = &_image;
     }
 
     template<class T> void SetupDrawIcon(T * _target, void (T::*_method_ptr)(emkCanvas &)) {
@@ -108,14 +113,18 @@ namespace emk {
 
       // Draw the appropriate icon.
       // First, shift the icon to be on a 100x100 grid, and shift back afterward.
+      canvas.Save();
       if (draw_icon_cb) {
-        canvas.Save();
         canvas.Translate(x+5, y+5);
         canvas.Scale(((double)(width-10))/100.0, ((double)(height-10))/100.0);
         draw_icon_cb->DoCallback(); // Write this!
-        canvas.Restore();
       }
-      // @CAO else if there's an image use it.  Else just make it a solid color?
+      else if (image) { // otherwise, if there's an image, use it.
+        canvas.DrawImage(*image, 0, 0, width, height);
+        // canvas.DrawImage(*image, 0, 0, width-10, height-10);
+      }
+      // @CAO  Else just make it a solid color?
+      canvas.Restore();
   
       // Make the button clickable (or grayed out!)
       canvas.BeginPath();

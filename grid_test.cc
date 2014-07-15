@@ -25,10 +25,12 @@ private:
   emkLayer layer_buttons;    // Layer for all of the buttons on the screen.
 
   emkText title;
-  emk::Grid grid;            // Visual Grid.
-  emk::Button button_rewind; // BUTTON: Restart a run.
-  emk::Button button_pause;  // BUTTON: Pause a run.
-  emk::Button button_freeze; // BUTTON: Save a population.
+  emk::Grid grid;             // Visual Grid.
+  emk::Button button_rewind;  // BUTTON: Restart a run.
+  emk::Button button_pause;   // BUTTON: Pause a run.
+  emk::Button button_freeze;  // BUTTON: Save a population.
+  emk::Button button_config;  // BUTTON: Save a population.
+  emkImage image_icon_config; // Image for config button
 
   emkText update_text;       // On main layer
   emkText mouse_text;        // On gridmouse layer
@@ -41,6 +43,7 @@ private:
   emk::ProbSchedule sched;
   int update;
   bool pause;
+  bool grid_flipped;
 public:
   GridExample(int _cols, int _rows)
     : cols(_cols), rows(_rows), num_cells(cols*rows)
@@ -51,22 +54,29 @@ public:
     , button_rewind(this, &GridExample::SetupRun)
     , button_pause(this, &GridExample::PauseRun)
     , button_freeze(this, &GridExample::FreezeRun)
+    , button_config(this, &GridExample::ConfigRun)
+    , image_icon_config("icons/gear.png") // ("icons/setting.png")
     , update_text(670, 50, "Update: ", "30", "Calibri", "black")
     , mouse_text(670, 90, "Move mouse over grid to test!", "30", "Calibri", "black")
     , click_text(670, 130, "Click on grid to test!", "30", "Calibri", "black")
     , sched(num_cells)
-    , update(0), pause(false)
+    , update(0), pause(false), grid_flipped(false)
   {
     // Setup the buttons a long the bottom of the grid.
     const int buttons_x = grid.GetX();
     const int buttons_y = grid.GetY() + grid.GetHeight() + 5;
-    const int buttons_w = grid.GetWidth();
-    button_rewind.SetLayout(buttons_x + buttons_w/2 - 50, buttons_y, 30, 30);
+    const int button_w = 40;
+    const int button_spacing = 5;
+    const int grid_w = grid.GetWidth();
+    button_rewind.SetLayout(buttons_x + grid_w/2 - button_w * 1.5 - button_spacing, buttons_y, button_w, button_w);
     button_rewind.SetupDrawIcon(this, &GridExample::DrawRewindButton);
-    button_pause.SetLayout(buttons_x + buttons_w/2 - 15, buttons_y, 30, 30);
+    button_pause.SetLayout(buttons_x + (grid_w - button_w)/2, buttons_y, button_w, button_w);
     button_pause.SetupDrawIcon(this, &GridExample::DrawPauseButton);
-    button_freeze.SetLayout(buttons_x + buttons_w/2 + 20, buttons_y, 30, 30);
+    button_freeze.SetLayout(buttons_x + (grid_w + button_w)/2 + button_spacing, buttons_y, button_w, button_w);
     button_freeze.SetupDrawIcon(this, &GridExample::DrawFreezeButton);
+    button_config.SetLayout(buttons_x + grid_w - button_w, buttons_y, button_w, button_w);
+    button_config.SetupDrawIcon(this, &GridExample::DrawConfigButton);
+    // button_config.SetFillPatternImage(image_icon_config);
 
     grid.SetMouseMoveCallback(this, &GridExample::Draw_Gridmouse);
     grid.SetClickCallback(this, &GridExample::Draw_Gridclick);
@@ -80,6 +90,7 @@ public:
     layer_buttons.Add(button_rewind);
     layer_buttons.Add(button_pause);
     layer_buttons.Add(button_freeze);
+    layer_buttons.Add(button_config);
 
     stage.Add(layer_static);
     stage.Add(layer_grid);
@@ -96,10 +107,17 @@ public:
   void SetupRun() {
     update = 0;
     for (int i = 0; i < num_cells; i++) {
-      grid.SetColor(i, random.GetInt(60));
-      merits[i] = random.GetDouble();
-      sched.Adjust(i, merits[i]);
+      grid.SetColor(i, random.GetInt(0));
+      merits[i] = 0.0;
+      sched.Adjust(i, 0.0);
+      // grid.SetColor(i, random.GetInt(60));
+      // merits[i] = random.GetDouble();
+      // sched.Adjust(i, merits[i]);
     }
+    grid.SetColor(1830, 40);
+      merits[1830] = 1.0;
+      sched.Adjust(1830, 1.0);
+
     layer_grid.BatchDraw();
   }
 
@@ -110,6 +128,10 @@ public:
 
   void FreezeRun() {
     emkAlert("Sorry, freezing not implemented yet!");
+  }
+
+  void ConfigRun() {  // Other side of grid is config.
+    emkAlert("Sorry, configs are not implemented yet!");
   }
 
   void Animate(const emkAnimationFrame & frame) {
@@ -138,8 +160,8 @@ public:
   }
 
   void DrawRewindButton(emkCanvas & canvas) {
-    canvas.SetStroke("black");
-    canvas.SetFillStyle("black");
+    canvas.SetStroke("#440000");
+    canvas.SetFillStyle("#440000");
 
     
     // Left bar...
@@ -196,6 +218,40 @@ public:
     canvas.Rect(-10, -50, 20, 100, true);
     canvas.Rotate(emk::PI/3);
     canvas.Rect(-10, -50, 20, 100, true);
+
+    canvas.Stroke();
+  }
+
+  void DrawConfigButton(emkCanvas & canvas) {
+    // canvas.SetStroke("#008800");
+    // canvas.SetFillStyle("#008800");
+    canvas.SetStroke("#708090");
+    canvas.SetFillStyle("#708090");
+
+    // Draw Gear 1
+    canvas.Translate(35, 35);
+    canvas.SetLineWidth(10);
+    canvas.BeginPath();
+    canvas.Arc(0, 0, 30, 0, 2.0*emk::PI);
+    canvas.Stroke();
+
+    for (int i=0; i < 12; i++) {
+      canvas.Rect(-5, 30, 10, 15, true);
+      canvas.Rotate(emk::PI/6);
+    }
+
+    // Draw Gear 2
+    canvas.Translate(45, 40);
+    canvas.SetLineWidth(10);
+    canvas.BeginPath();
+    canvas.Arc(0, 0, 20, 0, 2.0*emk::PI);
+    canvas.Stroke();
+
+    for (int i=0; i < 8; i++) {
+      canvas.Rect(-5, 20, 10, 12, true);
+      canvas.Rotate(emk::PI/4);
+    }
+
 
     canvas.Stroke();
   }

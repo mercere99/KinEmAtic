@@ -1,3 +1,6 @@
+icons
+
+*~
 
 test.js
 
@@ -7,19 +10,7 @@ GII.js
 
 GII.js.map
 
-GII.html~
-
-sudoku.html~
-
-sudoku.cc~
-
 sudoku.js
-
-grid_test.cc~
-
-grid_test.html~
-
-tools/Grid.h~
 
 grid_test.js.map
 
@@ -27,18 +18,8 @@ grid_test.js
 
 tools/Colors.h~
 
-*.cc~
-
-*.h~
-
 tools/cRandom.cc
 
 a.out
 
 *.plist
-
-*.sh~
-
-*.sh~
-
-compile.sh~

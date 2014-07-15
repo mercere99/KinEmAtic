@@ -234,6 +234,16 @@ mergeInto(LibraryManager.library, {
         emk_info.ctx.arc(x, y, radius, start, end, cclockwise);
     },
 
+    EMK_Canvas_DrawImage__deps: ['$emk_info'],
+    EMK_Canvas_DrawImage: function(image_id, x, y) {
+        emk_info.ctx.drawImage(emk_info.images[image_id], x, y)
+    },
+
+    EMK_Canvas_DrawImage_Size__deps: ['$emk_info'],
+    EMK_Canvas_DrawImage_Size: function(image_id, x, y, w, h) {
+        emk_info.ctx.drawImage(emk_info.images[image_id], x, y, w, h)
+    },
+
     EMK_Canvas_BeginPath__deps: ['$emk_info'],
     EMK_Canvas_BeginPath: function() {
         emk_info.ctx.beginPath();
