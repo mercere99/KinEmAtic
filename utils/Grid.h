@@ -61,8 +61,8 @@ namespace emk {
     int click_row;
 
     GridPointer mouse_pointer;
-    emkCallback * mousemove_callback;
-    emkCallback * click_callback;
+    emk::Callback * mousemove_callback;
+    emk::Callback * click_callback;
 
     inline int CellID(int row, int col) const { return row * num_cols + col; }
   public:
@@ -109,14 +109,14 @@ namespace emk {
     int GetMouseCellID() const { return (mouse_row == -1) ? -1 : mouse_row * num_cols + mouse_col; }
     GridPointer & GetMousePointer() { return mouse_pointer; }
     template <class T> void SetMouseMoveCallback(T * target, void (T::*method_ptr)()) {
-      mousemove_callback = new emkMethodCallback<T>(target, method_ptr);
+      mousemove_callback = new emk::MethodCallback<T>(target, method_ptr);
     }
 
     int GetClickCol() const { return click_col; }
     int GetClickRow() const { return click_row; }
     int GetClickCellID() const { return (click_row == -1) ? -1 : click_row * num_cols + click_col; }
     template <class T> void SetClickCallback(T * target, void (T::*method_ptr)()) {
-      click_callback = new emkMethodCallback<T>(target, method_ptr);
+      click_callback = new emk::MethodCallback<T>(target, method_ptr);
     }
 
     inline void SetColor(int id, int color) {
@@ -166,13 +166,13 @@ namespace emk {
       canvas.SetupTarget(*this);
     }
 
-    void OnClick(const emkEventInfo & evt) {
+    void OnClick(const emk::EventInfo & evt) {
       click_col = mouse_col;
       click_row = mouse_row;
       if (click_callback) click_callback->DoCallback();
     }
                                                
-    void OnMousemove(const emkEventInfo & evt) {
+    void OnMousemove(const emk::EventInfo & evt) {
       const int mouse_x = evt.layer_x - GetX();
       const int mouse_y = evt.layer_y - GetY();
       mouse_col = num_cols * mouse_x / (grid_width - border_width);
@@ -186,11 +186,11 @@ namespace emk {
       mouse_pointer.DrawLayer();
     }
                                                
-    void OnMouseout() {  // (const emkEventInfo & evt) {
+    void OnMouseout() {  // (const emk::EventInfo & evt) {
       mouse_col = mouse_row = -1;  // Don't highlight any cells if the mouse isn't on the grid.
     }
                                                
-    void OnMouseover() { // (const emkEventInfo & evt) {
+    void OnMouseover() { // (const emk::EventInfo & evt) {
     }
                                                
   };

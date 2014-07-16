@@ -15,6 +15,14 @@ private:
   int rows;
   int num_cells;
 
+  int grid_x;
+  int grid_y;
+  int grid_w;
+  int grid_h;
+
+  int grid_offset_x;
+  int grid_offset_y;
+
   std::vector<double> merits;
 
   emkStage stage;
@@ -36,21 +44,24 @@ private:
   emkText mouse_text;        // On gridmouse layer
   emkText click_text;        // On info layer
 
-  emkAnimation<GridExample> anim;
+  emkAnimation<GridExample> anim_grid_run;
+  emkAnimation<GridExample> anim_grid_flip;
 
   // Current status 
   emk::Random random;        // Random number generator
   emk::ProbSchedule sched;
   int update;
-  bool pause;
-  bool grid_flipped;
+  bool is_paused;            // false = grid running.  true = grid paused.
+  bool is_flipped;           // false = grid showing.  true = config showing.
 public:
   GridExample(int _cols, int _rows)
     : cols(_cols), rows(_rows), num_cells(cols*rows)
+    , grid_x(50), grid_y(50), grid_w(481), grid_h(481)
+    , grid_offset_x(grid_x + grid_w/2), grid_offset_y(grid_y + grid_h/2)
     , merits(num_cells)
     , stage(1200, 800, "container")
     , title(10, 10, "Avida Viewer test!", "30", "Calibri", "black")
-    , grid(50, 50, 481, 481, cols, rows, 60)
+    , grid(grid_offset_x, grid_offset_y, grid_w, grid_h, cols, rows, 60)
     , button_rewind(this, &GridExample::SetupRun)
     , button_pause(this, &GridExample::PauseRun)
     , button_freeze(this, &GridExample::FreezeRun)
@@ -60,14 +71,13 @@ public:
     , mouse_text(670, 90, "Move mouse over grid to test!", "30", "Calibri", "black")
     , click_text(670, 130, "Click on grid to test!", "30", "Calibri", "black")
     , sched(num_cells)
-    , update(0), pause(false), grid_flipped(false)
+    , update(0), is_paused(false), is_flipped(false)
   {
     // Setup the buttons a long the bottom of the grid.
-    const int buttons_x = grid.GetX();
-    const int buttons_y = grid.GetY() + grid.GetHeight() + 5;
+    const int buttons_x = grid_x;
+    const int buttons_y = grid_y + grid_h + 5;
     const int button_w = 40;
     const int button_spacing = 5;
-    const int grid_w = grid.GetWidth();
     button_rewind.SetLayout(buttons_x + grid_w/2 - button_w * 1.5 - button_spacing, buttons_y, button_w, button_w);
     button_rewind.SetupDrawIcon(this, &GridExample::DrawRewindButton);
     button_pause.SetLayout(buttons_x + (grid_w - button_w)/2, buttons_y, button_w, button_w);
@@ -80,6 +90,7 @@ public:
 
     grid.SetMouseMoveCallback(this, &GridExample::Draw_Gridmouse);
     grid.SetClickCallback(this, &GridExample::Draw_Gridclick);
+    grid.SetOffset(grid.GetWidth()/2, grid.GetHeight()/2);
 
     layer_static.Add(title);
     layer_grid.Add(grid);
@@ -100,8 +111,12 @@ public:
 
     SetupRun();
 
-    anim.Setup(this, &GridExample::Animate, layer_grid);
-    anim.Start();
+    // Setup potential animations...
+    anim_grid_run.Setup(this, &GridExample::Animate_Grid, layer_grid);
+    anim_grid_flip.Setup(this, &GridExample::Animate_Flip, layer_grid);
+
+    // And start the main animation
+    anim_grid_run.Start();
   }
 
   void SetupRun() {
@@ -122,8 +137,8 @@ public:
   }
 
   void PauseRun() {
-    if (pause == true) { anim.Start(); pause = false; }
-    else { anim.Stop(); pause = true; }
+    if (is_paused == true) { anim_grid_run.Start(); is_paused = false; }
+    else { anim_grid_run.Stop(); is_paused = true; }
   }
 
   void FreezeRun() {
@@ -131,10 +146,26 @@ public:
   }
 
   void ConfigRun() {  // Other side of grid is config.
-    emkAlert("Sorry, configs are not implemented yet!");
+    // If we're on the config side...
+    if (is_flipped) {
+      // Restart the grid if it's not paused.
+      if (is_paused == false) anim_grid_run.Start();
+      is_flipped = false;
+    }
+
+    // If we're on the grid side...
+    else {
+      // Stop the grid before flipping.
+      if (is_paused == false) anim_grid_run.Stop();
+      is_flipped = true;
+    }
+    
+    // @CAO Shut off listening on grid!
+    anim_grid_flip.Start();
+    // emkAlert("Sorry, configs are not implemented yet!");
   }
 
-  void Animate(const emkAnimationFrame & frame) {
+  void Animate_Grid(const emkAnimationFrame & frame) {
     update++;
     update_text.SetText(std::string("Update: ") + std::to_string(update));
     for (int i = 0; i < 100; i++) {
@@ -147,6 +178,27 @@ public:
       grid.SetColor(to, grid.GetColor(from));
       sched.Adjust(to, merits[from]);
       merits[to] = merits[from];
+    }
+  }
+
+  void Animate_Flip(const emkAnimationFrame & frame) {
+    const double period = 2000.0;
+    const double scale = std::abs( std::cos(frame.time * emk::PI / period) + 0.001 );
+
+    grid.SetScale(scale, 1.0);
+
+    // End it if we've gone too far...
+    if (frame.time > period) {
+      grid.SetScale(1.0, 1.0);
+      anim_grid_flip.Stop();
+    }
+
+    // If we are animating flipping to the configuration options...
+    if (is_flipped) {
+    }
+
+    // If we are animating flipping to the grid...
+    else {
     }
   }
 
@@ -191,7 +243,7 @@ public:
     canvas.SetFillStyle("black");
 
     // Draw a play sign if paused or a pause sign if running.
-    if (pause == true) {
+    if (is_paused) {
       canvas.BeginPath();
       canvas.MoveTo(20, 10);
       canvas.LineTo(20, 90);

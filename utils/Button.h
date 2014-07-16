@@ -14,8 +14,8 @@ namespace emk {
     bool mouse_down;
     bool mouse_over;
 
-    emkCallback * trigger_cb;
-    emkCallback * draw_icon_cb;
+    Callback * trigger_cb;
+    Callback * draw_icon_cb;
 
     std::string name;
     std::string tooltip;
@@ -31,7 +31,7 @@ namespace emk {
       , is_active(true), mouse_down(false), mouse_over(false), name(_name)
       , ul_round(true), ur_round(true), ll_round(true), lr_round(true)
     {
-      trigger_cb = new emkMethodCallback<T>(_target, _method_ptr);
+      trigger_cb = new emk::MethodCallback<T>(_target, _method_ptr);
       draw_icon_cb = NULL;
       On("mousedown", this, &Button::Default_OnMouseDown);
       On("mouseup", this, &Button::Default_OnMouseUp);
@@ -151,13 +151,13 @@ namespace emk {
       canvas.SetupTarget(*this);
     }
 
-    void Default_OnMouseDown(const emkEventInfo &) {
+    void Default_OnMouseDown(const emk::EventInfo &) {
       if (is_active == false) return;
       mouse_down = true;
       DrawLayer();
     }
 
-    void Default_OnMouseUp(const emkEventInfo &) {
+    void Default_OnMouseUp(const emk::EventInfo &) {
       if (is_active == false) return;
       mouse_down = false;
       Toggle();                         // If this is a toggle button...
@@ -168,14 +168,14 @@ namespace emk {
     }
     
 
-    void Default_OnMouseEnter(const emkEventInfo &) {
+    void Default_OnMouseEnter(const emk::EventInfo &) {
       mouse_over = true;
       UpdateHover();
       DrawLayer();
       // UpdateTooltip(this.x, this.y, this.tooltip); // ?????
     }
   
-    void Default_OnMouseLeave(const emkEventInfo &) {
+    void Default_OnMouseLeave(const emk::EventInfo &) {
       mouse_over = false;
       mouse_down = false;
       // highlight_id = -1;  // Need to unhighlight and redraw in sudoku... @CAO

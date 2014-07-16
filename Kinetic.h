@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "tools/Callbacks.h"
 #include "tools/Colors.h"
 
 extern "C" {
@@ -113,7 +114,6 @@ extern "C" {
 }
 
 // Pre-declarations of some classes...
-class emkEventInfo;
 class emkLayer;
 class emkStage;
 
@@ -179,29 +179,11 @@ public:
 
 
   template<class T> void On(const std::string & in_trigger, T * in_target, void (T::*in_method_ptr)());
-  template<class T> void On(const std::string & in_trigger, T * in_target, void (T::*in_method_ptr)(const emkEventInfo &));
+  template<class T> void On(const std::string & in_trigger, T * in_target, void (T::*in_method_ptr)(const emk::EventInfo &));
 };
 
 
-// Mediator for handling callbacks from JS.
-class emkCallback : public emkObject {
-private:
-  bool is_disposible;
-public:
-  emkCallback() : is_disposible(false) { obj_id = -2; }
-  virtual ~emkCallback() { ; }
-
-  virtual std::string GetType() { return "emkCallback"; }
-
-  virtual void DoCallback(int * arg_ptr=NULL) = 0;
-
-  bool IsDisposible() const { return is_disposible; }
-
-  void SetDisposible(bool _in=true) { is_disposible = _in; }
-};
-
-
-class emkImage : public emkCallback {
+class emkImage : public emk::Callback, public emkObject {
 private:
   const std::string filename;
   mutable bool has_loaded;
@@ -282,64 +264,7 @@ public:
 };
 
 
-template <class T> class emkMethodCallback : public emkCallback {
-private:
-  T * target;
-  void (T::*method_ptr)();
-public:
-  emkMethodCallback(T * in_target, void (T::*in_method_ptr)())
-    : target(in_target)
-    , method_ptr(in_method_ptr)
-  { ; }
-
-  ~emkMethodCallback() { ; }
-
-  virtual std::string GetType() { return "emkMethodCallback"; }
-
-  void DoCallback(int * arg_ptr) { (void) arg_ptr; (target->*(method_ptr))(); }
-};
-
-
-class emkEventInfo {
-public:
-  int layer_x;      // Coordinates of mouse in this layer.
-  int layer_y;
-  int button;       // Which button was pressed?
-  int key_code;     // Which key was pressed?
-  bool alt_key;     // Modifier keys
-  bool ctrl_key;
-  bool meta_key;
-  bool shift_key;  
-
-  emkEventInfo(int lx, int ly, int but, int key, int alt, int ctrl, int meta, int shift)
-    : layer_x(lx), layer_y(ly), button(but), key_code(key)
-    , alt_key(alt), ctrl_key(ctrl), meta_key(meta), shift_key(shift) { ; }
-};
-
-template <class T> class emkMethodCallback_Event : public emkCallback {
-private:
-  T * target;
-  void (T::*method_ptr)(const emkEventInfo &);
-public:
-  emkMethodCallback_Event(T * in_target, void (T::*in_method_ptr)(const emkEventInfo &))
-    : target(in_target)
-    , method_ptr(in_method_ptr)
-  { ; }
-
-  ~emkMethodCallback_Event() { ; }
-
-  virtual std::string GetType() { return "emkCallback_Event"; }
-
-  void DoCallback(int * arg_ptr) {
-    emkEventInfo info(arg_ptr[0], arg_ptr[1], arg_ptr[2], arg_ptr[3], arg_ptr[4], arg_ptr[5], arg_ptr[6], arg_ptr[7]);
-    (target->*(method_ptr))(info);
-    
-    // (target->*(method_ptr))( *((emkEventInfo *) arg_ptr) );
-  }
-};
-
-
-template <class T> class emkCallback_Canvas : public emkCallback {
+template <class T> class emkCallback_Canvas : public emk::Callback {
 private:
   T * target;
   void (T::*method_ptr)(emkCanvas &);
@@ -363,26 +288,26 @@ template<class T> void emkObject::On(const std::string & trigger, T * target,
                                      void (T::*method_ptr)())
 {
   // @CAO Technically we should track these callbacks to make sure we delete them properly.
-  emkMethodCallback<T> * new_callback = new emkMethodCallback<T>(target, method_ptr);
+  emk::MethodCallback<T> * new_callback = new emk::MethodCallback<T>(target, method_ptr);
   EMK_Setup_OnEvent(obj_id, trigger.c_str(), (int) new_callback);
 }
 
 template<class T> void emkObject::On(const std::string & trigger, T * target,
-                                     void (T::*method_ptr)(const emkEventInfo &))
+                                     void (T::*method_ptr)(const emk::EventInfo &))
 {
   // @CAO Technically we should track these callbacks to make sure we delete them properly.
-  emkMethodCallback_Event<T> * new_callback = new emkMethodCallback_Event<T>(target, method_ptr);
+  emk::MethodCallback_Event<T> * new_callback = new emk::MethodCallback_Event<T>(target, method_ptr);
   EMK_Setup_OnEvent_Info(obj_id, trigger.c_str(), (int) new_callback);
 }
 
 extern "C" void emkJSDoCallback(int cb_ptr, int arg_ptr)
 {
-  emkCallback * const cb_obj = (emkCallback *) cb_ptr;
+  emk::Callback * const cb_obj = (emk::Callback *) cb_ptr;
   cb_obj->DoCallback((int *) arg_ptr);
+
   if (cb_obj->IsDisposible()) {
     delete cb_obj;
   }
-  // ((emkCallback *) cb_ptr)->DoCallback((int *) arg_ptr);
 }
 
 
@@ -390,7 +315,7 @@ extern "C" void emkJSDoCallback(int cb_ptr, int arg_ptr)
 class emkShape : public emkObject {
 protected:
   const emkImage * image;  // If we are drawing an image, keep track of it to make sure it loads.
-  emkCallback * draw_callback; // If we override the draw callback, keep track of it here.
+  emk::Callback * draw_callback; // If we override the draw callback, keep track of it here.
 
   emkShape() : image(NULL), draw_callback(NULL) { obj_id = -3; } // The default Shape constructor should only be called from derived classes.
 public:
@@ -550,16 +475,19 @@ public:
 };
 
 
-template <class T> class emkAnimation : public emkCallback {
+template <class T> class emkAnimation : public emk::Callback, public emkObject {
 private:
   T * target;
   void (T::*method_ptr)(const emkAnimationFrame &);
   void (T::*method_ptr_nf)();
+  bool is_running;
 public:
-  emkAnimation() : target(NULL), method_ptr(NULL), method_ptr_nf(NULL) { ; }
+  emkAnimation() : target(NULL), method_ptr(NULL), method_ptr_nf(NULL), is_running(false) { ; }
   ~emkAnimation() { ; }
 
-  virtual std::string GetType() { return "emkAnimation"; }
+  std::string GetType() const { return "emkAnimation"; }
+
+  bool IsRunning() const { return is_running; }
 
   // Setup this animation object to know what class it will be working with, which update method it should use,
   // and what Stage layer it is in.  The method pointed to may, optionally, take a frame object.
@@ -588,10 +516,12 @@ public:
   void Start() {
     assert(obj_id >= 0); // Make sure we've setup this animation before starting it.
     EMK_Animation_Start(obj_id);
+    is_running = true;
   }
   void Stop() {
     assert(obj_id >= 0); // Make sure we've setup this animation before stopping it.
     EMK_Animation_Stop(obj_id);
+    is_running = false;
   }
 };
 
