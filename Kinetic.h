@@ -113,430 +113,437 @@ extern "C" {
   extern void EMK_Cursor_Set(const char * type);
 }
 
-// Pre-declarations of some classes...
-class emkLayer;
-class emkStage;
+
+namespace emk {
+
+  // Pre-declarations of some classes...
+  class Layer;
+  class Stage;
 
 
-void emkAlert(const std::string & msg) { EMK_Alert(msg.c_str()); }
-void emkAlert(int val) { EMK_Alert(std::to_string(val).c_str()); }
-void emkAlert(double val) { EMK_Alert(std::to_string(val).c_str()); }
+  void Alert(const std::string & msg) { EMK_Alert(msg.c_str()); }
+  void Alert(int val) { EMK_Alert(std::to_string(val).c_str()); }
+  void Alert(double val) { EMK_Alert(std::to_string(val).c_str()); }
 
-#define emkAlertVar(VAR) emkAlert(std::string(#VAR) + std::string("=") + std::to_string(VAR))
-
-
-// All emscripten-wrapped Kinetic objects should be derived from this base class.
-class emkObject {
-protected:
-  int obj_id;
-  emkObject * layer;
-
-  emkObject() : obj_id(-1) {;}  // Protected so that you can't make a direct emkObject.
-public:
-  ~emkObject() {
-    EMK_Object_Destroy(obj_id); // Cleanup this object from Kinetic.
-  }
-  int GetID() const { return obj_id; }
-
-  virtual std::string GetType() { return "emkObject"; }
-
-  // Retrieve info from JS Kinetic::Node objects
-  int GetX() const { return EMK_Object_GetX(obj_id); }
-  int GetY() const { return EMK_Object_GetY(obj_id); }
-  int GetWidth() const { return EMK_Object_GetWidth(obj_id); }
-  int GetHeight() const { return EMK_Object_GetHeight(obj_id); }
-  bool GetVisible() const { return EMK_Object_GetVisible(obj_id); }
-  double GetOpacity() const { return EMK_Object_GetOpacity(obj_id); }
-  bool GetListening() const { return EMK_Object_GetListening(obj_id); }
-  double GetScaleX() const { return EMK_Object_GetScaleX(obj_id); }
-  double GetScaleY() const { return EMK_Object_GetScaleY(obj_id); }
-  int GetOffsetX() const { return EMK_Object_GetOffsetX(obj_id); }
-  int GetOffsetY() const { return EMK_Object_GetOffsetY(obj_id); }
-  int GetRotation() const { return EMK_Object_GetRotation(obj_id); }
-  int GetDraggable() const { return EMK_Object_GetDraggable(obj_id); }
-
-  inline void SetX(int x) { EMK_Object_SetX(obj_id, x); }
-  inline void SetY(int y) { EMK_Object_SetY(obj_id, y); }
-  inline void SetXY(int x, int y) { EMK_Object_SetXY(obj_id, x, y); }
-  inline void SetWidth(int w) { EMK_Object_SetWidth(obj_id, w); }
-  inline void SetHeight(int h) { EMK_Object_SetHeight(obj_id, h); }
-  inline void SetSize(int w, int h) { EMK_Object_SetSize(obj_id, w, h); }
-  inline void SetLayout(int x, int y, int w, int h) {
-    EMK_Object_SetXY(obj_id, x, y);
-    EMK_Object_SetSize(obj_id, w, h);
-  }
-
-  void SetLayer(emkObject * _layer) { layer = _layer; }
-
-  // Draw either this object or objects in contains.
-  void Draw() { EMK_Object_Draw(obj_id); }
-
-  // Draw all objects in this layer.
-  void DrawLayer() { if (layer) EMK_Object_Draw(layer->GetID()); }
-
-  // Move this object to the top of the current layer.
-  void MoveToTop() { EMK_Object_MoveToTop(obj_id); }
+#define AlertVar(VAR) Alert(std::string(#VAR) + std::string("=") + std::to_string(VAR))
 
 
-  template<class T> void On(const std::string & in_trigger, T * in_target, void (T::*in_method_ptr)());
-  template<class T> void On(const std::string & in_trigger, T * in_target, void (T::*in_method_ptr)(const emk::EventInfo &));
-};
+  // All emscripten-wrapped Kinetic objects should be derived from this base class.
+  class Object {
+  protected:
+    int obj_id;
+    Object * layer;
+
+    Object() : obj_id(-1) {;}  // Protected so that you can't make a direct Object.
+  public:
+    ~Object() {
+      EMK_Object_Destroy(obj_id); // Cleanup this object from Kinetic.
+    }
+    int GetID() const { return obj_id; }
+
+    virtual std::string GetType() { return "emkObject"; }
+
+    // Retrieve info from JS Kinetic::Node objects
+    int GetX() const { return EMK_Object_GetX(obj_id); }
+    int GetY() const { return EMK_Object_GetY(obj_id); }
+    int GetWidth() const { return EMK_Object_GetWidth(obj_id); }
+    int GetHeight() const { return EMK_Object_GetHeight(obj_id); }
+    bool GetVisible() const { return EMK_Object_GetVisible(obj_id); }
+    double GetOpacity() const { return EMK_Object_GetOpacity(obj_id); }
+    bool GetListening() const { return EMK_Object_GetListening(obj_id); }
+    double GetScaleX() const { return EMK_Object_GetScaleX(obj_id); }
+    double GetScaleY() const { return EMK_Object_GetScaleY(obj_id); }
+    int GetOffsetX() const { return EMK_Object_GetOffsetX(obj_id); }
+    int GetOffsetY() const { return EMK_Object_GetOffsetY(obj_id); }
+    int GetRotation() const { return EMK_Object_GetRotation(obj_id); }
+    int GetDraggable() const { return EMK_Object_GetDraggable(obj_id); }
+
+    inline void SetX(int x) { EMK_Object_SetX(obj_id, x); }
+    inline void SetY(int y) { EMK_Object_SetY(obj_id, y); }
+    inline void SetXY(int x, int y) { EMK_Object_SetXY(obj_id, x, y); }
+    inline void SetWidth(int w) { EMK_Object_SetWidth(obj_id, w); }
+    inline void SetHeight(int h) { EMK_Object_SetHeight(obj_id, h); }
+    inline void SetSize(int w, int h) { EMK_Object_SetSize(obj_id, w, h); }
+    inline void SetLayout(int x, int y, int w, int h) {
+      EMK_Object_SetXY(obj_id, x, y);
+      EMK_Object_SetSize(obj_id, w, h);
+    }
+
+    void SetLayer(Object * _layer) { layer = _layer; }
+
+    // Draw either this object or objects in contains.
+    void Draw() { EMK_Object_Draw(obj_id); }
+
+    // Draw all objects in this layer.
+    void DrawLayer() { if (layer) EMK_Object_Draw(layer->GetID()); }
+
+    // Move this object to the top of the current layer.
+    void MoveToTop() { EMK_Object_MoveToTop(obj_id); }
 
 
-class emkImage : public emk::Callback, public emkObject {
-private:
-  const std::string filename;
-  mutable bool has_loaded;
-  mutable std::list<emkLayer *> layers_waiting;
-public:
-  emkImage(const std::string & _filename) : filename(_filename), has_loaded(false) {
-    obj_id = EMK_Image_Load(filename.c_str(), (int) this);   // Start loading the image.
-  }
-
-  virtual std::string GetType() { return "emkImage"; }
-
-  bool HasLoaded() const { return has_loaded; }
-
-  void DrawOnLoad(emkLayer * in_layer) const { layers_waiting.push_back(in_layer); }
-
-  void DoCallback(int * arg_ptr); // Called back when image is loaded
-};
+    template<class T> void On(const std::string & in_trigger, T * in_target, void (T::*in_method_ptr)());
+    template<class T> void On(const std::string & in_trigger, T * in_target, void (T::*in_method_ptr)(const EventInfo &));
+  };
 
 
-// Manual control over the canvas...  For the moment, we're going to keep the canvas info on the JS side of things.
-class emkCanvas {
-public:
-  // Setting values
-  inline static void SetFillStyle(const emk::Color & color) { EMK_Canvas_SetFillStyle(color.AsString().c_str()); }
-  inline static void SetStroke(const emk::Color & color) { EMK_Canvas_SetStroke(color.AsString().c_str()); }
-  inline static void SetLineJoin(const std::string & lj) { EMK_Canvas_SetLineJoin(lj.c_str()); }
-  inline static void SetLineWidth(double width) { EMK_Canvas_SetLineWidth(width); }
+  class Image : public Callback, public Object {
+  private:
+    const std::string filename;
+    mutable bool has_loaded;
+    mutable std::list<Layer *> layers_waiting;
+  public:
+    Image(const std::string & _filename) : filename(_filename), has_loaded(false) {
+      obj_id = EMK_Image_Load(filename.c_str(), (int) this);   // Start loading the image.
+    }
 
-  inline static void SetFont(const std::string & font) { EMK_Canvas_SetFont(font.c_str()); }
-  inline static void SetTextAlign(const std::string & align) { EMK_Canvas_SetTextAlign(align.c_str()); }
+    virtual std::string GetType() { return "emkImage"; }
 
-  inline static void SetShadowColor(const emk::Color & color) { EMK_Canvas_SetShadowColor(color.AsString().c_str()); }
-  inline static void SetShadowBlur(int blur) { EMK_Canvas_SetShadowBlur(blur); }
-  inline static void SetShadowOffsetX(int offset_x) { EMK_Canvas_SetShadowOffsetX(offset_x); }
-  inline static void SetShadowOffsetY(int offset_y) { EMK_Canvas_SetShadowOffsetY(offset_y); }
+    bool HasLoaded() const { return has_loaded; }
 
-  // Shapes and Text
-  inline static void Text(const std::string & msg, int x, int y, bool fill=true) {
-    if (fill) EMK_Canvas_FillText(msg.c_str(), x, y);
-    else EMK_Canvas_StrokeText(msg.c_str(), x, y);
-  }
+    void DrawOnLoad(Layer * in_layer) const { layers_waiting.push_back(in_layer); }
 
-  inline static void Rect(int x, int y, int width, int height, bool fill=false) {
-    if (fill) EMK_Canvas_FillRect(x, y, width, height);
-    else EMK_Canvas_StrokeRect(x, y, width, height);
-  }
+    void DoCallback(int * arg_ptr); // Called back when image is loaded
+  };
 
-  inline static void Arc(int x, int y, int radius, double start, double end, bool cclockwise=false) {
-    EMK_Canvas_Arc(x, y, radius, start, end, cclockwise);
-  }
 
-  inline static void DrawImage(const emkImage & image, int x, int y) {
-    EMK_Canvas_DrawImage(image.GetID(), x, y);
-  }
+  // Manual control over the canvas...  For the moment, we're going to keep the canvas info on the JS side of things.
+  class Canvas {
+  public:
+    // Setting values
+    inline static void SetFillStyle(const Color & color) { EMK_Canvas_SetFillStyle(color.AsString().c_str()); }
+    inline static void SetStroke(const Color & color) { EMK_Canvas_SetStroke(color.AsString().c_str()); }
+    inline static void SetLineJoin(const std::string & lj) { EMK_Canvas_SetLineJoin(lj.c_str()); }
+    inline static void SetLineWidth(double width) { EMK_Canvas_SetLineWidth(width); }
 
-  inline static void DrawImage(const emkImage & image, int x, int y, int w, int h) {
-    EMK_Canvas_DrawImage_Size(image.GetID(), x, y, w, h);
-  }
+    inline static void SetFont(const std::string & font) { EMK_Canvas_SetFont(font.c_str()); }
+    inline static void SetTextAlign(const std::string & align) { EMK_Canvas_SetTextAlign(align.c_str()); }
 
-  // Paths
-  inline static void BeginPath() { EMK_Canvas_BeginPath(); }
-  inline static void ClosePath() { EMK_Canvas_ClosePath(); }
-  inline static void Fill() { EMK_Canvas_Fill(); }
-  inline static void LineTo(int x, int y) { EMK_Canvas_LineTo(x, y); }
-  inline static void MoveTo(int x, int y) { EMK_Canvas_MoveTo(x, y); }
+    inline static void SetShadowColor(const Color & color) { EMK_Canvas_SetShadowColor(color.AsString().c_str()); }
+    inline static void SetShadowBlur(int blur) { EMK_Canvas_SetShadowBlur(blur); }
+    inline static void SetShadowOffsetX(int offset_x) { EMK_Canvas_SetShadowOffsetX(offset_x); }
+    inline static void SetShadowOffsetY(int offset_y) { EMK_Canvas_SetShadowOffsetY(offset_y); }
 
-  // Transformations
-  inline static void Restore() { EMK_Canvas_Restore(); }
-  inline static void Save() { EMK_Canvas_Save(); }
-  inline static void Scale(double x, double y) { EMK_Canvas_Scale(x, y);  }
-  inline static void Translate(int x, int y) { EMK_Canvas_Translate(x, y);  } 
-  inline static void Rotate(double angle) { EMK_Canvas_Rotate(angle);  } 
+    // Shapes and Text
+    inline static void Text(const std::string & msg, int x, int y, bool fill=true) {
+      if (fill) EMK_Canvas_FillText(msg.c_str(), x, y);
+      else EMK_Canvas_StrokeText(msg.c_str(), x, y);
+    }
+
+    inline static void Rect(int x, int y, int width, int height, bool fill=false) {
+      if (fill) EMK_Canvas_FillRect(x, y, width, height);
+      else EMK_Canvas_StrokeRect(x, y, width, height);
+    }
+
+    inline static void Arc(int x, int y, int radius, double start, double end, bool cclockwise=false) {
+      EMK_Canvas_Arc(x, y, radius, start, end, cclockwise);
+    }
+
+    inline static void DrawImage(const Image & image, int x, int y) {
+      EMK_Canvas_DrawImage(image.GetID(), x, y);
+    }
+
+    inline static void DrawImage(const Image & image, int x, int y, int w, int h) {
+      EMK_Canvas_DrawImage_Size(image.GetID(), x, y, w, h);
+    }
+
+    // Paths
+    inline static void BeginPath() { EMK_Canvas_BeginPath(); }
+    inline static void ClosePath() { EMK_Canvas_ClosePath(); }
+    inline static void Fill() { EMK_Canvas_Fill(); }
+    inline static void LineTo(int x, int y) { EMK_Canvas_LineTo(x, y); }
+    inline static void MoveTo(int x, int y) { EMK_Canvas_MoveTo(x, y); }
+
+    // Transformations
+    inline static void Restore() { EMK_Canvas_Restore(); }
+    inline static void Save() { EMK_Canvas_Save(); }
+    inline static void Scale(double x, double y) { EMK_Canvas_Scale(x, y);  }
+    inline static void Translate(int x, int y) { EMK_Canvas_Translate(x, y);  } 
+    inline static void Rotate(double angle) { EMK_Canvas_Rotate(angle);  } 
  
 
-  // Finsihing
-  inline static void Stroke() { EMK_Canvas_Stroke(); }
-  inline static void SetupTarget(const emkObject & obj) { EMK_Canvas_SetupTarget(obj.GetID()); }
+    // Finsihing
+    inline static void Stroke() { EMK_Canvas_Stroke(); }
+    inline static void SetupTarget(const Object & obj) { EMK_Canvas_SetupTarget(obj.GetID()); }
+  };
+
+
+  template <class T> class Callback_Canvas : public Callback {
+  private:
+    T * target;
+    void (T::*method_ptr)(Canvas &);
+  public:
+    Callback_Canvas(T * in_target, void (T::*in_method_ptr)(Canvas &))
+      : target(in_target)
+      , method_ptr(in_method_ptr)
+    { ; }
+
+    ~Callback_Canvas() { ; }
+
+    virtual std::string GetType() { return "emkCallback_Canvas"; }
+
+    void DoCallback(int * arg_ptr) {
+      Canvas canvas; // @CAO For now, all canvas objects are alike; we should allow them to coexist.
+      (target->*(method_ptr))(canvas); }
+  };
+
+
+  template<class T> void Object::On(const std::string & trigger, T * target,
+                                       void (T::*method_ptr)())
+  {
+    // @CAO Technically we should track these callbacks to make sure we delete them properly.
+    MethodCallback<T> * new_callback = new MethodCallback<T>(target, method_ptr);
+    EMK_Setup_OnEvent(obj_id, trigger.c_str(), (int) new_callback);
+  }
+
+  template<class T> void Object::On(const std::string & trigger, T * target,
+                                       void (T::*method_ptr)(const EventInfo &))
+  {
+    // @CAO Technically we should track these callbacks to make sure we delete them properly.
+    MethodCallback_Event<T> * new_callback = new MethodCallback_Event<T>(target, method_ptr);
+    EMK_Setup_OnEvent_Info(obj_id, trigger.c_str(), (int) new_callback);
+  }
+
+
+  // The subclass of object that may be placed in a layer.
+  class Shape : public Object {
+  protected:
+    const Image * image;  // If we are drawing an image, keep track of it to make sure it loads.
+    Callback * draw_callback; // If we override the draw callback, keep track of it here.
+
+    Shape() : image(NULL), draw_callback(NULL) { obj_id = -3; } // The default Shape constructor should only be called from derived classes.
+  public:
+    virtual ~Shape() { ; }
+
+    virtual std::string GetType() { return "emkShape"; }
+
+    virtual void SetFillPatternImage(const Image & _image) {
+      image = &_image;
+      EMK_Shape_SetFillPatternImage(obj_id, image->GetID());
+    }
+
+    inline void SetCornerRadius(int radius) { EMK_Shape_SetCornerRadius(obj_id, radius); }
+    inline void SetFillPatternScale(double scale) { EMK_Shape_SetFillPatternScale(obj_id, scale); }
+    inline void SetLineJoin(const char * join_type) { EMK_Shape_SetLineJoin(obj_id, join_type); }
+    inline void SetOffset(int _x, int _y) { EMK_Shape_SetOffset(obj_id, _x, _y); }
+    inline void SetScale(double _x, double _y) { EMK_Shape_SetScale(obj_id, _x, _y); }
+    inline void SetScale(double scale) { EMK_Shape_SetScale(obj_id, scale, scale); }
+    inline void SetStroke(const Color & color) { EMK_Shape_SetStroke(obj_id, color.AsString().c_str()); }
+
+
+    // Override the drawing of this shape.
+    template<class T> void SetDrawFunction(T * target, void (T::*draw_ptr)(Canvas &) ) {
+      if (draw_callback != NULL) delete draw_callback;
+      draw_callback = new Callback_Canvas<T>(target, draw_ptr);
+      EMK_Shape_SetDrawFunction(obj_id, (int) draw_callback);
+    }
+
+    void DoRotate(double rot) { EMK_Shape_DoRotate(obj_id, rot); }
+
+    const Image * GetImage() { return image; }
+  };
+
+
+  // Build your own shape!
+  class CustomShape : public Shape {
+  public:
+    template <class T> CustomShape(T * target, void (T::*draw_ptr)(Canvas &))
+    {
+      draw_callback = new Callback_Canvas<T>(target, draw_ptr);
+      obj_id = EMK_Custom_Shape_Build(0, 0, 0, 0, (int) draw_callback);
+    }
+    template <class T> CustomShape(int _x, int _y, int _w, int _h, T * target, void (T::*draw_ptr)(Canvas &))
+    {
+      draw_callback = new Callback_Canvas<T>(target, draw_ptr);
+      obj_id = EMK_Custom_Shape_Build(_x, _y, _w, _h, (int) draw_callback);
+    }
+    virtual ~CustomShape() { ; }
+
+    virtual std::string GetType() { return "emkCustomShape"; }
+  };
+
+
+
+  // Manager for stage layers
+  class Layer : public Object {
+  public:
+  public:
+    Layer() { obj_id = EMK_Layer_Build(); }
+    ~Layer() { ; }
+
+    virtual std::string GetType() { return "emkLayer"; }
+
+    // Add other types of stage objects; always place them in the current layer.
+    Layer & Add(Shape & in_obj) {
+      in_obj.SetLayer(this);
+
+      // If the object we are adding has an image that hasn't been loaded, setup a callback.
+      const Image * image = in_obj.GetImage();
+      if (image && image->HasLoaded() == false) {
+        image->DrawOnLoad(this);
+      }
+      EMK_Layer_AddObject(obj_id, in_obj.GetID());
+      return *this;
+    }
+
+    void BatchDraw() { EMK_Layer_BatchDraw(obj_id); }
+  };
+
+
+  // The main Stage object from Kinetic
+  class Stage : public Object {
+  private:
+    std::string m_container;      // Name of this stage.
+
+  public:
+    Stage(int _w, int _h, std::string name="container") 
+      : m_container(name)
+    {
+      obj_id = EMK_Stage_Build(_w, _h, m_container.c_str());
+    }
+    ~Stage() { ; }
+
+    virtual std::string GetType() { return "emkStage"; }
+
+    // Sizing
+    void ResizeMax(int min_width=0, int min_height=0) { EMK_Stage_ResizeMax(obj_id, min_width, min_height); }
+
+    // Add a layer and return this stage itself (so adding can be chained...)
+    Stage & Add(Layer & in_layer) {
+      EMK_Stage_AddLayer(obj_id, in_layer.GetID());
+      return *this;
+    }
+  };
+
+
+  // The text object from Kinetic...
+  class Text : public Shape {
+  public:
+    Text(int x=0, int y=0, std::string text="", std::string font_size="30", std::string font_family="Calibri", std::string fill="black")
+    {
+      obj_id = EMK_Text_Build(x, y, text.c_str(), font_size.c_str(), font_family.c_str(), fill.c_str());
+    }
+    ~Text() { ; }
+
+    virtual std::string GetType() { return "emkText"; }
+
+    void SetText(const std::string & in_text) {
+      EMK_Text_SetText(obj_id, in_text.c_str());
+    }
+  };
+
+  // The rectangle object from Kinetic...
+  class Rect : public Shape {
+  public:
+    Rect(int x=0, int y=0, int w=10, int h=10, std::string fill="white", std::string stroke="black", int stroke_width=1, int draggable=0)
+    {
+      obj_id = EMK_Rect_Build(x, y, w, h, fill.c_str(), stroke.c_str(), stroke_width, draggable);
+    }
+
+    virtual std::string GetType() { return "emkRect"; }
+  };
+
+  // The regular polygon object from Kinetic...
+  class RegularPolygon : public Shape {
+  public:
+    RegularPolygon(int x=0, int y=0, int sides=4, int radius=10, std::string fill="white", std::string stroke="black", int stroke_width=1, int draggable=0)
+    {
+      obj_id = EMK_RegularPolygon_Build(x, y, sides, radius, fill.c_str(), stroke.c_str(), stroke_width, draggable);
+    }
+
+    virtual std::string GetType() { return "emkRegularPolygon"; }
+  };
+
+
+  // Frame information for animations...
+  class AnimationFrame {
+  public:
+    int time_diff;  // Miliseconds since last frame. 
+    int last_time;  // Miliseconds from start to last frame.
+    int time;       // Miliseconds from start to current frame.
+    int frame_rate; // Current frames per second.
+  public:
+    AnimationFrame(int _td, int _lt, int _t, int _fr)
+      : time_diff(_td), last_time(_lt), time(_t), frame_rate(_fr) { ; }
+    ~AnimationFrame() { ; }
+  };
+
+
+  template <class T> class Animation : public Callback, public Object {
+  private:
+    T * target;
+    void (T::*method_ptr)(const AnimationFrame &);
+    void (T::*method_ptr_nf)();
+    bool is_running;
+  public:
+    Animation() : target(NULL), method_ptr(NULL), method_ptr_nf(NULL), is_running(false) { ; }
+    ~Animation() { ; }
+
+    std::string GetType() const { return "emkAnimation"; }
+
+    bool IsRunning() const { return is_running; }
+
+    // Setup this animation object to know what class it will be working with, which update method it should use,
+    // and what Stage layer it is in.  The method pointed to may, optionally, take a frame object.
+    void Setup(T * in_target, void (T::*in_method_ptr)(const AnimationFrame &), Layer & layer) {
+      target = in_target;
+      method_ptr = in_method_ptr;
+      obj_id = EMK_Animation_Build((int) this, layer.GetID());
+    }
+
+    void Setup(T * in_target, void (T::*in_method_ptr)(), Layer & layer) {
+      target = in_target;
+      method_ptr_nf = in_method_ptr;
+      obj_id = EMK_Animation_Build_NoFrame((int) this, layer.GetID());
+    }
+
+    void DoCallback(int * arg_ptr) {
+      if (arg_ptr > 0) {
+        AnimationFrame frame(arg_ptr[0], arg_ptr[1], arg_ptr[2], arg_ptr[3]);
+        (target->*(method_ptr))(frame);
+      } else {
+        AnimationFrame frame(arg_ptr[0], arg_ptr[1], arg_ptr[2], arg_ptr[3]);
+        (target->*(method_ptr_nf))();
+      }
+    }
+    
+    void Start() {
+      assert(obj_id >= 0); // Make sure we've setup this animation before starting it.
+      EMK_Animation_Start(obj_id);
+      is_running = true;
+    }
+    void Stop() {
+      assert(obj_id >= 0); // Make sure we've setup this animation before stopping it.
+      EMK_Animation_Stop(obj_id);
+      is_running = false;
+    }
+  };
+
+
+  //////////////////////////////////////////////////////////
+  // Methods previously declared
+
+  void Image::DoCallback(int * arg_ptr) { // Called back when image is loaded
+    (void) arg_ptr;
+    has_loaded = true;
+    while (layers_waiting.size()) {
+      Layer * cur_layer = layers_waiting.front();
+      layers_waiting.pop_front();
+      cur_layer->BatchDraw();
+    }
+  }
+
 };
 
-
-template <class T> class emkCallback_Canvas : public emk::Callback {
-private:
-  T * target;
-  void (T::*method_ptr)(emkCanvas &);
-public:
-  emkCallback_Canvas(T * in_target, void (T::*in_method_ptr)(emkCanvas &))
-    : target(in_target)
-    , method_ptr(in_method_ptr)
-  { ; }
-
-  ~emkCallback_Canvas() { ; }
-
-  virtual std::string GetType() { return "emkCallback_Canvas"; }
-
-  void DoCallback(int * arg_ptr) {
-    emkCanvas canvas; // @CAO For now, all canvas objects are alike; we should allow them to coexist.
-    (target->*(method_ptr))(canvas); }
-};
-
-
-template<class T> void emkObject::On(const std::string & trigger, T * target,
-                                     void (T::*method_ptr)())
-{
-  // @CAO Technically we should track these callbacks to make sure we delete them properly.
-  emk::MethodCallback<T> * new_callback = new emk::MethodCallback<T>(target, method_ptr);
-  EMK_Setup_OnEvent(obj_id, trigger.c_str(), (int) new_callback);
-}
-
-template<class T> void emkObject::On(const std::string & trigger, T * target,
-                                     void (T::*method_ptr)(const emk::EventInfo &))
-{
-  // @CAO Technically we should track these callbacks to make sure we delete them properly.
-  emk::MethodCallback_Event<T> * new_callback = new emk::MethodCallback_Event<T>(target, method_ptr);
-  EMK_Setup_OnEvent_Info(obj_id, trigger.c_str(), (int) new_callback);
-}
 
 extern "C" void emkJSDoCallback(int cb_ptr, int arg_ptr)
 {
   emk::Callback * const cb_obj = (emk::Callback *) cb_ptr;
   cb_obj->DoCallback((int *) arg_ptr);
-
+  
   if (cb_obj->IsDisposible()) {
     delete cb_obj;
   }
 }
 
-
-// The subclass of object that may be placed in a layer.
-class emkShape : public emkObject {
-protected:
-  const emkImage * image;  // If we are drawing an image, keep track of it to make sure it loads.
-  emk::Callback * draw_callback; // If we override the draw callback, keep track of it here.
-
-  emkShape() : image(NULL), draw_callback(NULL) { obj_id = -3; } // The default Shape constructor should only be called from derived classes.
-public:
-  virtual ~emkShape() { ; }
-
-  virtual std::string GetType() { return "emkShape"; }
-
-  virtual void SetFillPatternImage(const emkImage & _image) {
-    image = &_image;
-    EMK_Shape_SetFillPatternImage(obj_id, image->GetID());
-  }
-
-  inline void SetCornerRadius(int radius) { EMK_Shape_SetCornerRadius(obj_id, radius); }
-  inline void SetFillPatternScale(double scale) { EMK_Shape_SetFillPatternScale(obj_id, scale); }
-  inline void SetLineJoin(const char * join_type) { EMK_Shape_SetLineJoin(obj_id, join_type); }
-  inline void SetOffset(int _x, int _y) { EMK_Shape_SetOffset(obj_id, _x, _y); }
-  inline void SetScale(double _x, double _y) { EMK_Shape_SetScale(obj_id, _x, _y); }
-  inline void SetScale(double scale) { EMK_Shape_SetScale(obj_id, scale, scale); }
-  inline void SetStroke(const emk::Color & color) { EMK_Shape_SetStroke(obj_id, color.AsString().c_str()); }
-
-
-  // Override the drawing of this shape.
-  template<class T> void SetDrawFunction(T * target, void (T::*draw_ptr)(emkCanvas &) ) {
-    if (draw_callback != NULL) delete draw_callback;
-    draw_callback = new emkCallback_Canvas<T>(target, draw_ptr);
-    EMK_Shape_SetDrawFunction(obj_id, (int) draw_callback);
-  }
-
-  void DoRotate(double rot) { EMK_Shape_DoRotate(obj_id, rot); }
-
-  const emkImage * GetImage() { return image; }
-};
-
-
-// Build your own shape!
-class emkCustomShape : public emkShape {
-public:
-  template <class T> emkCustomShape(T * target, void (T::*draw_ptr)(emkCanvas &))
-  {
-    draw_callback = new emkCallback_Canvas<T>(target, draw_ptr);
-    obj_id = EMK_Custom_Shape_Build(0, 0, 0, 0, (int) draw_callback);
-  }
-  template <class T> emkCustomShape(int _x, int _y, int _w, int _h, T * target, void (T::*draw_ptr)(emkCanvas &))
-  {
-    draw_callback = new emkCallback_Canvas<T>(target, draw_ptr);
-    obj_id = EMK_Custom_Shape_Build(_x, _y, _w, _h, (int) draw_callback);
-  }
-  virtual ~emkCustomShape() { ; }
-
-  virtual std::string GetType() { return "emkCustomShape"; }
-};
-
-
-
-// Manager for stage layers
-class emkLayer : public emkObject {
-public:
-public:
-  emkLayer() { obj_id = EMK_Layer_Build(); }
-  ~emkLayer() { ; }
-
-  virtual std::string GetType() { return "emkLayer"; }
-
-  // Add other types of stage objects; always place them in the current layer.
-  emkLayer & Add(emkShape & in_obj) {
-    in_obj.SetLayer(this);
-
-    // If the object we are adding has an image that hasn't been loaded, setup a callback.
-    const emkImage * image = in_obj.GetImage();
-    if (image && image->HasLoaded() == false) {
-      image->DrawOnLoad(this);
-    }
-    EMK_Layer_AddObject(obj_id, in_obj.GetID());
-    return *this;
-  }
-
-  void BatchDraw() { EMK_Layer_BatchDraw(obj_id); }
-};
-
-
-// The main Stage object from Kinetic
-class emkStage : public emkObject {
-private:
-  std::string m_container;      // Name of this stage.
-
-public:
-  emkStage(int _w, int _h, std::string name="container") 
-    : m_container(name)
-  {
-    obj_id = EMK_Stage_Build(_w, _h, m_container.c_str());
-  }
-  ~emkStage() { ; }
-
-  virtual std::string GetType() { return "emkStage"; }
-
-  // Sizing
-  void ResizeMax(int min_width=0, int min_height=0) { EMK_Stage_ResizeMax(obj_id, min_width, min_height); }
-
-  // Add a layer and return this stage itself (so adding can be chained...)
-  emkStage & Add(emkLayer & in_layer) {
-    EMK_Stage_AddLayer(obj_id, in_layer.GetID());
-    return *this;
-  }
-};
-
-
-// The text object from Kinetic...
-class emkText : public emkShape {
-public:
-  emkText(int x=0, int y=0, std::string text="", std::string font_size="30", std::string font_family="Calibri", std::string fill="black")
-  {
-    obj_id = EMK_Text_Build(x, y, text.c_str(), font_size.c_str(), font_family.c_str(), fill.c_str());
-  }
-  ~emkText() { ; }
-
-  virtual std::string GetType() { return "emkText"; }
-
-  void SetText(const std::string & in_text) {
-    EMK_Text_SetText(obj_id, in_text.c_str());
-  }
-};
-
-// The rectangle object from Kinetic...
-class emkRect : public emkShape {
-public:
-  emkRect(int x=0, int y=0, int w=10, int h=10, std::string fill="white", std::string stroke="black", int stroke_width=1, int draggable=0)
-  {
-    obj_id = EMK_Rect_Build(x, y, w, h, fill.c_str(), stroke.c_str(), stroke_width, draggable);
-  }
-
-  virtual std::string GetType() { return "emkRect"; }
-};
-
-// The regular polygon object from Kinetic...
-class emkRegularPolygon : public emkShape {
-public:
-  emkRegularPolygon(int x=0, int y=0, int sides=4, int radius=10, std::string fill="white", std::string stroke="black", int stroke_width=1, int draggable=0)
-  {
-    obj_id = EMK_RegularPolygon_Build(x, y, sides, radius, fill.c_str(), stroke.c_str(), stroke_width, draggable);
-  }
-
-  virtual std::string GetType() { return "emkRegularPolygon"; }
-};
-
-
-// Frame information for animations...
-class emkAnimationFrame {
-public:
-  int time_diff;  // Miliseconds since last frame. 
-  int last_time;  // Miliseconds from start to last frame.
-  int time;       // Miliseconds from start to current frame.
-  int frame_rate; // Current frames per second.
-public:
-  emkAnimationFrame(int _td, int _lt, int _t, int _fr)
-    : time_diff(_td), last_time(_lt), time(_t), frame_rate(_fr) { ; }
-  ~emkAnimationFrame() { ; }
-};
-
-
-template <class T> class emkAnimation : public emk::Callback, public emkObject {
-private:
-  T * target;
-  void (T::*method_ptr)(const emkAnimationFrame &);
-  void (T::*method_ptr_nf)();
-  bool is_running;
-public:
-  emkAnimation() : target(NULL), method_ptr(NULL), method_ptr_nf(NULL), is_running(false) { ; }
-  ~emkAnimation() { ; }
-
-  std::string GetType() const { return "emkAnimation"; }
-
-  bool IsRunning() const { return is_running; }
-
-  // Setup this animation object to know what class it will be working with, which update method it should use,
-  // and what Stage layer it is in.  The method pointed to may, optionally, take a frame object.
-  void Setup(T * in_target, void (T::*in_method_ptr)(const emkAnimationFrame &), emkLayer & layer) {
-    target = in_target;
-    method_ptr = in_method_ptr;
-    obj_id = EMK_Animation_Build((int) this, layer.GetID());
-  }
-
-  void Setup(T * in_target, void (T::*in_method_ptr)(), emkLayer & layer) {
-    target = in_target;
-    method_ptr_nf = in_method_ptr;
-    obj_id = EMK_Animation_Build_NoFrame((int) this, layer.GetID());
-  }
-
-  void DoCallback(int * arg_ptr) {
-    if (arg_ptr > 0) {
-      emkAnimationFrame frame(arg_ptr[0], arg_ptr[1], arg_ptr[2], arg_ptr[3]);
-      (target->*(method_ptr))(frame);
-    } else {
-      emkAnimationFrame frame(arg_ptr[0], arg_ptr[1], arg_ptr[2], arg_ptr[3]);
-      (target->*(method_ptr_nf))();
-    }
-  }
-    
-  void Start() {
-    assert(obj_id >= 0); // Make sure we've setup this animation before starting it.
-    EMK_Animation_Start(obj_id);
-    is_running = true;
-  }
-  void Stop() {
-    assert(obj_id >= 0); // Make sure we've setup this animation before stopping it.
-    EMK_Animation_Stop(obj_id);
-    is_running = false;
-  }
-};
-
-
-//////////////////////////////////////////////////////////
-// Methods that refer to other classes defined later...
-
-void emkImage::DoCallback(int * arg_ptr) { // Called back when image is loaded
-  (void) arg_ptr;
-  has_loaded = true;
-  while (layers_waiting.size()) {
-    emkLayer * cur_layer = layers_waiting.front();
-    layers_waiting.pop_front();
-    cur_layer->BatchDraw();
-  }
-}
 
 #endif

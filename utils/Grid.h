@@ -8,13 +8,13 @@
 #include <vector>
 
 namespace emk {
-  class GridPointer : public emkCustomShape {
+  class GridPointer : public CustomShape {
   private:
     emk::Color outer_color;
     emk::Color inner_color;
   public:
     GridPointer(const emk::Color & _outer, const emk::Color & _inner)
-      : emkCustomShape(0, 0, 0, 0, this, &GridPointer::Draw)
+      : CustomShape(0, 0, 0, 0, this, &GridPointer::Draw)
       , outer_color(_outer), inner_color(_inner)
     { ; }
     ~GridPointer() { ; }
@@ -24,7 +24,7 @@ namespace emk {
       inner_color = _inner;
     }
 
-    void Draw(emkCanvas & canvas) {
+    void Draw(Canvas & canvas) {
       const int width = GetWidth();
       const int height = GetHeight();
       canvas.SetStroke(outer_color);
@@ -35,7 +35,7 @@ namespace emk {
     }    
   };
 
-  class Grid : public emkCustomShape {
+  class Grid : public CustomShape {
   private:
     const int num_cols;
     const int num_rows;
@@ -67,7 +67,7 @@ namespace emk {
     inline int CellID(int row, int col) const { return row * num_cols + col; }
   public:
     Grid(int _x, int _y, int _width, int _height, int _cols, int _rows, int _num_colors=12, int _border_width=1)
-      : emkCustomShape(_x, _y, _width, _height, this, &Grid::Draw)
+      : CustomShape(_x, _y, _width, _height, this, &Grid::Draw)
       , num_cols(_cols), num_rows(_rows), num_cells(num_rows*num_cols)
       , num_colors(_num_colors), border_width(_border_width), grid_colors(num_cells), color_map(num_colors, true)
       , mouse_col(-1), mouse_row(-1), click_col(-1), click_row(-1), mouse_pointer("yellow", "black")
@@ -124,7 +124,7 @@ namespace emk {
     }
     void SetColor(int row, int col, int color) { SetColor(CellID(row, col), color); }
 
-    void Draw(emkCanvas & canvas) {
+    void Draw(Canvas & canvas) {
       // Setup the background black...
       canvas.SetFillStyle("black");
       canvas.Rect(0, 0, grid_width, grid_height, true);

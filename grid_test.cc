@@ -7,8 +7,6 @@
 #include "utils/Button.h"
 #include "utils/Grid.h"
 
-using namespace std;
-
 class GridExample {
 private:
   int cols;
@@ -25,27 +23,26 @@ private:
 
   std::vector<double> merits;
 
-  emkStage stage;
-  emkLayer layer_static;     // Background layer that should never need to be updated.
-  emkLayer layer_grid;       // Main layer for the grid and anything that gets updated with it.
-  emkLayer layer_gridmouse;  // Fast updating as the mouse is moved over the grid.
-  emkLayer layer_info;       // Layer to print the side information.
-  emkLayer layer_buttons;    // Layer for all of the buttons on the screen.
+  emk::Stage stage;
+  emk::Layer layer_static;     // Background layer that should never need to be updated.
+  emk::Layer layer_grid;       // Main layer for the grid and anything that gets updated with it.
+  emk::Layer layer_gridmouse;  // Fast updating as the mouse is moved over the grid.
+  emk::Layer layer_info;       // Layer to print the side information.
+  emk::Layer layer_buttons;    // Layer for all of the buttons on the screen.
 
-  emkText title;
+  emk::Text title;
   emk::Grid grid;             // Visual Grid.
   emk::Button button_rewind;  // BUTTON: Restart a run.
   emk::Button button_pause;   // BUTTON: Pause a run.
   emk::Button button_freeze;  // BUTTON: Save a population.
   emk::Button button_config;  // BUTTON: Save a population.
-  emkImage image_icon_config; // Image for config button
+  emk::Image image_icon_config; // Image for config button
 
-  emkText update_text;       // On main layer
-  emkText mouse_text;        // On gridmouse layer
-  emkText click_text;        // On info layer
+  emk::Text update_text;       // On main layer
+  emk::Text mouse_text;        // On gridmouse layer
+  emk::Text click_text;        // On info layer
 
-  emkAnimation<GridExample> anim_grid_run;
-  emkAnimation<GridExample> anim_grid_flip;
+  emk::Animation<GridExample> anim_grid_run;
 
   // Current status 
   emk::Random random;        // Random number generator
@@ -113,7 +110,6 @@ public:
 
     // Setup potential animations...
     anim_grid_run.Setup(this, &GridExample::Animate_Grid, layer_grid);
-    anim_grid_flip.Setup(this, &GridExample::Animate_Flip, layer_grid);
 
     // And start the main animation
     anim_grid_run.Start();
@@ -142,10 +138,11 @@ public:
   }
 
   void FreezeRun() {
-    emkAlert("Sorry, freezing not implemented yet!");
+    emk::Alert("Sorry, freezing not implemented yet!");
   }
 
   void ConfigRun() {  // Other side of grid is config.
+    /*
     // If we're on the config side...
     if (is_flipped) {
       // Restart the grid if it's not paused.
@@ -162,10 +159,11 @@ public:
     
     // @CAO Shut off listening on grid!
     anim_grid_flip.Start();
-    // emkAlert("Sorry, configs are not implemented yet!");
+    */
+    emk::Alert("Sorry, configs are not implemented yet!");
   }
 
-  void Animate_Grid(const emkAnimationFrame & frame) {
+  void Animate_Grid(const emk::AnimationFrame & frame) {
     update++;
     update_text.SetText(std::string("Update: ") + std::to_string(update));
     for (int i = 0; i < 100; i++) {
@@ -181,26 +179,6 @@ public:
     }
   }
 
-  void Animate_Flip(const emkAnimationFrame & frame) {
-    const double period = 2000.0;
-    const double scale = std::abs( std::cos(frame.time * emk::PI / period) + 0.001 );
-
-    grid.SetScale(scale, 1.0);
-
-    // End it if we've gone too far...
-    if (frame.time > period) {
-      grid.SetScale(1.0, 1.0);
-      anim_grid_flip.Stop();
-    }
-
-    // If we are animating flipping to the configuration options...
-    if (is_flipped) {
-    }
-
-    // If we are animating flipping to the grid...
-    else {
-    }
-  }
 
   void Draw_Gridmouse() {
     mouse_text.SetText(std::string("Mouse Col:") + std::to_string(grid.GetMouseCol()) + std::string(" Row:") + std::to_string(grid.GetMouseRow()));
@@ -211,7 +189,7 @@ public:
     layer_info.BatchDraw();
   }
 
-  void DrawRewindButton(emkCanvas & canvas) {
+  void DrawRewindButton(emk::Canvas & canvas) {
     canvas.SetStroke("#440000");
     canvas.SetFillStyle("#440000");
 
@@ -238,7 +216,7 @@ public:
     canvas.Stroke();
   }
 
-  void DrawPauseButton(emkCanvas & canvas) {
+  void DrawPauseButton(emk::Canvas & canvas) {
     canvas.SetStroke("black");
     canvas.SetFillStyle("black");
 
@@ -259,7 +237,7 @@ public:
     canvas.Stroke();
   }
 
-  void DrawFreezeButton(emkCanvas & canvas) {
+  void DrawFreezeButton(emk::Canvas & canvas) {
     canvas.SetStroke("#222288");
     canvas.SetFillStyle("#222288");
 
@@ -274,7 +252,7 @@ public:
     canvas.Stroke();
   }
 
-  void DrawConfigButton(emkCanvas & canvas) {
+  void DrawConfigButton(emk::Canvas & canvas) {
     // canvas.SetStroke("#008800");
     // canvas.SetFillStyle("#008800");
     canvas.SetStroke("#708090");

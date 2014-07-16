@@ -8,7 +8,7 @@
 
 namespace emk {
   
-  class Button : public emkCustomShape {
+  class Button : public CustomShape {
   private:
     bool is_active;  // Is this button currently functional?
     bool mouse_down;
@@ -27,7 +27,7 @@ namespace emk {
     bool lr_round;
   public:
     template<class T> Button(T * _target, void (T::*_method_ptr)(), const std::string & _name="")
-      : emkCustomShape(this, &Button::Default_Draw)
+      : CustomShape(this, &Button::Default_Draw)
       , is_active(true), mouse_down(false), mouse_over(false), name(_name)
       , ul_round(true), ur_round(true), ll_round(true), lr_round(true)
     {
@@ -47,13 +47,13 @@ namespace emk {
       ll_round = _ll;      lr_round = _lr;
     }
 
-    void SetFillPatternImage(const emkImage & _image) {
+    void SetFillPatternImage(const Image & _image) {
       // Don't automatically draw the image here, just record it.
       image = &_image;
     }
 
-    template<class T> void SetupDrawIcon(T * _target, void (T::*_method_ptr)(emkCanvas &)) {
-      draw_icon_cb = new emkCallback_Canvas<T>(_target, _method_ptr);
+    template<class T> void SetupDrawIcon(T * _target, void (T::*_method_ptr)(Canvas &)) {
+      draw_icon_cb = new Callback_Canvas<T>(_target, _method_ptr);
     }
 
     virtual void Toggle() { ; }  // If this is a toggle button, switch its state.
@@ -62,7 +62,7 @@ namespace emk {
     void UpdateHover() { ; } // @CAO -- figure out what to do here.
 
     // A few default behaviors...
-    void Default_Draw(emkCanvas & canvas)
+    void Default_Draw(Canvas & canvas)
     {
       const int x = 0; // GetX();
       const int y = 0; // GetY();
