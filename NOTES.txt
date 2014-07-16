@@ -5,6 +5,8 @@
 Once we have a first draft of the basic framework:
 * Refactor to parallel the object heirarchy of Kinetic for easier compatability.
 * Come up with more intelligent default values
+* Make sure copy constructors work properly.
+* Tween onFinish http://www.html5canvastutorials.com/kineticjs/html5-canvas-transition-callback-with-kineticjs/
 
 Several new classes to incorporate:
 * A font class that handles font family, size, color, etc.
@@ -21,7 +23,24 @@ Cleanup:
   older ones) when needed.
 * Merge images back into main array of kinetic objects so that GetX, GetWidth, etc. work.
 
+
+Stack Overflow Questions
+* Tween onReverseFinish, for linking two tweens together in reverse?
+  http://stackoverflow.com/questions/19192600/tween-onstart-function-issue-kineticjs
+* Can a Tween be changed once it is created, or do I need to create a new one?
+
+
 Other libraries to think about:
 d3.js
 Processing.js
 http://fastly.github.io/epoch/
+
+
+Possible names:
+Emote - short enough for a proper namespace
+Emu - Nice and short, relates to gnu, but sounds too much like emulation.
+Empirical - Brings in science aspect, but long name (probably emp:: namesapce?) (or just call it Pirical?)
+Evoke - Steps out of em- prefix, but that's okay.  But the name is probably better for EALib
+Embassy - I like how it makes clear that it's linking two places together, but long.
+Emdemic or emsemble - made up words that highlight the linkages.
+

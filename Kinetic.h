@@ -42,6 +42,11 @@ extern "C" {
   extern void EMK_Object_DrawLayer(int obj_id);
   extern void EMK_Object_MoveToTop(int obj_id);
 
+  extern int EMK_Tween_Build(int target_id, double seconds);
+  extern void EMK_Tween_Configure(int settings_id, int obj_id);
+  extern void EMK_Tween_SetXY(int settings_id, int in_x, int in_y);
+  extern void EMK_Tween_Play(int obj_id);
+
   extern void EMK_Canvas_SetFillStyle(const char * fs);
   extern void EMK_Canvas_SetStroke(const char * fs);
   extern void EMK_Canvas_SetLineJoin(const char * lj);
@@ -125,7 +130,7 @@ namespace emk {
   void Alert(int val) { EMK_Alert(std::to_string(val).c_str()); }
   void Alert(double val) { EMK_Alert(std::to_string(val).c_str()); }
 
-#define AlertVar(VAR) Alert(std::string(#VAR) + std::string("=") + std::to_string(VAR))
+#define AlertVar(VAR) emk::Alert(std::string(#VAR) + std::string("=") + std::to_string(VAR))
 
 
   // All emscripten-wrapped Kinetic objects should be derived from this base class.
@@ -183,6 +188,36 @@ namespace emk {
 
     template<class T> void On(const std::string & in_trigger, T * in_target, void (T::*in_method_ptr)());
     template<class T> void On(const std::string & in_trigger, T * in_target, void (T::*in_method_ptr)(const EventInfo &));
+  };
+
+
+  class Tween : public Object {
+  private:
+    Object * target;   // What object is this tween associated with?
+    double seconds;    // How long should this tween run for?
+
+    int settings_id;   // JS memory position where the tween settings should go.
+    bool needs_config; // Does the Tween need to be reconfigured?
+
+    void BuildTween() {
+      EMK_Tween_Configure(settings_id, obj_id);
+      needs_config = false;
+    }
+  public:
+    Tween(Object & _target, double _seconds) : target(&_target), seconds(_seconds), needs_config(false) {
+      settings_id = EMK_Tween_Build(target->GetID(), seconds);
+      obj_id = settings_id + 1;
+    }
+    ~Tween() { ; }
+
+    // void SetTarget(Object & _target) { target = &_target; needs_config=true; }
+    // void SetTime(double _seconds) { seconds = _seconds; needs_config=true; }
+    void SetXY(int in_x, int in_y) { EMK_Tween_SetXY(settings_id, in_x, in_y); needs_config=true; }
+
+    void Play() {
+      if (needs_config) BuildTween();
+      EMK_Tween_Play(obj_id);
+    }
   };
 
 

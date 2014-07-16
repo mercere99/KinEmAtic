@@ -44,6 +44,8 @@ private:
 
   emk::Animation<GridExample> anim_grid_run;
 
+  emk::Tween tween_grid_flip;
+
   // Current status 
   emk::Random random;        // Random number generator
   emk::ProbSchedule sched;
@@ -67,6 +69,7 @@ public:
     , update_text(670, 50, "Update: ", "30", "Calibri", "black")
     , mouse_text(670, 90, "Move mouse over grid to test!", "30", "Calibri", "black")
     , click_text(670, 130, "Click on grid to test!", "30", "Calibri", "black")
+    , tween_grid_flip(update_text, 3)
     , sched(num_cells)
     , update(0), is_paused(false), is_flipped(false)
   {
@@ -110,6 +113,8 @@ public:
 
     // Setup potential animations...
     anim_grid_run.Setup(this, &GridExample::Animate_Grid, layer_grid);
+
+    tween_grid_flip.SetXY(800, 550);
 
     // And start the main animation
     anim_grid_run.Start();
@@ -160,7 +165,9 @@ public:
     // @CAO Shut off listening on grid!
     anim_grid_flip.Start();
     */
-    emk::Alert("Sorry, configs are not implemented yet!");
+
+    tween_grid_flip.SetXY(random.GetInt(600)+600, random.GetInt(600));
+    tween_grid_flip.Play();
   }
 
   void Animate_Grid(const emk::AnimationFrame & frame) {
@@ -243,11 +250,10 @@ public:
 
     // Draw a snowflake.
     canvas.Translate(50, 50);
-    canvas.Rect(-10, -50, 20, 100, true);
-    canvas.Rotate(emk::PI/3);
-    canvas.Rect(-10, -50, 20, 100, true);
-    canvas.Rotate(emk::PI/3);
-    canvas.Rect(-10, -50, 20, 100, true);
+    for (int i = 0; i < 3; i++) {
+      canvas.Rect(-8, -50, 16, 100, true);
+      canvas.Rotate(emk::PI/3);
+    }
 
     canvas.Stroke();
   }

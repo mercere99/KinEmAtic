@@ -149,6 +149,34 @@ mergeInto(LibraryManager.library, {
     },
 
 
+    EMK_Tween_Build__deps: ['$emk_info'],
+    EMK_Tween_Build: function(target_id, seconds) {
+        var obj_id = emk_info.objs.length;
+        emk_info.objs[obj_id] = {
+            node: emk_info.objs[target_id],
+            duration: seconds
+        };  // Fill out configuration info.
+        emk_info.objs[obj_id+1] = 0; // Preserve for tween.
+        return obj_id;        
+    },
+
+    EMK_Tween_Configure__deps: ['$emk_info'],
+    EMK_Tween_Configure: function(settings_id, obj_id) {
+        emk_info.objs[obj_id] = new Kinetic.Tween( emk_info.objs[settings_id] );
+    },
+
+    EMK_Tween_SetXY__deps: ['$emk_info'],
+    EMK_Tween_SetXY: function(settings_id, in_x, in_y) {
+        emk_info.objs[settings_id].x = in_x;
+        emk_info.objs[settings_id].y = in_y;
+    },
+
+    EMK_Tween_Play__deps: ['$emk_info'],
+    EMK_Tween_Play: function(obj_id) {
+        emk_info.objs[obj_id].play();
+    },
+
+
     // The following series of wrappers deal with the canvas context.
     // NOTE, we assume that a context has been placed in emk_info.ctx
     EMK_Canvas_SetFillStyle__deps: ['$emk_info'],
