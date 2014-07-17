@@ -37,6 +37,12 @@ extern "C" {
   extern void EMK_Object_SetWidth(int obj_id, int w);
   extern void EMK_Object_SetHeight(int obj_id, int h);
   extern void EMK_Object_SetSize(int obj_id, int w, int h);
+  extern void EMK_Object_SetVisible(int obj_id, int visable);
+  extern void EMK_Object_SetOpacity(int obj_id, double opacity);
+  extern void EMK_Object_SetListening(int obj_id, int listening);
+  extern void EMK_Object_SetRotation(int obj_id, double rotation);
+  extern void EMK_Object_SetDraggable(int obj_id, int draggable);
+
 
   extern void EMK_Object_Draw(int obj_id);
   extern void EMK_Object_DrawLayer(int obj_id);
@@ -173,6 +179,11 @@ namespace emk {
       EMK_Object_SetXY(obj_id, x, y);
       EMK_Object_SetSize(obj_id, w, h);
     }
+    inline void SetVisible(bool visable) { EMK_Object_SetVisible(obj_id, visable); }
+    inline void SetOpacity(double opacity) { EMK_Object_SetOpacity(obj_id, opacity); }
+    inline void SetListening(bool listening) { EMK_Object_SetListening(obj_id, listening); }
+    inline void SetRotation(double rotation) { EMK_Object_SetRotation(obj_id, rotation); }
+    inline void SetDraggable(bool draggable) { EMK_Object_SetDraggable(obj_id, draggable); }
 
     void SetLayer(Object * _layer) { layer = _layer; }
 

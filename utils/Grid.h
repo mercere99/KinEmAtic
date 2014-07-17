@@ -73,6 +73,7 @@ namespace emk {
       , mouse_col(-1), mouse_row(-1), click_col(-1), click_row(-1), mouse_pointer("yellow", "black")
       , mousemove_callback(NULL), click_callback(NULL)
     {
+      color_map[0] = "#202020";
       SetupSize();
       for (int i = 0; i < num_cells; i++) grid_colors[i] = 0;
       On("click", this, &Grid::OnClick);
@@ -91,7 +92,7 @@ namespace emk {
       cell_width = cell_x_space - border_width;
       cell_height = cell_y_space - border_width;
 
-      mouse_pointer.SetSize(cell_width, cell_height);
+      mouse_pointer.SetLayout(GetX(), GetY(), cell_width, cell_height);
     }
 
     inline int GetColor(int id) const {
@@ -141,28 +142,15 @@ namespace emk {
         }
       }
 
-      // Highlight the cursor under the mouse.
-      if (mouse_col >= 0 && false) {
-        const int x_pos = border_width + cell_x_space * mouse_col;
-        const int y_pos = border_width + cell_y_space * mouse_row;
-        canvas.SetStroke("yellow");
-        canvas.Rect(x_pos, y_pos, cell_width, cell_height, false);
-        canvas.SetStroke("black");
-        canvas.Rect(x_pos+1, y_pos+1, cell_width-2, cell_height-2, false);
-      }
-      
-
       canvas.Stroke();
 
       // Make the canvas respond to the mouse.
       canvas.BeginPath();
-      canvas.SetLineWidth(1);
       canvas.MoveTo(0, 0);
       canvas.LineTo(grid_width, 0);
       canvas.LineTo(grid_width, grid_height);
       canvas.LineTo(0, grid_height);
       canvas.ClosePath();
-      canvas.SetFillStyle(emk::Color(255, 0, 0, 0.5));
       canvas.SetupTarget(*this);
     }
 

@@ -136,6 +136,32 @@ mergeInto(LibraryManager.library, {
         emk_info.objs[obj_id].height(h);
     },
 
+    EMK_Object_SetVisible__deps: ['$emk_info'],
+    EMK_Object_SetVisible: function(obj_id, visable) {
+        emk_info.objs[obj_id].visable(visable);
+    },
+
+    EMK_Object_SetOpacity__deps: ['$emk_info'],
+    EMK_Object_SetOpacity: function(obj_id, opacity) {
+        emk_info.objs[obj_id].opacity(opacity);
+    },
+
+    EMK_Object_SetListening__deps: ['$emk_info'],
+    EMK_Object_SetListening: function(obj_id, listening) {
+        emk_info.objs[obj_id].listening(listening);
+    },
+
+    EMK_Object_SetRotation__deps: ['$emk_info'],
+    EMK_Object_SetRotation: function(obj_id, rotation) {
+        emk_info.objs[obj_id].rotation(rotation);
+    },
+
+    EMK_Object_SetDraggable__deps: ['$emk_info'],
+    EMK_Object_SetDraggable: function(obj_id, draggable) {
+        emk_info.objs[obj_id].draggable(draggable);
+    },
+
+
 
 
     EMK_Object_Draw__deps: ['$emk_info'],

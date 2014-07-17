@@ -12,14 +12,10 @@ private:
   int cols;
   int rows;
   int num_cells;
+  int num_colors;
 
-  int grid_x;
-  int grid_y;
-  int grid_w;
-  int grid_h;
-
-  int grid_offset_x;
-  int grid_offset_y;
+  int logo_x;  int logo_y;  int logo_w;  int logo_h;
+  int grid_x;  int grid_y;  int grid_w;  int grid_h;
 
   std::vector<double> merits;
 
@@ -31,12 +27,15 @@ private:
   emk::Layer layer_buttons;    // Layer for all of the buttons on the screen.
 
   emk::Text title;
-  emk::Grid grid;             // Visual Grid.
-  emk::Button button_rewind;  // BUTTON: Restart a run.
-  emk::Button button_pause;   // BUTTON: Pause a run.
-  emk::Button button_freeze;  // BUTTON: Save a population.
-  emk::Button button_config;  // BUTTON: Save a population.
-  emk::Image image_icon_config; // Image for config button
+
+  emk::Image image_avida_logo; // Image for Avida Logo
+  emk::Rect rect_avida_logo;   // Image holder for Avida Logo
+
+  emk::Grid grid;              // Visual Grid.
+  emk::Button button_rewind;   // BUTTON: Restart a run.
+  emk::Button button_pause;    // BUTTON: Pause a run.
+  emk::Button button_freeze;   // BUTTON: Save a population.
+  emk::Button button_config;   // BUTTON: Save a population.
 
   emk::Text update_text;       // On main layer
   emk::Text mouse_text;        // On gridmouse layer
@@ -52,27 +51,34 @@ private:
   int update;
   bool is_paused;            // false = grid running.  true = grid paused.
   bool is_flipped;           // false = grid showing.  true = config showing.
+
+  double mut_rate;
 public:
-  GridExample(int _cols, int _rows)
-    : cols(_cols), rows(_rows), num_cells(cols*rows)
-    , grid_x(50), grid_y(50), grid_w(481), grid_h(481)
-    , grid_offset_x(grid_x + grid_w/2), grid_offset_y(grid_y + grid_h/2)
+  GridExample(int _cols, int _rows, int _colors)
+    : cols(_cols), rows(_rows), num_cells(cols*rows), num_colors(_colors)
+    , logo_x(0), logo_y(50), logo_w(100), logo_h(100)
+    , grid_x(logo_w+5), grid_y(50), grid_w(481), grid_h(481)
     , merits(num_cells)
     , stage(1200, 800, "container")
     , title(10, 10, "Avida Viewer test!", "30", "Calibri", "black")
-    , grid(grid_offset_x, grid_offset_y, grid_w, grid_h, cols, rows, 60)
+    , image_avida_logo("icons/avida-ED-logo.png") // ("icons/setting.png")
+    , rect_avida_logo(logo_x, logo_y, logo_w, logo_h)
+    , grid(grid_x, grid_y, grid_w, grid_h, cols, rows, num_colors+1)
     , button_rewind(this, &GridExample::SetupRun)
     , button_pause(this, &GridExample::PauseRun)
     , button_freeze(this, &GridExample::FreezeRun)
     , button_config(this, &GridExample::ConfigRun)
-    , image_icon_config("icons/gear.png") // ("icons/setting.png")
     , update_text(670, 50, "Update: ", "30", "Calibri", "black")
     , mouse_text(670, 90, "Move mouse over grid to test!", "30", "Calibri", "black")
     , click_text(670, 130, "Click on grid to test!", "30", "Calibri", "black")
     , tween_grid_flip(update_text, 3)
     , sched(num_cells)
     , update(0), is_paused(false), is_flipped(false)
+    , mut_rate(0.01)
   {
+    rect_avida_logo.SetFillPatternImage(image_avida_logo);
+    emk::Alert(image_avida_logo.GetWidth());
+    
     // Setup the buttons a long the bottom of the grid.
     const int buttons_x = grid_x;
     const int buttons_y = grid_y + grid_h + 5;
@@ -86,13 +92,20 @@ public:
     button_freeze.SetupDrawIcon(this, &GridExample::DrawFreezeButton);
     button_config.SetLayout(buttons_x + grid_w - button_w, buttons_y, button_w, button_w);
     button_config.SetupDrawIcon(this, &GridExample::DrawConfigButton);
-    // button_config.SetFillPatternImage(image_icon_config);
+
+    // @CAO TESTING!  Fix this!!
+    emk::Grid * grid_spect = new emk::Grid(grid_x, buttons_y+button_w+10, grid_w, grid_w/60, 60, 1, 60);
+    for (int i = 0; i < 61; i++) grid_spect->SetColor(i, i);
+    grid_spect->SetDraggable(true);
+    layer_static.Add(*grid_spect);
+
+
 
     grid.SetMouseMoveCallback(this, &GridExample::Draw_Gridmouse);
     grid.SetClickCallback(this, &GridExample::Draw_Gridclick);
-    grid.SetOffset(grid.GetWidth()/2, grid.GetHeight()/2);
 
     layer_static.Add(title);
+    layer_static.Add(rect_avida_logo);
     layer_grid.Add(grid);
     layer_grid.Add(update_text);
     layer_gridmouse.Add(grid.GetMousePointer());
@@ -123,16 +136,16 @@ public:
   void SetupRun() {
     update = 0;
     for (int i = 0; i < num_cells; i++) {
-      grid.SetColor(i, random.GetInt(0));
+      grid.SetColor(i, 0);
       merits[i] = 0.0;
       sched.Adjust(i, 0.0);
-      // grid.SetColor(i, random.GetInt(60));
+      // grid.SetColor(i, random.GetInt(num_colors)+1);
       // merits[i] = random.GetDouble();
       // sched.Adjust(i, merits[i]);
     }
-    grid.SetColor(1830, 40);
-      merits[1830] = 1.0;
-      sched.Adjust(1830, 1.0);
+    grid.SetColor(1830, 1);
+    merits[1830] = 1.0;
+    sched.Adjust(1830, 1.0);
 
     layer_grid.BatchDraw();
   }
@@ -166,6 +179,11 @@ public:
     anim_grid_flip.Start();
     */
 
+    static bool status = false;
+    status = !status;
+    if (status) grid.SetListening(false);
+    else grid.SetListening(true);
+
     tween_grid_flip.SetXY(random.GetInt(600)+600, random.GetInt(600));
     tween_grid_flip.Play();
   }
@@ -174,15 +192,25 @@ public:
     update++;
     update_text.SetText(std::string("Update: ") + std::to_string(update));
     for (int i = 0; i < 100; i++) {
-      // int from = random.GetInt(num_cells);
       int from = sched.NextID();
       int to = from + (random.GetInt(3) - 1) + (random.GetInt(3) - 1) * 60;
       if (from == to) continue;
       if (to >= num_cells) to -= num_cells;
       if (to < 0) to += num_cells;
-      grid.SetColor(to, grid.GetColor(from));
-      sched.Adjust(to, merits[from]);
-      merits[to] = merits[from];
+
+      if (random.P(mut_rate)) {
+        grid.SetColor(to, random.GetInt(num_colors)+1);
+        merits[to] = merits[from];
+        double quality = random.GetDouble();
+        if (quality > 0.99) merits[to] *= 2.0;
+        else if (quality < 0.5) merits[to] *= 0.5;
+      }
+      else {
+        grid.SetColor(to, grid.GetColor(from));
+        merits[to] = merits[from];
+      }
+      sched.Adjust(to, merits[to]);
+
     }
   }
 
@@ -252,6 +280,7 @@ public:
     canvas.Translate(50, 50);
     for (int i = 0; i < 3; i++) {
       canvas.Rect(-8, -50, 16, 100, true);
+      // @CAO Should draw side-spurs on snowflake so it looks more identifiable.
       canvas.Rotate(emk::PI/3);
     }
 
@@ -299,7 +328,7 @@ GridExample * example;
 
 extern "C" int emkMain()
 {
-  example = new GridExample(60, 60);
+  example = new GridExample(60, 60, 60);
 
   return 0;
 }
