@@ -37,7 +37,7 @@ extern "C" {
   extern void EMK_Object_SetWidth(int obj_id, int w);
   extern void EMK_Object_SetHeight(int obj_id, int h);
   extern void EMK_Object_SetSize(int obj_id, int w, int h);
-  extern void EMK_Object_SetVisible(int obj_id, int visable);
+  extern void EMK_Object_SetVisible(int obj_id, int visible);
   extern void EMK_Object_SetOpacity(int obj_id, double opacity);
   extern void EMK_Object_SetListening(int obj_id, int listening);
   extern void EMK_Object_SetRotation(int obj_id, double rotation);
@@ -51,6 +51,7 @@ extern "C" {
   extern int EMK_Tween_Build(int target_id, double seconds);
   extern void EMK_Tween_Configure(int settings_id, int obj_id);
   extern void EMK_Tween_SetXY(int settings_id, int in_x, int in_y);
+  extern void EMK_Tween_SetScaleXY(int settings_id, double _x, double _y);
   extern void EMK_Tween_Play(int obj_id);
 
   extern void EMK_Canvas_SetFillStyle(const char * fs);
@@ -179,7 +180,7 @@ namespace emk {
       EMK_Object_SetXY(obj_id, x, y);
       EMK_Object_SetSize(obj_id, w, h);
     }
-    inline void SetVisible(bool visable) { EMK_Object_SetVisible(obj_id, visable); }
+    inline void SetVisible(bool visible) { EMK_Object_SetVisible(obj_id, visible); }
     inline void SetOpacity(double opacity) { EMK_Object_SetOpacity(obj_id, opacity); }
     inline void SetListening(bool listening) { EMK_Object_SetListening(obj_id, listening); }
     inline void SetRotation(double rotation) { EMK_Object_SetRotation(obj_id, rotation); }
@@ -224,6 +225,9 @@ namespace emk {
     // void SetTarget(Object & _target) { target = &_target; needs_config=true; }
     // void SetTime(double _seconds) { seconds = _seconds; needs_config=true; }
     void SetXY(int in_x, int in_y) { EMK_Tween_SetXY(settings_id, in_x, in_y); needs_config=true; }
+    void SetScaleXY(double _x, double _y) {
+      EMK_Tween_SetScaleXY(settings_id, _x, _y); needs_config=true;
+    }
 
     void Play() {
       if (needs_config) BuildTween();
@@ -303,6 +307,7 @@ namespace emk {
     inline static void Restore() { EMK_Canvas_Restore(); }
     inline static void Save() { EMK_Canvas_Save(); }
     inline static void Scale(double x, double y) { EMK_Canvas_Scale(x, y);  }
+    inline static void Scale(double new_scale) { EMK_Canvas_Scale(new_scale, new_scale);  }
     inline static void Translate(int x, int y) { EMK_Canvas_Translate(x, y);  } 
     inline static void Rotate(double angle) { EMK_Canvas_Rotate(angle);  } 
  

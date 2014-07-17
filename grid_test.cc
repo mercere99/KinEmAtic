@@ -31,6 +31,10 @@ private:
   emk::Image image_avida_logo; // Image for Avida Logo
   emk::Rect rect_avida_logo;   // Image holder for Avida Logo
 
+  emk::Button button_mode_population; // Population mode
+  emk::Button button_mode_organism;   // Population mode
+  emk::Button button_mode_analysis;   // Population mode
+
   emk::Grid grid;              // Visual Grid.
   emk::Button button_rewind;   // BUTTON: Restart a run.
   emk::Button button_pause;    // BUTTON: Pause a run.
@@ -56,29 +60,49 @@ private:
 public:
   GridExample(int _cols, int _rows, int _colors)
     : cols(_cols), rows(_rows), num_cells(cols*rows), num_colors(_colors)
-    , logo_x(0), logo_y(50), logo_w(100), logo_h(100)
-    , grid_x(logo_w+5), grid_y(50), grid_w(481), grid_h(481)
+    , logo_x(5), logo_y(10), logo_w(103), logo_h(91)
+    , grid_x(logo_x + logo_w + 10), grid_y(10), grid_w(481), grid_h(481)
     , merits(num_cells)
     , stage(1200, 800, "container")
-    , title(10, 10, "Avida Viewer test!", "30", "Calibri", "black")
-    , image_avida_logo("icons/avida-ED-logo.png") // ("icons/setting.png")
-    , rect_avida_logo(logo_x, logo_y, logo_w, logo_h)
+    , title(650, 10, "Avida Viewer test!", "30", "Calibri", "black")
+    , image_avida_logo("icons/avidalogo.jpg") // ("icons/setting.png")
+    , rect_avida_logo(logo_x, logo_y, logo_w, logo_h, "white", "black", 4)
+    , button_mode_population(this, &GridExample::ModePopulation)
+    , button_mode_organism(this, &GridExample::ModeOrganism)
+    , button_mode_analysis(this, &GridExample::ModeAnalysis)
     , grid(grid_x, grid_y, grid_w, grid_h, cols, rows, num_colors+1)
     , button_rewind(this, &GridExample::SetupRun)
     , button_pause(this, &GridExample::PauseRun)
     , button_freeze(this, &GridExample::FreezeRun)
     , button_config(this, &GridExample::ConfigRun)
-    , update_text(670, 50, "Update: ", "30", "Calibri", "black")
-    , mouse_text(670, 90, "Move mouse over grid to test!", "30", "Calibri", "black")
-    , click_text(670, 130, "Click on grid to test!", "30", "Calibri", "black")
-    , tween_grid_flip(update_text, 3)
+    , update_text(650, 50, "Update: ", "30", "Calibri", "black")
+    , mouse_text(650, 90, "Move mouse over grid to test!", "30", "Calibri", "black")
+    , click_text(650, 130, "Click on grid to test!", "30", "Calibri", "black")
+    , tween_grid_flip(grid, 1)
     , sched(num_cells)
     , update(0), is_paused(false), is_flipped(false)
     , mut_rate(0.01)
   {
     rect_avida_logo.SetFillPatternImage(image_avida_logo);
-    emk::Alert(image_avida_logo.GetWidth());
-    
+    rect_avida_logo.SetFillPatternScale(0.5);
+    // emk::Alert(image_avida_logo.GetWidth());
+
+    const int mode_x = rect_avida_logo.GetX();
+    const int mode_y = rect_avida_logo.GetY() + rect_avida_logo.GetHeight() + 10;
+    const int mode_w = rect_avida_logo.GetWidth();
+    const int mode_h = 40;
+    button_mode_population.SetLayout(mode_x, mode_y, mode_w, mode_h);
+    button_mode_population.SetBGColor("white");
+    button_mode_population.SetRoundCorners(true, false, false, true);
+
+    button_mode_organism.SetLayout(mode_x, mode_y+mode_h+5, mode_w, mode_h);
+    button_mode_organism.SetBGColor("white");
+    button_mode_organism.SetRoundCorners(true, false, false, true);
+
+    button_mode_analysis.SetLayout(mode_x, mode_y+2*mode_h+10, mode_w, mode_h);
+    button_mode_analysis.SetBGColor("white");
+    button_mode_analysis.SetRoundCorners(true, false, false, true);
+ 
     // Setup the buttons a long the bottom of the grid.
     const int buttons_x = grid_x;
     const int buttons_y = grid_y + grid_h + 5;
@@ -111,6 +135,9 @@ public:
     layer_gridmouse.Add(grid.GetMousePointer());
     layer_gridmouse.Add(mouse_text);
     layer_info.Add(click_text);
+    layer_buttons.Add(button_mode_population);
+    layer_buttons.Add(button_mode_organism);
+    layer_buttons.Add(button_mode_analysis);
     layer_buttons.Add(button_rewind);
     layer_buttons.Add(button_pause);
     layer_buttons.Add(button_freeze);
@@ -127,10 +154,20 @@ public:
     // Setup potential animations...
     anim_grid_run.Setup(this, &GridExample::Animate_Grid, layer_grid);
 
-    tween_grid_flip.SetXY(800, 550);
-
     // And start the main animation
     anim_grid_run.Start();
+  }
+
+  void ModePopulation() {
+    // Nothing here yet...
+  }
+
+  void ModeOrganism() {
+    // Nothing here yet...
+  }
+
+  void ModeAnalysis() {
+    // Nothing here yet...
   }
 
   void SetupRun() {
@@ -160,32 +197,41 @@ public:
   }
 
   void ConfigRun() {  // Other side of grid is config.
-    /*
     // If we're on the config side...
     if (is_flipped) {
+      tween_grid_flip.SetXY(grid_x, grid_y);
+      tween_grid_flip.SetScaleXY(1.0, 1.0);
+      grid.GetMousePointer().SetVisible(true);
+      tween_grid_flip.Play();
+
       // Restart the grid if it's not paused.
       if (is_paused == false) anim_grid_run.Start();
       is_flipped = false;
+      grid.SetListening(true);
     }
 
     // If we're on the grid side...
     else {
       // Stop the grid before flipping.
+      grid.SetListening(false);
       if (is_paused == false) anim_grid_run.Stop();
       is_flipped = true;
+
+      tween_grid_flip.SetXY(grid_x+grid_w/2, grid_y);
+      tween_grid_flip.SetScaleXY(0.0, 1.0);
+      grid.GetMousePointer().SetVisible(false);
+      grid.GetMousePointer().DrawLayer();
+      
+      tween_grid_flip.Play();
     }
     
     // @CAO Shut off listening on grid!
-    anim_grid_flip.Start();
-    */
+    // anim_grid_flip.Start();
 
-    static bool status = false;
-    status = !status;
-    if (status) grid.SetListening(false);
-    else grid.SetListening(true);
-
-    tween_grid_flip.SetXY(random.GetInt(600)+600, random.GetInt(600));
-    tween_grid_flip.Play();
+    // static bool status = false;
+    // status = !status;
+    // if (status) grid.SetListening(false);
+    // else grid.SetListening(true);
   }
 
   void Animate_Grid(const emk::AnimationFrame & frame) {

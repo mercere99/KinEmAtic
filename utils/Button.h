@@ -4,6 +4,7 @@
 #include <string>
 
 #include "../tools/const.h"
+#include "../tools/Colors.h"
 #include "../Kinetic.h"
 
 namespace emk {
@@ -25,11 +26,20 @@ namespace emk {
     bool ur_round;
     bool ll_round;
     bool lr_round;
+
+    Color color_bg;
+    Color color_bg_toggled;
+    Color color_bg_mouseover;
+    Color color_bg_toggled_mouseover;
+    Color color_bg_mousedown;
+
   public:
     template<class T> Button(T * _target, void (T::*_method_ptr)(), const std::string & _name="")
       : CustomShape(this, &Button::Default_Draw)
       , is_active(true), mouse_down(false), mouse_over(false), name(_name)
       , ul_round(true), ur_round(true), ll_round(true), lr_round(true)
+      , color_bg("rgb(255,250,245)"), color_bg_toggled("rgb(255,255,100)"), color_bg_mouseover("rgb(240,240,255)")
+      , color_bg_toggled_mouseover("rgb(250,250,200)"), color_bg_mousedown("blue")
     {
       trigger_cb = new emk::MethodCallback<T>(_target, _method_ptr);
       draw_icon_cb = NULL;
@@ -52,6 +62,12 @@ namespace emk {
       image = &_image;
     }
 
+    void SetBGColor(const Color & _color) { color_bg = _color; }
+    void SetBGColorToggled(const Color & _color) { color_bg_toggled = _color; }
+    void SetBGColorMouseover(const Color & _color) { color_bg_mouseover = _color; }
+    void SetBGColorToggledMouseover(const Color & _color) { color_bg_toggled_mouseover = _color; }
+    void SetBGColorMousedown(const Color & _color) { color_bg_mousedown = _color; }
+
     template<class T> void SetupDrawIcon(T * _target, void (T::*_method_ptr)(Canvas &)) {
       draw_icon_cb = new Callback_Canvas<T>(_target, _method_ptr);
     }
@@ -71,7 +87,7 @@ namespace emk {
 
       const int x2 = x + width;          // Far X coordinate
       const int y2 = y + height;         // Far Y coordinate
-      const int corner_r = width/5;      // Corner radius of each button
+      const int corner_r = 8; //width/5;      // Corner radius of each button
 
       const int x_in = x + corner_r;     // Inner x for corner arcs
       const int y_in = y + corner_r;     // Inner y for corner arcs
@@ -79,14 +95,14 @@ namespace emk {
       const int y2_in = y2 - corner_r;   // Inner y2 for corner arcs
   
       // Set the button color
-      if (mouse_down) canvas.SetFillStyle("blue");
+      if (mouse_down) canvas.SetFillStyle(color_bg_mousedown);
       else if (mouse_over) {
-        if (ToggleOn()) canvas.SetFillStyle("rgb(250,250,200)");
-        else canvas.SetFillStyle("rgb(240,240,255)");
+        if (ToggleOn()) canvas.SetFillStyle(color_bg_toggled_mouseover);
+        else canvas.SetFillStyle(color_bg_mouseover);
       }
       else {
-        if (ToggleOn()) canvas.SetFillStyle("rgb(255,255,100)");
-        else canvas.SetFillStyle("rgb(255,250,245)");
+        if (ToggleOn()) canvas.SetFillStyle(color_bg_toggled);
+        else canvas.SetFillStyle(color_bg);
       }
   
       // Draw the button outline
@@ -112,11 +128,11 @@ namespace emk {
       canvas.Stroke();
 
       // Draw the appropriate icon.
-      // First, shift the icon to be on a 100x100 grid, and shift back afterward.
+      // First, shift the icon to be on a 100-height grid, and shift back afterward.
       canvas.Save();
       if (draw_icon_cb) {
         canvas.Translate(x+5, y+5);
-        canvas.Scale(((double)(width-10))/100.0, ((double)(height-10))/100.0);
+        canvas.Scale( ((double) height-10) / 100.0 );
         draw_icon_cb->DoCallback(); // Write this!
       }
       else if (image) { // otherwise, if there's an image, use it.

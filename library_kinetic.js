@@ -137,8 +137,8 @@ mergeInto(LibraryManager.library, {
     },
 
     EMK_Object_SetVisible__deps: ['$emk_info'],
-    EMK_Object_SetVisible: function(obj_id, visable) {
-        emk_info.objs[obj_id].visable(visable);
+    EMK_Object_SetVisible: function(obj_id, visible) {
+        emk_info.objs[obj_id].visible(visible);
     },
 
     EMK_Object_SetOpacity__deps: ['$emk_info'],
@@ -192,9 +192,15 @@ mergeInto(LibraryManager.library, {
     },
 
     EMK_Tween_SetXY__deps: ['$emk_info'],
-    EMK_Tween_SetXY: function(settings_id, in_x, in_y) {
-        emk_info.objs[settings_id].x = in_x;
-        emk_info.objs[settings_id].y = in_y;
+    EMK_Tween_SetXY: function(settings_id, _x, _y) {
+        emk_info.objs[settings_id].x = _x;
+        emk_info.objs[settings_id].y = _y;
+    },
+
+    EMK_Tween_SetScaleXY__deps: ['$emk_info'],
+    EMK_Tween_SetScaleXY: function(settings_id, _x, _y) {
+        emk_info.objs[settings_id].scaleX = _x;
+        emk_info.objs[settings_id].scaleY = _y;
     },
 
     EMK_Tween_Play__deps: ['$emk_info'],
@@ -289,13 +295,13 @@ mergeInto(LibraryManager.library, {
     },
 
     EMK_Canvas_DrawImage__deps: ['$emk_info'],
-    EMK_Canvas_DrawImage: function(image_id, x, y) {
-        emk_info.ctx.drawImage(emk_info.images[image_id], x, y)
+    EMK_Canvas_DrawImage: function(obj_id, x, y) {
+        emk_info.ctx.drawImage(emk_info.objs[obj_id], x, y)
     },
 
     EMK_Canvas_DrawImage_Size__deps: ['$emk_info'],
-    EMK_Canvas_DrawImage_Size: function(image_id, x, y, w, h) {
-        emk_info.ctx.drawImage(emk_info.images[image_id], x, y, w, h)
+    EMK_Canvas_DrawImage_Size: function(obj_id, x, y, w, h) {
+        emk_info.ctx.drawImage(emk_info.objs[obj_id], x, y, w, h)
     },
 
     EMK_Canvas_BeginPath__deps: ['$emk_info'],
@@ -364,14 +370,16 @@ mergeInto(LibraryManager.library, {
     EMK_Image_Load: function(file, callback_ptr) {
         file = Pointer_stringify(file);
         img_id = emk_info.images.length;
+        var obj_id = emk_info.objs.length;
         emk_info.images[img_id] = new Image();
         emk_info.images[img_id].src = file;
+        emk_info.objs[obj_id] = emk_info.images[img_id]; // Make accessible by obj_id.
 
         emk_info.images[img_id].onload = function() {
             emk_info.image_load_count += 1;
             emkJSDoCallback(callback_ptr, 0);
         };
-        return img_id;
+        return obj_id;
     },
 
     EMK_Image_AllLoaded__deps: ['$emk_info'],
@@ -431,7 +439,7 @@ mergeInto(LibraryManager.library, {
         emk_info.objs[obj_id] = new Kinetic.Image({
             x: in_x,
             y: in_y,
-            image: emk_info.image[img_id],
+            image: emk_info.objs[img_id],
             width: in_w,
             height: in_h
         });
@@ -569,7 +577,7 @@ mergeInto(LibraryManager.library, {
     EMK_Shape_SetFillPatternImage__deps: ['$emk_info'],
     EMK_Shape_SetFillPatternImage: function(obj_id, img_id) {
         emk_info.objs[obj_id].setFillPriority('pattern');
-        emk_info.objs[obj_id].setFillPatternImage(emk_info.images[img_id]);
+        emk_info.objs[obj_id].setFillPatternImage(emk_info.objs[img_id]);
     },
 
     EMK_Shape_SetFillPatternScale__deps: ['$emk_info'],
