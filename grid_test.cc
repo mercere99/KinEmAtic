@@ -60,7 +60,7 @@ private:
 public:
   GridExample(int _cols, int _rows, int _colors)
     : cols(_cols), rows(_rows), num_cells(cols*rows), num_colors(_colors)
-    , logo_x(5), logo_y(10), logo_w(103), logo_h(91)
+    , logo_x(5), logo_y(10), logo_w(130), logo_h(logo_w*181/205)  
     , grid_x(logo_x + logo_w + 10), grid_y(10), grid_w(481), grid_h(481)
     , merits(num_cells)
     , stage(1200, 800, "container")
@@ -84,7 +84,7 @@ public:
     , mut_rate(0.01)
   {
     rect_avida_logo.SetFillPatternImage(image_avida_logo);
-    rect_avida_logo.SetFillPatternScale(0.5);
+    rect_avida_logo.SetFillPatternScale( ((double) logo_w) / 205.0  );
     // emk::Alert(image_avida_logo.GetWidth());
 
     const int mode_x = rect_avida_logo.GetX();
@@ -94,14 +94,17 @@ public:
     button_mode_population.SetLayout(mode_x, mode_y, mode_w, mode_h);
     button_mode_population.SetBGColor("white");
     button_mode_population.SetRoundCorners(true, false, false, true);
+    button_mode_population.SetupDrawIcon(this, &GridExample::DrawPopulationModeButton);
 
     button_mode_organism.SetLayout(mode_x, mode_y+mode_h+5, mode_w, mode_h);
     button_mode_organism.SetBGColor("white");
     button_mode_organism.SetRoundCorners(true, false, false, true);
+    button_mode_organism.SetupDrawIcon(this, &GridExample::DrawOrganismModeButton);
 
     button_mode_analysis.SetLayout(mode_x, mode_y+2*mode_h+10, mode_w, mode_h);
     button_mode_analysis.SetBGColor("white");
     button_mode_analysis.SetRoundCorners(true, false, false, true);
+    button_mode_analysis.SetupDrawIcon(this, &GridExample::DrawAnalysisModeButton);
  
     // Setup the buttons a long the bottom of the grid.
     const int buttons_x = grid_x;
@@ -120,7 +123,6 @@ public:
     // @CAO TESTING!  Fix this!!
     emk::Grid * grid_spect = new emk::Grid(grid_x, buttons_y+button_w+10, grid_w, grid_w/60, 60, 1, 60);
     for (int i = 0; i < 61; i++) grid_spect->SetColor(i, i);
-    grid_spect->SetDraggable(true);
     layer_static.Add(*grid_spect);
 
 
@@ -268,6 +270,103 @@ public:
   void Draw_Gridclick() {
     click_text.SetText(std::string("Click Col:") + std::to_string(grid.GetClickCol()) + std::string(" Row:") + std::to_string(grid.GetClickRow()));
     layer_info.BatchDraw();
+  }
+
+  void DrawPopulationModeButton(emk::Canvas & canvas) {
+    const int offset = 5;
+    const int width_cells = 4;
+    const int cell_width = (100-2*offset)/width_cells;
+    const int grid_width = cell_width * width_cells;
+
+    canvas.SetFillStyle("yellow");
+    canvas.Rect(offset + 0*cell_width, offset + 0*cell_width, cell_width, cell_width, true);
+    canvas.Rect(offset + 1*cell_width, offset + 0*cell_width, cell_width, cell_width, true);
+    canvas.Rect(offset + 2*cell_width, offset + 0*cell_width, cell_width, cell_width, true);
+    canvas.Rect(offset + 0*cell_width, offset + 1*cell_width, cell_width, cell_width, true);
+    canvas.Rect(offset + 1*cell_width, offset + 1*cell_width, cell_width, cell_width, true);
+    canvas.Rect(offset + 1*cell_width, offset + 2*cell_width, cell_width, cell_width, true);
+
+    canvas.SetFillStyle("#8000FF");
+    canvas.Rect(offset + 3*cell_width, offset + 0*cell_width, cell_width, cell_width, true);
+    canvas.Rect(offset + 2*cell_width, offset + 1*cell_width, cell_width, cell_width, true);
+
+    canvas.SetFillStyle("#4444FF");
+    canvas.Rect(offset + 0*cell_width, offset + 2*cell_width, cell_width, cell_width, true);
+    canvas.Rect(offset + 0*cell_width, offset + 3*cell_width, cell_width, cell_width, true);
+
+    canvas.SetFillStyle("orange");
+    canvas.Rect(offset + 3*cell_width, offset + 1*cell_width, cell_width, cell_width, true);
+    canvas.Rect(offset + 2*cell_width, offset + 2*cell_width, cell_width, cell_width, true);
+    canvas.Rect(offset + 3*cell_width, offset + 2*cell_width, cell_width, cell_width, true);
+    canvas.Rect(offset + 1*cell_width, offset + 3*cell_width, cell_width, cell_width, true);
+    canvas.Rect(offset + 2*cell_width, offset + 3*cell_width, cell_width, cell_width, true);
+    canvas.Rect(offset + 3*cell_width, offset + 3*cell_width, cell_width, cell_width, true);
+
+    // Inner lines
+    canvas.SetStroke("#000000");
+    canvas.Rect(offset + 1*cell_width, offset + 0*cell_width, cell_width, grid_width, false);
+    canvas.Rect(offset + 3*cell_width, offset + 0*cell_width, cell_width, grid_width, false);
+    canvas.Rect(offset + 0*cell_width, offset + 1*cell_width, grid_width, cell_width, false);
+    canvas.Rect(offset + 0*cell_width, offset + 3*cell_width, grid_width, cell_width, false);
+
+    // Outer box
+    canvas.SetLineWidth(6);
+    canvas.Rect(offset, offset, grid_width, grid_width, false);
+
+    canvas.SetFillStyle("black");
+    canvas.SetFont("50px Arial");
+    canvas.Text("Population", 120, 65);
+  }
+
+  void DrawOrganismModeButton(emk::Canvas & canvas) {
+    canvas.Translate(50, 50);
+
+    canvas.SetStroke("#000000");
+    canvas.SetFillStyle("#008800");
+    const int num_circles = 12;
+    for (int i = 0; i < num_circles; i++) {
+      canvas.BeginPath();
+      canvas.Arc(0, 40, 8, 0.0, 2*emk::PI);
+      canvas.Fill();
+      canvas.Stroke();
+      canvas.Rotate(2*emk::PI/num_circles);
+    }
+
+    canvas.Translate(-50, -50);
+
+    canvas.SetFillStyle("black");
+    canvas.SetFont("50px Arial");
+    canvas.Text("Organism", 120, 65);
+  }
+
+  void DrawAnalysisModeButton(emk::Canvas & canvas) {
+    canvas.SetStroke("#888888");
+    canvas.SetFillStyle("white");
+
+    // White background
+    canvas.Rect(5, 5, 90, 90, true);
+
+    // Background lines...
+    canvas.SetLineWidth(4);
+    canvas.Rect(5, 5, 90, 90, false);
+    canvas.Rect(23, 5, 18, 90, false);
+    canvas.Rect(59, 5, 18, 90, false);
+    canvas.Rect(5, 23, 90, 18, false);
+    canvas.Rect(5, 59, 90, 18, false);
+
+    // Red Line
+    canvas.SetLineWidth(8);
+    canvas.SetStroke("red");
+    canvas.BeginPath();
+    canvas.MoveTo(5, 85);
+    canvas.LineTo(50, 45);
+    canvas.LineTo(60, 60);
+    canvas.LineTo(95, 10);
+    canvas.Stroke();
+
+    canvas.SetFillStyle("black");
+    canvas.SetFont("50px Arial");
+    canvas.Text("Analysis", 120, 65);
   }
 
   void DrawRewindButton(emk::Canvas & canvas) {

@@ -5,12 +5,20 @@
 Once we have a first draft of the basic framework:
 * Refactor to parallel the object heirarchy of Kinetic for easier compatability.
 * Come up with more intelligent default values
-* Make sure copy constructors work properly.
-* Tween onFinish http://www.html5canvastutorials.com/kineticjs/html5-canvas-transition-callback-with-kineticjs/
+* Make sure copy constructors work properly, and encourage the use of template objects
+* Setup EventChain base class to allow for different types of objects triggering each other.
+  The should include Tween, Animation, and Callback (or at least CallbackChain, since Callback should be lightweight)
+  Links should include .Then(next) and .With(sametime)  (should work in both directions!)
+  Tween onFinish http://www.html5canvastutorials.com/kineticjs/html5-canvas-transition-callback-with-kineticjs/
+* Most set methods should return the class object so that they can be chained.
+* Clean up accessor locations to make sure they're on the lowest levels possible.
+* Build a library of canvas shapes (lattice, arrow, etc.) to easily plug into things like button images.
 
 Several new classes to incorporate:
 * A font class that handles font family, size, color, etc.
 * A coordinates class.
+* A Control class that allows for dynamic creation of objects with easy relationships to track.
+  (and perhaps maintained through size changes?)
 
 Optimizations / improvements:
 * Grid class would be faster if it only did updates rather than full redraws with every change.
