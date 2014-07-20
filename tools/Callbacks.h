@@ -93,5 +93,16 @@ namespace emk {
 
 };
 
+extern "C" void emkJSDoCallback(int cb_ptr, int arg_ptr)
+{
+  emk::Callback * const cb_obj = (emk::Callback *) cb_ptr;
+  cb_obj->DoCallback((int *) arg_ptr);
+  
+  if (cb_obj->IsDisposible()) {
+    delete cb_obj;
+  }
+}
+
+
 
 #endif

@@ -5,6 +5,7 @@
 #include "Kinetic.h"
 #include "tools/Random.h"
 #include "utils/Button.h"
+#include "utils/Events.h"
 #include "utils/Grid.h"
 
 class GridExample {

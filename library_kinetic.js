@@ -191,6 +191,11 @@ mergeInto(LibraryManager.library, {
         emk_info.objs[obj_id] = new Kinetic.Tween( emk_info.objs[settings_id] );
     },
 
+    EMK_Tween_SetFinishedCallback__deps: ['$emk_info'],
+    EMK_Tween_SetFinishedCallback: function(settings_id, callback_ptr, info_ptr) {
+        emk_info.objs[settings_id].
+    },
+
     EMK_Tween_SetXY__deps: ['$emk_info'],
     EMK_Tween_SetXY: function(settings_id, _x, _y) {
         emk_info.objs[settings_id].x = _x;

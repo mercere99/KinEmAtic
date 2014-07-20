@@ -6,27 +6,29 @@ Once we have a first draft of the basic framework:
 * Refactor to parallel the object heirarchy of Kinetic for easier compatability.
 * Come up with more intelligent default values
 * Make sure copy constructors work properly, and encourage the use of template objects
+* Most set methods should return the class object so that they can be chained.
+* Clean up accessor locations to make sure they're on the lowest levels possible.
+* Build a library of canvas shapes (lattice, arrow, etc.) to easily plug into things like button images.
+* Add a .OK() to many classes that will use emk::Alerts to warn of problems?
+
+Several new classes to incorporate:
 * Setup EventChain base class to allow for different types of objects triggering each other.
   The should include Tween, Animation, and Callback (or at least CallbackChain, since Callback should be lightweight)
   Links should include .Then(next) and .With(sametime)  (should work in both directions!)
   Tween onFinish http://www.html5canvastutorials.com/kineticjs/html5-canvas-transition-callback-with-kineticjs/
-* Most set methods should return the class object so that they can be chained.
-* Clean up accessor locations to make sure they're on the lowest levels possible.
-* Build a library of canvas shapes (lattice, arrow, etc.) to easily plug into things like button images.
-
-Several new classes to incorporate:
-* A font class that handles font family, size, color, etc.
-* A coordinates class.
 * A Control class that allows for dynamic creation of objects with easy relationships to track.
   (and perhaps maintained through size changes?)
+* A font class that handles font family, size, color, etc.
+* A coordinates class.
+* Flippable container.  (Run .Flip() to flip to the alternate object)
+* Buttonset container.  (handles all sorts of button layouts on a matrix, including spacers.)
 
-Optimizations / improvements:
+Optimizations / cleanup:
 * Grid class would be faster if it only did updates rather than full redraws with every change.
 * When we pass back an object from JS, can we just plug in the memory block rather than copying it?
 * Setting "canvas.mozOpaque = true;" will cause layers to be opaque but crisper text in Firefox.
-* Similarly, adding 0.5 to coordinate values is supposed to make lines crisper...
-
-Cleanup:
+* Similarly, adding 0.5 to coordinate values is supposed to make lines crisper... (not seeing it...)
+* Fix images so that they don't try to draw if they're not loaded.
 * Setup a map<string, emkJSCallback *> to keep track of "On" callbacks and replace them properly (i.e., deleting the
   older ones) when needed.
 * Merge images back into main array of kinetic objects so that GetX, GetWidth, etc. work.
@@ -35,8 +37,23 @@ Cleanup:
 Stack Overflow Questions
 * Tween onReverseFinish, for linking two tweens together in reverse?
   http://stackoverflow.com/questions/19192600/tween-onstart-function-issue-kineticjs
-* Can a Tween be changed once it is created, or do I need to create a new one?
 
+
+For Web-Avida:
+* Figure out modes we want; probably based on text viewer.
+  - [P]opulation (was map)      : LEFT - MAP             RIGHT - Population Stats (Avg, Dom, Active)
+  - [O]rganism (was zoom)       :        Organism                Org stats & CPU State
+  - [A]analyze (same)           :        Graphs/visualizations   Manipulation commands & display options
+  - [C]onfigure (was options)   :        List of options         Help
+  - ?[T]imeline (past milestones and scheduled events)
+  - ?[E]nvironment (including resources, tasks, reactions, etc.)
+  - ?[B]lank (just leave updates flipping by...)
+  - Full freezer (not seperate option unless no room)
+* Under map:  Rewind (no shortcut?  Or should confirm?)  
+              Pause/Play (spacebar)
+              Freeze population
+              Step ([N]ext update)
+              Randomize?  Jumbles the population.
 
 Other libraries to think about:
 d3.js
@@ -46,9 +63,8 @@ http://fastly.github.io/epoch/
 
 Possible names:
 Emote - short enough for a proper namespace
-Emu - Nice and short, relates to gnu, but sounds too much like emulation.
-Empirical - Brings in science aspect, but long name (probably emp:: namesapce?) (or just call it Pirical?)
-Evoke - Steps out of em- prefix, but that's okay.  But the name is probably better for EALib
-Embassy - I like how it makes clear that it's linking two places together, but long.
-Emdemic or emsemble - made up words that highlight the linkages.
-
+Empirical - Brings in science aspect, but long name (probably emp:: namesapce? or MP::)
+Emform
+Emfuse (fuse::)
+Emvy
+Tubular (tube::)

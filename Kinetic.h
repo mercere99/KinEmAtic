@@ -50,6 +50,7 @@ extern "C" {
 
   extern int EMK_Tween_Build(int target_id, double seconds);
   extern void EMK_Tween_Configure(int settings_id, int obj_id);
+  extern void EMK_Tween_SetFinishedCallback(int settings_id, int callback_ptr, int info_ptr);
   extern void EMK_Tween_SetXY(int settings_id, int in_x, int in_y);
   extern void EMK_Tween_SetScaleXY(int settings_id, double _x, double _y);
   extern void EMK_Tween_Play(int obj_id);
@@ -227,6 +228,10 @@ namespace emk {
     void SetXY(int in_x, int in_y) { EMK_Tween_SetXY(settings_id, in_x, in_y); needs_config=true; }
     void SetScaleXY(double _x, double _y) {
       EMK_Tween_SetScaleXY(settings_id, _x, _y); needs_config=true;
+    }
+
+    void SetFinishedCallback(Callback & callback, int * info_ptr) {
+      EMK_Tween_SetFinishedCallback(settings_id, (int) (&callback), (int) info_ptr);
     }
 
     void Play() {
@@ -584,17 +589,6 @@ namespace emk {
   }
 
 };
-
-
-extern "C" void emkJSDoCallback(int cb_ptr, int arg_ptr)
-{
-  emk::Callback * const cb_obj = (emk::Callback *) cb_ptr;
-  cb_obj->DoCallback((int *) arg_ptr);
-  
-  if (cb_obj->IsDisposible()) {
-    delete cb_obj;
-  }
-}
 
 
 #endif
