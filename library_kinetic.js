@@ -193,7 +193,9 @@ mergeInto(LibraryManager.library, {
 
     EMK_Tween_SetFinishedCallback__deps: ['$emk_info'],
     EMK_Tween_SetFinishedCallback: function(settings_id, callback_ptr, info_ptr) {
-        emk_info.objs[settings_id].
+        emk_info.objs[settings_id].onFinish = function() {
+            emkJSDoCallback(callback_ptr, info_ptr);
+        }
     },
 
     EMK_Tween_SetXY__deps: ['$emk_info'],

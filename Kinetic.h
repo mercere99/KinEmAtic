@@ -230,8 +230,8 @@ namespace emk {
       EMK_Tween_SetScaleXY(settings_id, _x, _y); needs_config=true;
     }
 
-    void SetFinishedCallback(Callback & callback, int * info_ptr) {
-      EMK_Tween_SetFinishedCallback(settings_id, (int) (&callback), (int) info_ptr);
+    void SetFinishedCallback(Callback * callback, int * info_ptr) {
+      EMK_Tween_SetFinishedCallback(settings_id, (int) (callback), (int) info_ptr);
     }
 
     void Play() {

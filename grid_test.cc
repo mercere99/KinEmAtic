@@ -121,11 +121,23 @@ public:
     button_config.SetLayout(buttons_x + grid_w - button_w, buttons_y, button_w, button_w);
     button_config.SetupDrawIcon(this, &GridExample::DrawConfigButton);
 
+    /*
     // @CAO TESTING!  Fix this!!
     emk::Grid * grid_spect = new emk::Grid(grid_x, buttons_y+button_w+10, grid_w, grid_w/60, 60, 1, 60);
     for (int i = 0; i < 61; i++) grid_spect->SetColor(i, i);
     layer_static.Add(*grid_spect);
 
+    emk::Tween * tween1 = new emk::Tween(*grid_spect, 2);
+    tween1->SetXY(700, 120);
+    emk::Tween * tween2 = new emk::Tween(*grid_spect, 2);
+    tween2->SetXY(650, 550);
+
+    emk::EventChain * chain = new emk::EventChain();
+    chain->First(*tween1).Then(*tween2);
+    chain->Trigger();
+
+    //tween2->Play();
+    */
 
 
     grid.SetMouseMoveCallback(this, &GridExample::Draw_Gridmouse);

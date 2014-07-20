@@ -8,12 +8,10 @@ namespace emk {
   class EventChain;
   
   class Event {
-  private:
+  protected:
     Event * next;       // which event should go next?
     bool next_simul;    // shouild the next event be simultaneous with this one (is possible)?
     
-  protected:
-
   public:
     Event() : next(NULL), next_simul(false) { ; }
     virtual ~Event() { if (next) delete next; }
@@ -21,7 +19,7 @@ namespace emk {
     Event * GetNext() const { return next; }
     bool GetNextSimul() const { return next_simul; }
 
-    virtual void Trigger() = 0;
+    virtual void Trigger(EventChain * chain) = 0;
 
     Event * Then(Event * _next) { next = _next; return next; }
     Event * With(Event * _next) { next = _next; next_simul=true; return next; }
@@ -41,7 +39,7 @@ namespace emk {
       if (next && next_simul) next->Trigger(chain);
       else {
         // Otherwise, setup a callback so the chain knows when to take the next step.
-        tween.SetChainCallback(*chain, (int *) next);
+        tween.SetFinishedCallback((Callback *) chain, (int *) next);
       }
     }
   };
