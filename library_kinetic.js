@@ -198,10 +198,30 @@ mergeInto(LibraryManager.library, {
         }
     },
 
+    EMK_Tween_SetX__deps: ['$emk_info'],
+    EMK_Tween_SetX: function(settings_id, _x) {
+        emk_info.objs[settings_id].x = _x;
+    },
+
+    EMK_Tween_SetY__deps: ['$emk_info'],
+    EMK_Tween_SetY: function(settings_id, _y) {
+        emk_info.objs[settings_id].y = _y;
+    },
+
     EMK_Tween_SetXY__deps: ['$emk_info'],
     EMK_Tween_SetXY: function(settings_id, _x, _y) {
         emk_info.objs[settings_id].x = _x;
         emk_info.objs[settings_id].y = _y;
+    },
+
+    EMK_Tween_SetScaleX__deps: ['$emk_info'],
+    EMK_Tween_SetScaleX: function(settings_id, _x) {
+        emk_info.objs[settings_id].scaleX = _x;
+    },
+
+    EMK_Tween_SetScaleY__deps: ['$emk_info'],
+    EMK_Tween_SetScaleY: function(settings_id, _y) {
+        emk_info.objs[settings_id].scaleY = _y;
     },
 
     EMK_Tween_SetScaleXY__deps: ['$emk_info'],

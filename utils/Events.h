@@ -21,7 +21,7 @@ namespace emk {
 
     virtual void Trigger(EventChain * chain) = 0;
 
-    Event * Then(Event * _next) { next = _next; return next; }
+    Event * Then(Event * _next) { next = _next; next_simul=false; return next; }
     Event * With(Event * _next) { next = _next; next_simul=true; return next; }
   };
 
@@ -34,12 +34,16 @@ namespace emk {
     ~Event_Tween() { ; }
 
     void Trigger(EventChain * chain) {
-      tween.Play();
       // If there is something to be run at the same time, make sure to do so!
-      if (next && next_simul) next->Trigger(chain);
+      if (next && next_simul) {
+        tween.Play();
+        next->Trigger(chain);
+      }
+
+      // Otherwise, setup a callback before playing so that the chain knows when to take the next step.
       else {
-        // Otherwise, setup a callback so the chain knows when to take the next step.
         tween.SetFinishedCallback((Callback *) chain, (int *) next);
+        tween.Play();
       }
     }
   };
@@ -63,7 +67,6 @@ namespace emk {
     void Clear() { if (first) delete first; }
 
     void DoCallback(int * next) {
-      emk::Alert("Made it to callback!");
       // The previous event must have fiinshed.  Move on to the next one!
       if (next) ((Event *) next)->Trigger(this);
       else is_running = false;

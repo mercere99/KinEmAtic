@@ -53,7 +53,11 @@ extern "C" {
   extern int EMK_Tween_Build(int target_id, double seconds);
   extern void EMK_Tween_Configure(int settings_id, int obj_id);
   extern void EMK_Tween_SetFinishedCallback(int settings_id, int callback_ptr, int info_ptr);
+  extern void EMK_Tween_SetX(int settings_id, int in_x);
+  extern void EMK_Tween_SetY(int settings_id, int in_y);
   extern void EMK_Tween_SetXY(int settings_id, int in_x, int in_y);
+  extern void EMK_Tween_SetScaleX(int settings_id, double _x);
+  extern void EMK_Tween_SetScaleY(int settings_id, double _y);
   extern void EMK_Tween_SetScaleXY(int settings_id, double _x, double _y);
   extern void EMK_Tween_Play(int obj_id);
 
@@ -227,7 +231,11 @@ namespace emk {
 
     // void SetTarget(Object & _target) { target = &_target; needs_config=true; }
     // void SetTime(double _seconds) { seconds = _seconds; needs_config=true; }
+    void SetX(int in_x) { EMK_Tween_SetX(settings_id, in_x); needs_config=true; }
+    void SetY(int in_y) { EMK_Tween_SetY(settings_id, in_y); needs_config=true; }
     void SetXY(int in_x, int in_y) { EMK_Tween_SetXY(settings_id, in_x, in_y); needs_config=true; }
+    void SetScaleX(double _x) { EMK_Tween_SetScaleX(settings_id, _x); needs_config=true; }
+    void SetScaleY(double _y) { EMK_Tween_SetScaleY(settings_id, _y); needs_config=true; }
     void SetScaleXY(double _x, double _y) {
       EMK_Tween_SetScaleXY(settings_id, _x, _y); needs_config=true;
     }

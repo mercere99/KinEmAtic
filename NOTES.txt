@@ -47,13 +47,18 @@ For Web-Avida:
   - [C]onfigure (was options)   :        List of options         Help
   - ?[T]imeline (past milestones and scheduled events)
   - ?[E]nvironment (including resources, tasks, reactions, etc.)
-  - ?[B]lank (just leave updates flipping by...)
   - Full freezer (not seperate option unless no room)
 * Under map:  Rewind (no shortcut?  Or should confirm?)  
               Pause/Play (spacebar)
               Freeze population
               Step ([N]ext update)
               Randomize?  Jumbles the population.
+              Pulldown to choose [M]ap mode (also controls small histogram under map that matches color?)
+              - Genotype
+              - Fitness
+              - Gestation rate
+              - Metabolic rate
+              - ?Blank (just leave updates flipping by...)
 
 Other libraries to think about:
 d3.js

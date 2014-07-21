@@ -128,15 +128,6 @@ public:
     for (int i = 0; i < 61; i++) grid_spect->SetColor(i, i);
     layer_static.Add(*grid_spect);
 
-    emk::Tween * tween1 = new emk::Tween(*grid_spect, 2);
-    tween1->SetXY(700, 120);
-    emk::Tween * tween2 = new emk::Tween(*grid_spect, 2);
-    tween2->SetXY(650, 550);
-
-    emk::EventChain * chain = new emk::EventChain();
-    chain->First(*tween1).Then(*tween2);
-    chain->Trigger();
-
 
     grid.SetMouseMoveCallback(this, &GridExample::Draw_Gridmouse);
     grid.SetClickCallback(this, &GridExample::Draw_Gridclick);
@@ -212,8 +203,8 @@ public:
   void ConfigRun() {  // Other side of grid is config.
     // If we're on the config side...
     if (is_flipped) {
-      tween_grid_flip.SetXY(grid_x, grid_y);
-      tween_grid_flip.SetScaleXY(1.0, 1.0);
+      tween_grid_flip.SetX(grid_x);
+      tween_grid_flip.SetScaleX(1.0);
       grid.GetMousePointer().SetVisible(true);
       tween_grid_flip.Play();
 
@@ -230,8 +221,8 @@ public:
       if (is_paused == false) anim_grid_run.Stop();
       is_flipped = true;
 
-      tween_grid_flip.SetXY(grid_x+grid_w/2, grid_y);
-      tween_grid_flip.SetScaleXY(0.0, 1.0);
+      tween_grid_flip.SetX(grid_x+grid_w/2);
+      tween_grid_flip.SetScaleX(0.0);
       grid.GetMousePointer().SetVisible(false);
       grid.GetMousePointer().DrawLayer();
       
