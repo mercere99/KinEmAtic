@@ -1,18 +1,16 @@
-#ifndef EMK_DEBUG_H
-#define EMK_DEBUG_H
+#ifndef EMK_ASSERT_H
+#define EMK_ASSERT_H
 
 #include <string>
 
-#define EMK_DEBUG
-
-  ///////////////////// Debug
+///////////////////// Debug
 #ifdef EMK_DEBUG
 
 namespace emk {
-  assert_trip_count = 0;
+  int assert_trip_count = 0;
 }
 
-#define assert(EXPR) if (!(EXPR) && assert_trip_count++ < 3) emkAlert(std::string("Assert Error: ") + std::string(#EXPR)))
+#define assert(EXPR) if ( !(EXPR) && emk::assert_trip_count++ < 3 ) emk::Alert(std::string("Assert Error (In ") + std::string(__FILE__) + std::string(" line ") + std::to_string(__LINE__) + std::string("): ") + std::string(#EXPR))
 
   ///////////////////// NOT Debug
 #else // EMK_DEBUG

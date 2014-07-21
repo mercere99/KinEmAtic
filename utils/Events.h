@@ -63,6 +63,7 @@ namespace emk {
     void Clear() { if (first) delete first; }
 
     void DoCallback(int * next) {
+      emk::Alert("Made it to callback!");
       // The previous event must have fiinshed.  Move on to the next one!
       if (next) ((Event *) next)->Trigger(this);
       else is_running = false;
@@ -77,7 +78,7 @@ namespace emk {
     }
 
     template <class T> EventChain & Then(T & _in) {
-      assert(first == NULL && last == NULL);
+      assert(first != NULL && last != NULL);
       assert(is_running == false);
       last = last->Then( BuildEvent(_in) );
       length++;
@@ -85,7 +86,7 @@ namespace emk {
     }
 
     template <class T> EventChain & With(T & _in) {
-      assert(first == NULL && last == NULL);
+      assert(first != NULL && last != NULL);
       assert(is_running == false);
       last = last->With( BuildEvent(_in) );
       length++;
