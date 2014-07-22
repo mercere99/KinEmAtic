@@ -1,7 +1,7 @@
 #ifndef EMK_EVENTS_H
 #define EMK_EVENTS_H
 
-#include "../Kinetic.h"
+#include "../libs/Kinetic.h"
 
 namespace emk {
 

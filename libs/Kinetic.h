@@ -8,10 +8,10 @@
 #include <string>
 #include <vector>
 
-#include "tools/Callbacks.h"
-#include "tools/Colors.h"
+#include "../tools/Callbacks.h"
+#include "../tools/Colors.h"
 
-#include "tools/debug.h"
+#include "../tools/debug.h"
 
 extern "C" {
   extern void EMK_Alert(const char * in_msg);

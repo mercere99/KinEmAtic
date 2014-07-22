@@ -1,9 +1,9 @@
 #ifndef EMK_GRID_H
 #define EMK_GRID_H
 
+#include "../libs/Kinetic.h"
 #include "../tools/Colors.h"
 #include "../tools/ProbSchedule.h"
-#include "../Kinetic.h"
 
 #include <vector>
 

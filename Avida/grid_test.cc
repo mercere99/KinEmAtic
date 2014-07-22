@@ -2,11 +2,12 @@
 #include <iostream>
 #include <cmath>
 
-#include "Kinetic.h"
-#include "tools/Random.h"
-#include "utils/Button.h"
-#include "utils/Events.h"
-#include "utils/Grid.h"
+#include "../libs/Kinetic.h"
+#include "../tools/Random.h"
+#include "../cogs/Button.h"
+#include "../cogs/Events.h"
+#include "../cogs/Grid.h"
+#include "../cogs/Panel.h"
 
 #define EMK_DEBUG // Turn on DEBUG mode...
 
@@ -39,6 +40,7 @@ private:
   emk::Button button_mode_analysis;   // Population mode
 
   emk::Grid grid;              // Visual Grid.
+  emk::Panel panel_config;     // Congifuration options.
   emk::Button button_rewind;   // BUTTON: Restart a run.
   emk::Button button_pause;    // BUTTON: Pause a run.
   emk::Button button_freeze;   // BUTTON: Save a population.
@@ -51,6 +53,8 @@ private:
   emk::Animation<GridExample> anim_grid_run;
 
   emk::Tween tween_grid_flip;
+  emk::Tween tween_panel_flip;
+  emk::EventChain event_grid_flip;
 
   // Current status 
   emk::Random random;        // Random number generator
@@ -68,12 +72,13 @@ public:
     , merits(num_cells)
     , stage(1200, 800, "container")
     , title(650, 10, "Avida Viewer test!", "30", "Calibri", "black")
-    , image_avida_logo("icons/avidalogo.jpg") // ("icons/setting.png")
+    , image_avida_logo("../icons/avidalogo.jpg") // ("icons/setting.png")
     , rect_avida_logo(logo_x, logo_y, logo_w, logo_h, "white", "black", 4)
     , button_mode_population(this, &GridExample::ModePopulation)
     , button_mode_organism(this, &GridExample::ModeOrganism)
     , button_mode_analysis(this, &GridExample::ModeAnalysis)
     , grid(grid_x, grid_y, grid_w, grid_h, cols, rows, num_colors+1)
+    , panel_config(grid_x+grid_w/2, grid_y, grid_w, grid_h)
     , button_rewind(this, &GridExample::SetupRun)
     , button_pause(this, &GridExample::PauseRun)
     , button_freeze(this, &GridExample::FreezeRun)
@@ -81,9 +86,10 @@ public:
     , update_text(650, 50, "Update: ", "30", "Calibri", "black")
     , mouse_text(650, 90, "Move mouse over grid to test!", "30", "Calibri", "black")
     , click_text(650, 130, "Click on grid to test!", "30", "Calibri", "black")
-    , tween_grid_flip(grid, 1)
+    , tween_grid_flip(grid, 0.5)
+    , tween_panel_flip(panel_config, 0.5)
     , sched(num_cells)
-    , update(0), is_paused(false), is_flipped(false)
+    , update(0), is_paused(true), is_flipped(false)
     , mut_rate(0.01)
   {
     rect_avida_logo.SetFillPatternImage(image_avida_logo);
@@ -132,9 +138,12 @@ public:
     grid.SetMouseMoveCallback(this, &GridExample::Draw_Gridmouse);
     grid.SetClickCallback(this, &GridExample::Draw_Gridclick);
 
+    panel_config.SetScale(0.0, 1.0);
+
     layer_static.Add(title);
     layer_static.Add(rect_avida_logo);
     layer_grid.Add(grid);
+    layer_grid.Add(panel_config);
     layer_grid.Add(update_text);
     layer_gridmouse.Add(grid.GetMousePointer());
     layer_gridmouse.Add(mouse_text);
@@ -157,9 +166,6 @@ public:
 
     // Setup potential animations...
     anim_grid_run.Setup(this, &GridExample::Animate_Grid, layer_grid);
-
-    // And start the main animation
-    anim_grid_run.Start();
   }
 
   void ModePopulation() {
@@ -203,10 +209,18 @@ public:
   void ConfigRun() {  // Other side of grid is config.
     // If we're on the config side...
     if (is_flipped) {
+      // Stop the config panel from listening for inputs.
+      panel_config.SetListening(false);
+
+      // Setup the animation
       tween_grid_flip.SetX(grid_x);
       tween_grid_flip.SetScaleX(1.0);
+      tween_panel_flip.SetX(grid_x+grid_w/2);
+      tween_panel_flip.SetScaleX(0.0);
       grid.GetMousePointer().SetVisible(true);
-      tween_grid_flip.Play();
+      event_grid_flip.Clear();
+      event_grid_flip.First(tween_panel_flip).Then(tween_grid_flip);
+      event_grid_flip.Trigger();
 
       // Restart the grid if it's not paused.
       if (is_paused == false) anim_grid_run.Start();
@@ -223,10 +237,15 @@ public:
 
       tween_grid_flip.SetX(grid_x+grid_w/2);
       tween_grid_flip.SetScaleX(0.0);
+      tween_panel_flip.SetX(grid_x);
+      tween_panel_flip.SetScaleX(1.0);
       grid.GetMousePointer().SetVisible(false);
       grid.GetMousePointer().DrawLayer();
       
-      tween_grid_flip.Play();
+      event_grid_flip.Clear();
+      event_grid_flip.First(tween_grid_flip).Then(tween_panel_flip);
+      event_grid_flip.Trigger();
+      panel_config.SetListening(true);
     }
     
     // @CAO Shut off listening on grid!
@@ -263,6 +282,7 @@ public:
 
     }
   }
+
 
 
   void Draw_Gridmouse() {

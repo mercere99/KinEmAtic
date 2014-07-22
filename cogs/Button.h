@@ -5,7 +5,7 @@
 
 #include "../tools/const.h"
 #include "../tools/Colors.h"
-#include "../Kinetic.h"
+#include "../libs/Kinetic.h"
 
 namespace emk {
   
