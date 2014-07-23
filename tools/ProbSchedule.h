@@ -66,8 +66,8 @@ namespace emk {
     double GetWeight(int id) const { return weights[id]; }
     double GetSubtreeWeight(int id) const { return tree_weights[id]; }
    
-    void Adjust(int id, const double in_weight) {
-      weights[id] = in_weight;
+    void Adjust(int id, const double _weight) {
+      weights[id] = _weight;
 
       // Determine the child ids to adjust subtree weight.
       const int left_id = 2*id + 1;
@@ -76,7 +76,7 @@ namespace emk {
       // Make sure the subtrees looked for haven't fallen off the end of this tree.
       const double st1_weight = (left_id < num_items) ? tree_weights[left_id] : 0.0;
       const double st2_weight = (right_id < num_items) ? tree_weights[right_id] : 0.0;
-      tree_weights[id] = in_weight + st1_weight + st2_weight;
+      tree_weights[id] = _weight + st1_weight + st2_weight;
       
       // Cascade the change up the tree to the root.
       while (id) {

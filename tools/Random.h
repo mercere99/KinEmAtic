@@ -14,8 +14,8 @@
 //  A versatile and non-patterned pseudo-random-number generator.
 //
 //  Constructor:
-//    Random(int in_seed=-1)
-//      in_seed is the random number seed that will produce a unique pseudo-random sequence.
+//    Random(int _seed=-1)
+//      _seed is the random number seed that will produce a unique pseudo-random sequence.
 //      (a value of -1 indicates that the seed should be bassed off of a combination of time and the
 //      memory position of the random number generator in case multiple ones start at the same time.)
 //
@@ -116,13 +116,13 @@ namespace emk {
   public:
     /**
      * Set up the random generator object.
-     * @param in_seed The seed of the random number generator. 
+     * @param _seed The seed of the random number generator. 
      * A negative seed means that the random number generator gets its
      * seed from the actual system time.
      **/
-    Random(const int in_seed = -1) : seed(0), original_seed(0), inext(0), inextp(0), expRV(0) {
+    Random(const int _seed = -1) : seed(0), original_seed(0), inext(0), inextp(0), expRV(0) {
       for (int i = 0; i < 56; ++i) ma[i] = 0;
-      ResetSeed(in_seed);  // Calls init()
+      ResetSeed(_seed);  // Calls init()
     }
 
     ~Random() { ; }
@@ -145,15 +145,15 @@ namespace emk {
      * A negative seed means that the random number generator gets its
      * seed from the actual system time and the process ID.
      **/
-    void ResetSeed(const int in_seed) {
-      original_seed = in_seed;
+    void ResetSeed(const int _seed) {
+      original_seed = _seed;
     
-      if (in_seed <= 0) {
+      if (_seed <= 0) {
         int seed_time = (int) time(NULL);
         int seed_mem = (int) this;
         seed = seed_time ^ seed_mem;
       } else {
-        seed = in_seed;
+        seed = _seed;
       }
     
       if (seed < 0) seed *= -1;

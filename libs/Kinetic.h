@@ -14,7 +14,7 @@
 #include "../tools/debug.h"
 
 extern "C" {
-  extern void EMK_Alert(const char * in_msg);
+  extern void EMK_Alert(const char * msg);
   extern void EMK_Setup_OnEvent(int obj_id, const char * trigger, int callback_ptr);      
   extern void EMK_Setup_OnEvent_Info(int obj_id, const char * trigger, int callback_ptr); // Pass back event
 
@@ -53,9 +53,9 @@ extern "C" {
   extern int EMK_Tween_Build(int target_id, double seconds);
   extern void EMK_Tween_Configure(int settings_id, int obj_id);
   extern void EMK_Tween_SetFinishedCallback(int settings_id, int callback_ptr, int info_ptr);
-  extern void EMK_Tween_SetX(int settings_id, int in_x);
-  extern void EMK_Tween_SetY(int settings_id, int in_y);
-  extern void EMK_Tween_SetXY(int settings_id, int in_x, int in_y);
+  extern void EMK_Tween_SetX(int settings_id, int _x);
+  extern void EMK_Tween_SetY(int settings_id, int _y);
+  extern void EMK_Tween_SetXY(int settings_id, int _x, int _y);
   extern void EMK_Tween_SetScaleX(int settings_id, double _x);
   extern void EMK_Tween_SetScaleY(int settings_id, double _y);
   extern void EMK_Tween_SetScaleXY(int settings_id, double _x, double _y);
@@ -94,7 +94,7 @@ extern "C" {
   extern int EMK_Image_Load(const char * file, int callback_ptr);
   extern int EMK_Image_AllLoaded();
 
-  extern int EMK_Stage_Build(int in_w, int in_h, const char * in_name);
+  extern int EMK_Stage_Build(int _w, int _h, const char * _name);
   extern int EMK_Stage_AddLayer(int stage_obj_id, int layer_obj_id);
   extern int EMK_Stage_ResizeMax(int stage_obj_id, int min_x, int min_y);
 
@@ -102,14 +102,14 @@ extern "C" {
   extern int EMK_Layer_AddObject(int layer_obj_id, int add_obj_id);
   extern void EMK_Layer_BatchDraw(int layer_obj_id);
 
-  extern int EMK_Image_Build(int in_x, int in_y, int img_id, int in_w, int in_h);
+  extern int EMK_Image_Build(int _x, int _y, int img_id, int _w, int _h);
 
-  extern int EMK_Text_Build(int in_x, int in_y, const char * in_text, const char * in_font_size, const char * in_font_family, const char * in_fill);
-  extern void EMK_Text_SetText(int obj_id, const char * in_text);
+  extern int EMK_Text_Build(int _x, int _y, const char * _text, const char * _font_size, const char * _font_family, const char * _fill);
+  extern void EMK_Text_SetText(int obj_id, const char * _text);
 
-  extern int EMK_Rect_Build(int in_x, int in_y, int in_w, int in_h, const char * in_fill, const char * in_stroke, int in_stroke_width, int in_draggable);
-  extern int EMK_RegularPolygon_Build(int in_x, int in_y, int in_sides, int in_radius,
-                                      const char * in_fill, const char * in_stroke, int in_stroke_width, int in_draggable);
+  extern int EMK_Rect_Build(int _x, int _y, int _w, int _h, const char * _fill, const char * _stroke, int _stroke_width, int _draggable);
+  extern int EMK_RegularPolygon_Build(int _x, int _y, int _sides, int _radius,
+                                      const char * _fill, const char * _stroke, int _stroke_width, int _draggable);
 
   extern int EMK_Animation_Build(int callback_ptr, int layer_id);
   extern int EMK_Animation_Build_NoFrame(int callback_ptr, int layer_id);
@@ -205,8 +205,8 @@ namespace emk {
     void MoveToTop() { EMK_Object_MoveToTop(obj_id); }
 
 
-    template<class T> void On(const std::string & in_trigger, T * in_target, void (T::*in_method_ptr)());
-    template<class T> void On(const std::string & in_trigger, T * in_target, void (T::*in_method_ptr)(const EventInfo &));
+    template<class T> void On(const std::string & _trigger, T * _target, void (T::*_method_ptr)());
+    template<class T> void On(const std::string & _trigger, T * _target, void (T::*_method_ptr)(const EventInfo &));
   };
 
 
@@ -231,9 +231,9 @@ namespace emk {
 
     // void SetTarget(Object & _target) { target = &_target; needs_config=true; }
     // void SetTime(double _seconds) { seconds = _seconds; needs_config=true; }
-    void SetX(int in_x) { EMK_Tween_SetX(settings_id, in_x); needs_config=true; }
-    void SetY(int in_y) { EMK_Tween_SetY(settings_id, in_y); needs_config=true; }
-    void SetXY(int in_x, int in_y) { EMK_Tween_SetXY(settings_id, in_x, in_y); needs_config=true; }
+    void SetX(int _x) { EMK_Tween_SetX(settings_id, _x); needs_config=true; }
+    void SetY(int _y) { EMK_Tween_SetY(settings_id, _y); needs_config=true; }
+    void SetXY(int _x, int _y) { EMK_Tween_SetXY(settings_id, _x, _y); needs_config=true; }
     void SetScaleX(double _x) { EMK_Tween_SetScaleX(settings_id, _x); needs_config=true; }
     void SetScaleY(double _y) { EMK_Tween_SetScaleY(settings_id, _y); needs_config=true; }
     void SetScaleXY(double _x, double _y) {
@@ -265,7 +265,7 @@ namespace emk {
 
     bool HasLoaded() const { return has_loaded; }
 
-    void DrawOnLoad(Layer * in_layer) const { layers_waiting.push_back(in_layer); }
+    void DrawOnLoad(Layer * _layer) const { layers_waiting.push_back(_layer); }
 
     void DoCallback(int * arg_ptr); // Called back when image is loaded
   };
@@ -338,9 +338,9 @@ namespace emk {
     T * target;
     void (T::*method_ptr)(Canvas &);
   public:
-    Callback_Canvas(T * in_target, void (T::*in_method_ptr)(Canvas &))
-      : target(in_target)
-      , method_ptr(in_method_ptr)
+    Callback_Canvas(T * _target, void (T::*_method_ptr)(Canvas &))
+      : target(_target)
+      , method_ptr(_method_ptr)
     { ; }
 
     ~Callback_Canvas() { ; }
@@ -439,15 +439,15 @@ namespace emk {
     virtual std::string GetType() { return "emkLayer"; }
 
     // Add other types of stage objects; always place them in the current layer.
-    Layer & Add(Shape & in_obj) {
-      in_obj.SetLayer(this);
+    Layer & Add(Shape & _obj) {
+      _obj.SetLayer(this);
 
       // If the object we are adding has an image that hasn't been loaded, setup a callback.
-      const Image * image = in_obj.GetImage();
+      const Image * image = _obj.GetImage();
       if (image && image->HasLoaded() == false) {
         image->DrawOnLoad(this);
       }
-      EMK_Layer_AddObject(obj_id, in_obj.GetID());
+      EMK_Layer_AddObject(obj_id, _obj.GetID());
       return *this;
     }
 
@@ -474,8 +474,8 @@ namespace emk {
     void ResizeMax(int min_width=0, int min_height=0) { EMK_Stage_ResizeMax(obj_id, min_width, min_height); }
 
     // Add a layer and return this stage itself (so adding can be chained...)
-    Stage & Add(Layer & in_layer) {
-      EMK_Stage_AddLayer(obj_id, in_layer.GetID());
+    Stage & Add(Layer & _layer) {
+      EMK_Stage_AddLayer(obj_id, _layer.GetID());
       return *this;
     }
   };
@@ -492,8 +492,8 @@ namespace emk {
 
     virtual std::string GetType() { return "emkText"; }
 
-    void SetText(const std::string & in_text) {
-      EMK_Text_SetText(obj_id, in_text.c_str());
+    void SetText(const std::string & _text) {
+      EMK_Text_SetText(obj_id, _text.c_str());
     }
   };
 
@@ -550,15 +550,15 @@ namespace emk {
 
     // Setup this animation object to know what class it will be working with, which update method it should use,
     // and what Stage layer it is in.  The method pointed to may, optionally, take a frame object.
-    void Setup(T * in_target, void (T::*in_method_ptr)(const AnimationFrame &), Layer & layer) {
-      target = in_target;
-      method_ptr = in_method_ptr;
+    void Setup(T * _target, void (T::*_method_ptr)(const AnimationFrame &), Layer & layer) {
+      target = _target;
+      method_ptr = _method_ptr;
       obj_id = EMK_Animation_Build((int) this, layer.GetID());
     }
 
-    void Setup(T * in_target, void (T::*in_method_ptr)(), Layer & layer) {
-      target = in_target;
-      method_ptr_nf = in_method_ptr;
+    void Setup(T * _target, void (T::*_method_ptr)(), Layer & layer) {
+      target = _target;
+      method_ptr_nf = _method_ptr;
       obj_id = EMK_Animation_Build_NoFrame((int) this, layer.GetID());
     }
 

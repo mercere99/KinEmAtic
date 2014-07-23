@@ -9,9 +9,9 @@
 mergeInto(LibraryManager.library, {
     $emk_info: { objs:[], images:[], image_load_count:0 },
 
-    EMK_Alert: function(in_msg) {
-        in_msg = Pointer_stringify(in_msg);
-        alert(in_msg);
+    EMK_Alert: function(msg) {
+        msg = Pointer_stringify(msg);
+        alert(msg);
     },
 
 
@@ -415,13 +415,13 @@ mergeInto(LibraryManager.library, {
     },
 
     EMK_Stage_Build__deps: ['$emk_info'],
-    EMK_Stage_Build: function(in_w, in_h, in_name) {
-        in_name = Pointer_stringify(in_name);
+    EMK_Stage_Build: function(_w, _h, _name) {
+        _name = Pointer_stringify(_name);
         var obj_id = emk_info.objs.length;
         emk_info.objs[obj_id] = new Kinetic.Stage({
-                container: in_name,
-                width: in_w,
-                height: in_h
+                container: _name,
+                width: _w,
+                height: _h
             });
 
         return obj_id;
@@ -461,76 +461,76 @@ mergeInto(LibraryManager.library, {
     },
 
     EMK_Image_Build__deps: ['$emk_info'],
-    EMK_Image_Build: function(in_x, in_y, img_id, in_w, in_h) {
+    EMK_Image_Build: function(_x, _y, img_id, _w, _h) {
         var obj_id = emk_info.objs.length;
         emk_info.objs[obj_id] = new Kinetic.Image({
-            x: in_x,
-            y: in_y,
+            x: _x,
+            y: _y,
             image: emk_info.objs[img_id],
-            width: in_w,
-            height: in_h
+            width: _w,
+            height: _h
         });
         return obj_id;
     },
 
     EMK_Text_Build__deps: ['$emk_info'],
-    EMK_Text_Build: function(in_x, in_y, in_text, in_font_size, in_font_family, in_fill) {
-        var obj_id = emk_info.objs.length;                   // Determine the next free id for a Kinetic object.
-        in_text = Pointer_stringify(in_text);                // Make sure string values are properly converted (text)
-        in_font_size = Pointer_stringify(in_font_size);      // Make sure string values are properly converted (size)
-        in_font_family = Pointer_stringify(in_font_family);  // Make sure string values are properly converted (font)
-        in_fill = Pointer_stringify(in_fill);                // Make sure string values are properly converted (color)
+    EMK_Text_Build: function(_x, _y, _text, _font_size, _font_family, _fill) {
+        var obj_id = emk_info.objs.length;               // Determine the next free id for a Kinetic object.
+        _text = Pointer_stringify(_text);                // Make sure string values are properly converted (text)
+        _font_size = Pointer_stringify(_font_size);      // Make sure string values are properly converted (size)
+        _font_family = Pointer_stringify(_font_family);  // Make sure string values are properly converted (font)
+        _fill = Pointer_stringify(_fill);                // Make sure string values are properly converted (color)
         
         emk_info.objs[obj_id] = new Kinetic.Text({           // Build the new text object!
-                x: in_x,
-                y: in_y,
-                text: in_text,
-                fontSize: in_font_size,
-                fontFamily: in_font_family,
-                fill: in_fill
+                x: _x,
+                y: _y,
+                text: _text,
+                fontSize: _font_size,
+                fontFamily: _font_family,
+                fill: _fill
             });
         return obj_id;                                       // Return the Kinetic object id.
     },
 
     EMK_Text_SetText__deps: ['$emk_info'],
-    EMK_Text_SetText: function(obj_id, in_text) {
-        in_text = Pointer_stringify(in_text);
-        emk_info.objs[obj_id].text(in_text);
+    EMK_Text_SetText: function(obj_id, _text) {
+        _text = Pointer_stringify(_text);
+        emk_info.objs[obj_id].text(_text);
     },
 
     EMK_Rect_Build__deps: ['$emk_info'],
-    EMK_Rect_Build: function(in_x, in_y, in_w, in_h, in_fill, in_stroke, in_stroke_width, in_draggable) {
+    EMK_Rect_Build: function(_x, _y, _w, _h, _fill, _stroke, _stroke_width, _draggable) {
         var obj_id = emk_info.objs.length;                   // Determine the next free id for a Kinetic object.
-        in_fill = Pointer_stringify(in_fill);                // Make sure string values are properly converted (colors)
-        in_stroke = Pointer_stringify(in_stroke);
+        _fill = Pointer_stringify(_fill);                // Make sure string values are properly converted (colors)
+        _stroke = Pointer_stringify(_stroke);
         emk_info.objs[obj_id] = new Kinetic.Rect({           // Build the new rectangle!
-            x: in_x,
-            y: in_y,
-            width: in_w,
-            height: in_h,
-            fill: in_fill,
-            stroke: in_stroke,
-            strokeWidth: in_stroke_width,
-            draggable: in_draggable
+            x: _x,
+            y: _y,
+            width: _w,
+            height: _h,
+            fill: _fill,
+            stroke: _stroke,
+            strokeWidth: _stroke_width,
+            draggable: _draggable
         });
         return obj_id;                                       // Return the Kinetic object id.
     },
 
 
     EMK_RegularPolygon_Build__deps: ['$emk_info'],
-    EMK_RegularPolygon_Build: function(in_x, in_y, in_sides, in_radius, in_fill, in_stroke, in_stroke_width, in_draggable) {
+    EMK_RegularPolygon_Build: function(_x, _y, _sides, _radius, _fill, _stroke, _stroke_width, _draggable) {
         var obj_id = emk_info.objs.length;                   // Determine the next free id for a Kinetic object.
-        in_fill = Pointer_stringify(in_fill);                // Make sure string values are properly converted (colors)
-        in_stroke = Pointer_stringify(in_stroke);
+        _fill = Pointer_stringify(_fill);                // Make sure string values are properly converted (colors)
+        _stroke = Pointer_stringify(_stroke);
         emk_info.objs[obj_id] = new Kinetic.RegularPolygon({ // Build the new regular polygon!
-                x: in_x,
-                y: in_y,
-                sides: in_sides,
-                radius: in_radius,
-                fill: in_fill,
-                stroke: in_stroke,
-                strokeWidth: in_stroke_width,
-                draggable: in_draggable
+                x: _x,
+                y: _y,
+                sides: _sides,
+                radius: _radius,
+                fill: _fill,
+                stroke: _stroke,
+                strokeWidth: _stroke_width,
+                draggable: _draggable
             });
         return obj_id;                                       // Return the Kinetic object id.
     },
@@ -642,8 +642,8 @@ mergeInto(LibraryManager.library, {
 
     EMK_Shape_SetDrawFunction__deps: ['$emk_info'],
     EMK_Shape_SetDrawFunction: function(obj_id, callback_ptr) {
-        emk_info.objs[obj_id].setDrawFunc( function(in_ctx) {
-            emk_info.ctx = in_ctx._context;
+        emk_info.objs[obj_id].setDrawFunc( function(_ctx) {
+            emk_info.ctx = _ctx._context;
             emkJSDoCallback(callback_ptr, 0);
             emk_info.ctx = null;
         } );

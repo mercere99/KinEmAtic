@@ -39,9 +39,9 @@ namespace emk {
     T * target;
     void (T::*method_ptr)();
   public:
-    MethodCallback(T * in_target, void (T::*in_method_ptr)())
-      : target(in_target)
-      , method_ptr(in_method_ptr)
+    MethodCallback(T * _target, void (T::*_method_ptr)())
+      : target(_target)
+      , method_ptr(_method_ptr)
     { ; }
     ~MethodCallback() { ; }
     
@@ -75,9 +75,9 @@ namespace emk {
     T * target;
     void (T::*method_ptr)(const EventInfo &);
   public:
-    MethodCallback_Event(T * in_target, void (T::*in_method_ptr)(const EventInfo &))
-      : target(in_target)
-      , method_ptr(in_method_ptr)
+    MethodCallback_Event(T * _target, void (T::*_method_ptr)(const EventInfo &))
+      : target(_target)
+      , method_ptr(_method_ptr)
     { ; }
     
     ~MethodCallback_Event() { ; }
