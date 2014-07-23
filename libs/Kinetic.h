@@ -3,7 +3,6 @@
 
 #include <emscripten.h>
 
-// #include <assert.h>
 #include <list>
 #include <string>
 #include <vector>
@@ -15,36 +14,6 @@
 
 extern "C" {
   extern void EMK_Alert(const char * msg);
-  extern void EMK_Setup_OnEvent(int obj_id, const char * trigger, int callback_ptr);      
-  extern void EMK_Setup_OnEvent_Info(int obj_id, const char * trigger, int callback_ptr); // Pass back event
-
-  extern void EMK_Object_Destroy(int obj_id);
-  extern int EMK_Object_GetX(int obj_id);
-  extern int EMK_Object_GetY(int obj_id);
-  extern int EMK_Object_GetWidth(int obj_id);
-  extern int EMK_Object_GetHeight(int obj_id);
-  extern bool EMK_Object_GetVisible(int obj_id);
-  extern double EMK_Object_GetOpacity(int obj_id);
-  extern bool EMK_Object_GetListening(int obj_id);
-  extern double EMK_Object_GetScaleX(int obj_id);
-  extern double EMK_Object_GetScaleY(int obj_id);
-  extern int EMK_Object_GetOffsetX(int obj_id);
-  extern int EMK_Object_GetOffsetY(int obj_id);
-  extern int EMK_Object_GetRotation(int obj_id);
-  extern int EMK_Object_GetDraggable(int obj_id);
-
-  extern void EMK_Object_SetX(int obj_id, int x);
-  extern void EMK_Object_SetY(int obj_id, int y);
-  extern void EMK_Object_SetXY(int obj_id, int x, int y);
-  extern void EMK_Object_SetWidth(int obj_id, int w);
-  extern void EMK_Object_SetHeight(int obj_id, int h);
-  extern void EMK_Object_SetSize(int obj_id, int w, int h);
-  extern void EMK_Object_SetVisible(int obj_id, int visible);
-  extern void EMK_Object_SetOpacity(int obj_id, double opacity);
-  extern void EMK_Object_SetListening(int obj_id, int listening);
-  extern void EMK_Object_SetRotation(int obj_id, double rotation);
-  extern void EMK_Object_SetDraggable(int obj_id, int draggable);
-
 
   extern void EMK_Object_Draw(int obj_id);
   extern void EMK_Object_DrawLayer(int obj_id);
@@ -104,9 +73,6 @@ extern "C" {
 
   extern int EMK_Image_Build(int _x, int _y, int img_id, int _w, int _h);
 
-  extern int EMK_Text_Build(int _x, int _y, const char * _text, const char * _font_size, const char * _font_family, const char * _fill);
-  extern void EMK_Text_SetText(int obj_id, const char * _text);
-
   extern int EMK_Rect_Build(int _x, int _y, int _w, int _h, const char * _fill, const char * _stroke, int _stroke_width, int _draggable);
   extern int EMK_RegularPolygon_Build(int _x, int _y, int _sides, int _radius,
                                       const char * _fill, const char * _stroke, int _stroke_width, int _draggable);
@@ -156,42 +122,46 @@ namespace emk {
     Object() : obj_id(-1) {;}  // Protected so that you can't make a direct Object.
   public:
     ~Object() {
-      EMK_Object_Destroy(obj_id); // Cleanup this object from Kinetic.
+      EM_ASM_ARGS({
+          if ($0 >= 0) emk_info.objs[$0].destroy();
+        }, obj_id);
     }
     int GetID() const { return obj_id; }
 
     virtual std::string GetType() { return "emkObject"; }
 
     // Retrieve info from JS Kinetic::Node objects
-    int GetX() const { return EMK_Object_GetX(obj_id); }
-    int GetY() const { return EMK_Object_GetY(obj_id); }
-    int GetWidth() const { return EMK_Object_GetWidth(obj_id); }
-    int GetHeight() const { return EMK_Object_GetHeight(obj_id); }
-    bool GetVisible() const { return EMK_Object_GetVisible(obj_id); }
-    double GetOpacity() const { return EMK_Object_GetOpacity(obj_id); }
-    bool GetListening() const { return EMK_Object_GetListening(obj_id); }
-    double GetScaleX() const { return EMK_Object_GetScaleX(obj_id); }
-    double GetScaleY() const { return EMK_Object_GetScaleY(obj_id); }
-    int GetOffsetX() const { return EMK_Object_GetOffsetX(obj_id); }
-    int GetOffsetY() const { return EMK_Object_GetOffsetY(obj_id); }
-    int GetRotation() const { return EMK_Object_GetRotation(obj_id); }
-    int GetDraggable() const { return EMK_Object_GetDraggable(obj_id); }
+    int GetX() const { return EM_ASM_INT({return emk_info.objs[$0].x();}, obj_id); }
+    int GetY() const { return EM_ASM_INT({return emk_info.objs[$0].y();}, obj_id); }
+    int GetWidth() const { return EM_ASM_INT({return emk_info.objs[$0].width();}, obj_id); }
+    int GetHeight() const { return EM_ASM_INT({return emk_info.objs[$0].height();}, obj_id); }
+    bool GetVisible() const { return EM_ASM_INT({return emk_info.objs[$0].visible();}, obj_id); }
+    double GetOpacity() const { return EM_ASM_DOUBLE({return emk_info.objs[$0].opacity();}, obj_id); }
+    bool GetListening() const { return EM_ASM_INT({return emk_info.objs[$0].listening();}, obj_id); }
+    double GetScaleX() const { return EM_ASM_DOUBLE({return emk_info.objs[$0].scaleX();}, obj_id); }
+    double GetScaleY() const { return EM_ASM_DOUBLE({return emk_info.objs[$0].scaleY();}, obj_id); }
+    int GetOffsetX() const { return EM_ASM_INT({return emk_info.objs[$0].offsetX();}, obj_id); }
+    int GetOffsetY() const { return EM_ASM_INT({return emk_info.objs[$0].offsetY();}, obj_id); }
+    int GetRotation() const { return EM_ASM_INT({return emk_info.objs[$0].rotation();}, obj_id); }
+    int GetDraggable() const { return EM_ASM_INT({return emk_info.objs[$0].draggable();}, obj_id); }
 
-    inline void SetX(int x) { EMK_Object_SetX(obj_id, x); }
-    inline void SetY(int y) { EMK_Object_SetY(obj_id, y); }
-    inline void SetXY(int x, int y) { EMK_Object_SetXY(obj_id, x, y); }
-    inline void SetWidth(int w) { EMK_Object_SetWidth(obj_id, w); }
-    inline void SetHeight(int h) { EMK_Object_SetHeight(obj_id, h); }
-    inline void SetSize(int w, int h) { EMK_Object_SetSize(obj_id, w, h); }
-    inline void SetLayout(int x, int y, int w, int h) {
-      EMK_Object_SetXY(obj_id, x, y);
-      EMK_Object_SetSize(obj_id, w, h);
-    }
-    inline void SetVisible(bool visible) { EMK_Object_SetVisible(obj_id, visible); }
-    inline void SetOpacity(double opacity) { EMK_Object_SetOpacity(obj_id, opacity); }
-    inline void SetListening(bool listening) { EMK_Object_SetListening(obj_id, listening); }
-    inline void SetRotation(double rotation) { EMK_Object_SetRotation(obj_id, rotation); }
-    inline void SetDraggable(bool draggable) { EMK_Object_SetDraggable(obj_id, draggable); }
+    int SetX(int _in) const { return EM_ASM_ARGS({emk_info.objs[$0].x($1);}, obj_id, _in); }
+    int SetY(int _in) const { return EM_ASM_ARGS({emk_info.objs[$0].y($1);}, obj_id, _in); }
+    int SetWidth(int _in) const { return EM_ASM_ARGS({emk_info.objs[$0].width($1);}, obj_id, _in); }
+    int SetHeight(int _in) const { return EM_ASM_ARGS({emk_info.objs[$0].height($1);}, obj_id, _in); }
+    bool SetVisible(int _in) const { return EM_ASM_ARGS({emk_info.objs[$0].visible($1);}, obj_id, _in); }
+    double SetOpacity(double _in) const { return EM_ASM_ARGS({emk_info.objs[$0].opacity($1);}, obj_id, _in); }
+    bool SetListening(int _in) const { return EM_ASM_ARGS({emk_info.objs[$0].listening($1);}, obj_id, _in); }
+    double SetScaleX(double _in) const { return EM_ASM_ARGS({emk_info.objs[$0].scaleX($1);}, obj_id, _in); }
+    double SetScaleY(double _in) const { return EM_ASM_ARGS({emk_info.objs[$0].scaleY($1);}, obj_id, _in); }
+    int SetOffsetX(int _in) const { return EM_ASM_ARGS({emk_info.objs[$0].offsetX($1);}, obj_id, _in); }
+    int SetOffsetY(int _in) const { return EM_ASM_ARGS({emk_info.objs[$0].offsetY($1);}, obj_id, _in); }
+    int SetRotation(int _in) const { return EM_ASM_ARGS({emk_info.objs[$0].rotation($1);}, obj_id, _in); }
+    int SetDraggable(int _in) const { return EM_ASM_ARGS({emk_info.objs[$0].draggable($1);}, obj_id, _in); }
+
+    inline void SetXY(int x, int y) { SetX(x); SetY(y); }
+    inline void SetSize(int w, int h) { SetWidth(w); SetHeight(h); }
+    inline void SetLayout(int x, int y, int w, int h) { SetX(x); SetY(y); SetWidth(w); SetHeight(h); }
 
     void SetLayer(Object * _layer) { layer = _layer; }
 
@@ -358,7 +328,12 @@ namespace emk {
   {
     // @CAO Technically we should track these callbacks to make sure we delete them properly.
     MethodCallback<T> * new_callback = new MethodCallback<T>(target, method_ptr);
-    EMK_Setup_OnEvent(obj_id, trigger.c_str(), (int) new_callback);
+    EM_ASM_ARGS({
+        var trigger = Pointer_stringify($1);
+        emk_info.objs[$0].on(trigger, function() {
+            emkJSDoCallback($2);
+        });
+    }, obj_id, trigger.c_str(), (int) new_callback);
   }
 
   template<class T> void Object::On(const std::string & trigger, T * target,
@@ -366,7 +341,24 @@ namespace emk {
   {
     // @CAO Technically we should track these callbacks to make sure we delete them properly.
     MethodCallback_Event<T> * new_callback = new MethodCallback_Event<T>(target, method_ptr);
-    EMK_Setup_OnEvent_Info(obj_id, trigger.c_str(), (int) new_callback);
+    EM_ASM_ARGS({
+        var trigger = Pointer_stringify($1);
+        emk_info.objs[$0].on(trigger, function(event) {
+            var evt = event.evt;
+            var ptr = Module._malloc(32); // 8 ints @ 4 bytes each...
+            setValue(ptr,    evt.layerX,   'i32');
+            setValue(ptr+4,  evt.layerY,   'i32');
+            setValue(ptr+8,  evt.button,   'i32');
+            setValue(ptr+12, evt.keyCode,  'i32');
+            setValue(ptr+16, evt.altKey,   'i32');
+            setValue(ptr+20, evt.ctrlKey,  'i32');
+            setValue(ptr+24, evt.metaKey,  'i32');
+            setValue(ptr+28, evt.shiftKey, 'i32');
+
+            emkJSDoCallback($2, ptr);
+            Module._free(ptr);
+        });
+    },  obj_id, trigger.c_str(), (int) new_callback);
   }
 
 
@@ -486,14 +478,30 @@ namespace emk {
   public:
     Text(int x=0, int y=0, std::string text="", std::string font_size="30", std::string font_family="Calibri", std::string fill="black")
     {
-      obj_id = EMK_Text_Build(x, y, text.c_str(), font_size.c_str(), font_family.c_str(), fill.c_str());
+      obj_id = EM_ASM_INT( {
+          var obj_id = emk_info.objs.length;         // Determine the next free id for a Kinetic object.
+          _text = Pointer_stringify($2);             // Make sure string values are properly converted (text)
+          _font_size = Pointer_stringify($3);        // Make sure string values are properly converted (size)
+          _font_family = Pointer_stringify($4);      // Make sure string values are properly converted (font)
+          _fill = Pointer_stringify($5);             // Make sure string values are properly converted (color)
+        
+          emk_info.objs[obj_id] = new Kinetic.Text({           // Build the new text object!
+              x: $0,
+              y: $1,
+              text: _text,
+              fontSize: _font_size,
+              fontFamily: _font_family,
+              fill: _fill
+          });
+          return obj_id;                                       // Return the Kinetic object id.
+      }, x, y, text.c_str(), font_size.c_str(), font_family.c_str(), fill.c_str());
     }
     ~Text() { ; }
 
     virtual std::string GetType() { return "emkText"; }
 
     void SetText(const std::string & _text) {
-      EMK_Text_SetText(obj_id, _text.c_str());
+      EM_ASM_ARGS({var _text = Pointer_stringify($1); emk_info.objs[$0].text(_text);}, obj_id, _text.c_str());
     }
   };
 

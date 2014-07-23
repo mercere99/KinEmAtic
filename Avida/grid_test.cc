@@ -83,7 +83,7 @@ public:
     , button_pause(this, &GridExample::PauseRun)
     , button_freeze(this, &GridExample::FreezeRun)
     , button_config(this, &GridExample::ConfigRun)
-    , update_text(650, 50, "Update: ", "30", "Calibri", "black")
+    , update_text(650, 50, "Update: 0", "30", "Calibri", "black")
     , mouse_text(650, 90, "Move mouse over grid to test!", "30", "Calibri", "black")
     , click_text(650, 130, "Click on grid to test!", "30", "Calibri", "black")
     , tween_grid_flip(grid, 0.5)

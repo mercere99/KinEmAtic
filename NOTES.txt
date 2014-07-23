@@ -1,7 +1,6 @@
 --== Development Notes ==--
 
 * Implement other shapes (circles, etc.)
-* Change all in_var to just _var.
 * Split up Kinetic.h into multiple files
 
 Once we have a first draft of the basic framework:
