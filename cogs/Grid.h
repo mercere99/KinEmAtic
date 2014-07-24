@@ -3,6 +3,7 @@
 
 #include "../libs/Kinetic.h"
 #include "../tools/Colors.h"
+#include "../tools/functions.h"
 #include "../tools/ProbSchedule.h"
 
 #include <vector>
@@ -176,9 +177,12 @@ namespace emk {
                                                
     void OnMouseout() {  // (const emk::EventInfo & evt) {
       mouse_col = mouse_row = -1;  // Don't highlight any cells if the mouse isn't on the grid.
+      SetCursor("default");
     }
                                                
     void OnMouseover() { // (const emk::EventInfo & evt) {
+      // SetCursor("crosshair");
+      SetCursor("cell");
     }
                                                
   };

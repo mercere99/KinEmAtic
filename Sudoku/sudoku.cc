@@ -7,11 +7,11 @@
 #include <stdlib.h>
 #include <vector>
 
-#include "Kinetic.h"
+#include "../libs/Kinetic.h"
 
-#include "tools/const.h"
-#include "tools/functions.h"
-#include "utils/Button.h"
+#include "../tools/const.h"
+#include "../tools/functions.h"
+#include "../cogs/Button.h"
 
 class SudokuLayout {
 private:
@@ -235,7 +235,7 @@ private:
   int button_w;           // Width of buttons.
 
   // Graphical elements
-  emkCustomShape puzzle_board; // @CAO Should this be an emkRect to capture mouse clicks?
+  emk::CustomShape puzzle_board; // @CAO Should this be an emkRect to capture mouse clicks?
   emk::Button button_rewind;
   emk::Button button_undo;
   emk::Button button_bookmark;
@@ -245,10 +245,10 @@ private:
   emk::ToggleButton button_warnings;
   emk::ToggleButton button_autonotes;
   emk::ToggleButton button_toggleclick;
-  emkLayer layer_main;
-  emkLayer layer_buttons;
-  emkLayer layer_tooltips;
-  emkStage stage;
+  emk::Layer layer_main;
+  emk::Layer layer_buttons;
+  emk::Layer layer_tooltips;
+  emk::Stage stage;
 
   // Current state
   int cell_id;                   // Current cell in focus
@@ -348,9 +348,9 @@ public:
   }
   ~SudokuInterface() { ; }
 
-  // void OnClick(const emkEventInfo & info) { emkAlert(info.shift_key); }
+  // void OnClick(const emk::EventInfo & info) { emk::Alert(info.shift_key); }
 
-  void OnMousedown(const emkEventInfo & info)
+  void OnMousedown(const emk::EventInfo & info)
   {
     // If this cell is locked, stop here -- there's nothing to do.
     if (puzzle.GetLock(cell_id) == true) return;
@@ -371,7 +371,7 @@ public:
     layer_main.Draw();
   }
 
-  void OnMousemove(const emkEventInfo & info)
+  void OnMousemove(const emk::EventInfo & info)
   {
     const double rel_x = ((double) (info.layer_x - border)) / (double) cell_width;
     const double rel_y = ((double) (info.layer_y - border)) / (double) cell_width;
@@ -419,7 +419,7 @@ public:
     button_toggleclick.SetLayout(button_w*9 - x_offset, y_offset, button_w, button_w);
   }
 
-  void DrawGrid(emkCanvas & canvas) {
+  void DrawGrid(emk::Canvas & canvas) {
     const int offset = border; // @CAO Technically we should deal with an x & y here...
 
     const int active_col = puzzle.GetLayout().ToCol(cell_id);
@@ -811,7 +811,7 @@ public:
   // Setup icons
   // Note: All icons are adjusted to be on a 100x100 grid.
   
-  void DrawIcon_Rewind(emkCanvas & canvas) {
+  void DrawIcon_Rewind(emk::Canvas & canvas) {
     // Draw the bookmark
     canvas.BeginPath();
     canvas.SetLineWidth(3);
@@ -871,7 +871,7 @@ public:
     canvas.Stroke();
   }
 
-  void DrawIcon_Undo(emkCanvas & canvas) {
+  void DrawIcon_Undo(emk::Canvas & canvas) {
     canvas.BeginPath();
     canvas.SetFillStyle("white");
     canvas.MoveTo(30,95);              // Arrow point
@@ -897,7 +897,7 @@ public:
   }
   
 
-  void DrawIcon_Bookmark(emkCanvas & canvas) {
+  void DrawIcon_Bookmark(emk::Canvas & canvas) {
     // Grid
     const int gridx = 5;
     const int gridy = 10;
@@ -940,7 +940,7 @@ public:
     canvas.Stroke();
   }
 
-  void DrawIcon_Redo(emkCanvas & canvas) {
+  void DrawIcon_Redo(emk::Canvas & canvas) {
     canvas.BeginPath();
     canvas.SetFillStyle("white");
     canvas.MoveTo(70,95);              // Arrow point
@@ -965,7 +965,7 @@ public:
     canvas.Stroke();    
   }
   
-  void DrawIcon_Redoall(emkCanvas & canvas) {
+  void DrawIcon_Redoall(emk::Canvas & canvas) {
     // Arrow 1
     canvas.BeginPath();
     canvas.SetLineWidth(2);
@@ -1019,7 +1019,7 @@ public:
     canvas.Stroke();
   }
   
-  void DrawIcon_Hint(emkCanvas & canvas) {
+  void DrawIcon_Hint(emk::Canvas & canvas) {
     canvas.SetFont("95pt Helvetica");
     canvas.SetFillStyle("green");
     canvas.SetTextAlign("center");
@@ -1032,7 +1032,7 @@ public:
     canvas.Stroke();
   }
   
-  void DrawIcon_Warnings(emkCanvas & canvas) {
+  void DrawIcon_Warnings(emk::Canvas & canvas) {
     canvas.SetFont("95pt Helvetica");
     canvas.SetFillStyle("#800");
     canvas.SetTextAlign("center");
@@ -1045,7 +1045,7 @@ public:
     canvas.Stroke();
   }
   
-  void DrawIcon_Autonotes(emkCanvas & canvas) {
+  void DrawIcon_Autonotes(emk::Canvas & canvas) {
     // Board
     canvas.BeginPath();
     canvas.SetLineWidth(2);
@@ -1075,7 +1075,7 @@ public:
     canvas.Stroke();
   }
   
-  void DrawIcon_Toggleclick(emkCanvas & canvas) {
+  void DrawIcon_Toggleclick(emk::Canvas & canvas) {
     // Board
     canvas.BeginPath();
     canvas.SetLineWidth(2);

@@ -41,10 +41,6 @@ mergeInto(LibraryManager.library, {
         return obj_id;
     },
 
-    EMK_Image_AllLoaded__deps: ['$emk_info'],
-    EMK_Image_AllLoaded: function() {
-        return (emk_info.images.length == emk_info.image_load_count);
-    },
 
     EMK_Stage_Build__deps: ['$emk_info'],
     EMK_Stage_Build: function(_w, _h, _name) {
@@ -57,11 +53,6 @@ mergeInto(LibraryManager.library, {
             });
 
         return obj_id;
-    },
-
-    EMK_Stage_AddLayer__deps: ['$emk_info'],
-    EMK_Stage_AddLayer: function(stage_obj_id, layer_obj_id) {
-        emk_info.objs[stage_obj_id].add(emk_info.objs[layer_obj_id]);  // Add the new layer to the stage.
     },
 
     EMK_Stage_ResizeMax__deps: ['$emk_info'],
@@ -80,17 +71,6 @@ mergeInto(LibraryManager.library, {
         return obj_id;                                       // Return the Kinetic object id.
     },
 
-    EMK_Layer_AddObject__deps: ['$emk_info'],
-    EMK_Layer_AddObject: function(layer_obj_id, add_obj_id) 
-    {
-        emk_info.objs[layer_obj_id].add(emk_info.objs[add_obj_id]);
-    },
-
-    EMK_Layer_BatchDraw__deps: ['$emk_info'],
-    EMK_Layer_BatchDraw: function(layer_obj_id)
-    {
-        emk_info.objs[layer_obj_id].batchDraw();
-    },
 
     EMK_Image_Build__deps: ['$emk_info'],
     EMK_Image_Build: function(_x, _y, img_id, _w, _h) {
@@ -204,8 +184,6 @@ mergeInto(LibraryManager.library, {
 
     EMK_Cursor_Set__deps: ['$emk_info'],
     EMK_Cursor_Set: function(cur_type) {
-        cur_type  = Pointer_stringify(cur_type);
-        document.body.style.cursor = cur_type;
     },
 
 

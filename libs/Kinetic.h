@@ -16,15 +16,11 @@ extern "C" {
   extern int EMK_Tween_Build(int target_id, double seconds);
 
   extern int EMK_Image_Load(const char * file, int callback_ptr);
-  extern int EMK_Image_AllLoaded();
 
   extern int EMK_Stage_Build(int _w, int _h, const char * _name);
-  extern int EMK_Stage_AddLayer(int stage_obj_id, int layer_obj_id);
   extern int EMK_Stage_ResizeMax(int stage_obj_id, int min_x, int min_y);
 
   extern int EMK_Layer_Build();
-  extern int EMK_Layer_AddObject(int layer_obj_id, int add_obj_id);
-  extern void EMK_Layer_BatchDraw(int layer_obj_id);
 
   extern int EMK_Image_Build(int _x, int _y, int img_id, int _w, int _h);
 
@@ -38,9 +34,6 @@ extern "C" {
   extern void EMK_Shape_SetDrawFunction(int obj_id, int new_callback);
 
   extern int EMK_Custom_Shape_Build(int x, int y, int w, int h, int draw_callback);
-
-  // These may already be in HTML5
-  extern void EMK_Cursor_Set(const char * type);
 }
 
 
@@ -187,6 +180,8 @@ namespace emk {
     void DrawOnLoad(Layer * _layer) const { layers_waiting.push_back(_layer); }
 
     void DoCallback(int * arg_ptr); // Called back when image is loaded
+
+    static bool AllLoaded() { return EM_ASM_INT_V({return (emk_info.images.length == emk_info.image_load_count);}); }
   };
 
 
@@ -499,11 +494,11 @@ namespace emk {
       if (image && image->HasLoaded() == false) {
         image->DrawOnLoad(this);
       }
-      EMK_Layer_AddObject(obj_id, _obj.GetID());
+      EM_ASM_ARGS({emk_info.objs[$0].add(emk_info.objs[$1]);}, obj_id, _obj.GetID());
       return *this;
     }
 
-    void BatchDraw() { EMK_Layer_BatchDraw(obj_id); }
+    void BatchDraw() { EM_ASM_ARGS({emk_info.objs[$0].batchDraw();}, obj_id); }
   };
 
 
@@ -527,7 +522,7 @@ namespace emk {
 
     // Add a layer and return this stage itself (so adding can be chained...)
     Stage & Add(Layer & _layer) {
-      EMK_Stage_AddLayer(obj_id, _layer.GetID());
+      EM_ASM_ARGS({emk_info.objs[$0].add(emk_info.objs[$1]);}, obj_id, _layer.GetID());
       return *this;
     }
   };

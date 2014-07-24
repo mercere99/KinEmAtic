@@ -9,6 +9,8 @@
 #include "../cogs/Grid.h"
 #include "../cogs/Panel.h"
 
+#include "../cogs/Control.h"
+
 #define EMK_DEBUG // Turn on DEBUG mode...
 
 class GridExample {

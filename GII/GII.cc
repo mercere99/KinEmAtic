@@ -3,7 +3,8 @@
 #include <string>
 #include <vector>
 
-#include "Kinetic.h"
+#include "../tools/functions.h"
+#include "../libs/Kinetic.h"
 
 using namespace std;
 
@@ -21,15 +22,15 @@ namespace GII
 
   class Card {
   private:
-    const emkImage & front;
-    const emkImage & back;
-    emkRect card_rect;
+    const emk::Image & front;
+    const emk::Image & back;
+    emk::Rect card_rect;
     const int animal;
     const int color;
     const int rank;
     const int id;
   public:
-    Card(const emkImage & _front, emkImage & _back, int _a, int _c, int _r, int _id)
+    Card(const emk::Image & _front, emk::Image & _back, int _a, int _c, int _r, int _id)
       : front(_front)
       , back(_back)
       , card_rect(0, 0, 150, 210, "white", "black", 1, true)
@@ -45,7 +46,7 @@ namespace GII
     }
     ~Card() { ; }
 
-    emkRect & Rect() { return card_rect; }
+    emk::Rect & Rect() { return card_rect; }
     int GetAnimal() const { return animal; }
     int GetColor() const { return color; }
     int GetRank() const { return rank; }
@@ -54,13 +55,13 @@ namespace GII
     void MouseOver() {
       card_rect.SetStroke("red");
       card_rect.DrawLayer();
-      EMK_Cursor_Set("pointer");
+      emk::SetCursor("pointer");
     }
   
     void MouseOut() {
       card_rect.SetStroke("black");
       card_rect.DrawLayer();
-      EMK_Cursor_Set("default");
+      emk::SetCursor("default");
     }
   
     void MouseDown() {
@@ -77,8 +78,8 @@ namespace GII
   
   class Deck {
     string path;
-    emkImage back_image;
-    vector<emkImage *> front_images;
+    emk::Image back_image;
+    vector<emk::Image *> front_images;
     vector<Card *> card_array;
     int next_id;
   public:
@@ -88,7 +89,7 @@ namespace GII
       for (int animal_id = 0; animal_id < num_animals; animal_id++) {
         for (int rank_id = 0; rank_id < num_base_ranks; rank_id++) {
           // Load in the associated image.
-          emkImage * cur_front = new emkImage(path + ranks[rank_id] + "_" + animals[animal_id] + ".png");
+          emk::Image * cur_front = new emk::Image(path + ranks[rank_id] + "_" + animals[animal_id] + ".png");
           for (int card_count = 0; card_count <= rank_id*2; card_count++) {
             Card * new_card = new Card(*cur_front, back_image, animal_id, animal_id/2, rank_id, next_id++);
             card_array.push_back(new_card);
@@ -100,7 +101,7 @@ namespace GII
       if (include_dragons) {
         for (int color_id = 0; color_id < num_colors; color_id++) {
           // Load in the associated image.
-          emkImage * cur_front = new emkImage(path + "D_" + colors[color_id] + ".png");
+          emk::Image * cur_front = new emk::Image(path + "D_" + colors[color_id] + ".png");
           Card * new_card = new Card(*cur_front, back_image, color_id*2, color_id, num_base_ranks, next_id++);
           card_array.push_back(new_card);
           front_images.push_back(cur_front);          
@@ -120,9 +121,9 @@ namespace GII
 
 class KineticExample {
 private:
-  emkStage stage;
-  emkLayer layer;
-  //  emkAnimation<KineticExample> anim;
+  emk::Stage stage;
+  emk::Layer layer;
+  //  emk::Animation<KineticExample> anim;
 
   GII::Deck deck;
 
@@ -133,7 +134,7 @@ public:
   {
     
     for (int i = 0; i < deck.GetNumCards(); i++) {
-      emkRect & rect = deck[i].Rect();
+      emk::Rect & rect = deck[i].Rect();
       rect.SetXY(i*5+10, 100);
       deck[i].Rescale(0.2 + 0.01 * (double) i);
       layer.Add(rect);
