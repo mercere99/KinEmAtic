@@ -5,6 +5,7 @@
 #include "../libs/Kinetic.h"
 #include "../tools/Random.h"
 #include "../cogs/Button.h"
+#include "../cogs/ButtonSet.h"
 #include "../cogs/Events.h"
 #include "../cogs/Grid.h"
 #include "../cogs/Panel.h"
@@ -25,12 +26,7 @@ private:
 
   std::vector<double> merits;
 
-  emk::Stage stage;
-  emk::Layer layer_static;     // Background layer that should never need to be updated.
-  emk::Layer layer_grid;       // Main layer for the grid and anything that gets updated with it.
-  emk::Layer layer_gridmouse;  // Fast updating as the mouse is moved over the grid.
-  emk::Layer layer_info;       // Layer to print the side information.
-  emk::Layer layer_buttons;    // Layer for all of the buttons on the screen.
+  emk::Control control;           // Main controller for GUI elements
 
   emk::Text title;
 
@@ -72,7 +68,7 @@ public:
     , logo_x(5), logo_y(10), logo_w(130), logo_h(logo_w*181/205)  
     , grid_x(logo_x + logo_w + 10), grid_y(10), grid_w(481), grid_h(481)
     , merits(num_cells)
-    , stage(1200, 800, "container")
+      //    , stage(1200, 800, "container")
     , title(650, 10, "Avida Viewer test!", "30", "Calibri", "black")
     , image_avida_logo("../icons/avidalogo.jpg") // ("icons/setting.png")
     , rect_avida_logo(logo_x, logo_y, logo_w, logo_h, "white", "black", 4)
@@ -131,6 +127,16 @@ public:
     button_config.SetLayout(buttons_x + grid_w - button_w, buttons_y, button_w, button_w);
     button_config.SetupDrawIcon(this, &GridExample::DrawConfigButton);
 
+
+    emk::Layer & layer_static = control.AddLayer("static");       // Background layer that should never need to be updated.
+    emk::Layer & layer_grid = control.AddLayer("grid");           // Main layer for the grid and anything updated with it.
+    emk::Layer & layer_gridmouse = control.AddLayer("gridmouse"); // Fast updating as the mouse is moved over the grid.
+    emk::Layer & layer_info = control.AddLayer("info");           // Layer to print the side information.
+    emk::Layer & layer_buttons = control.AddLayer("buttons");     // Layer for all of the buttons on the screen.
+
+
+
+
     // @CAO TESTING!  Fix this!!
     emk::Grid * grid_spect = new emk::Grid(grid_x, buttons_y+button_w+10, grid_w, grid_w/60, 60, 1, 60);
     for (int i = 0; i < 61; i++) grid_spect->SetColor(i, i);
@@ -158,6 +164,7 @@ public:
     layer_buttons.Add(button_freeze);
     layer_buttons.Add(button_config);
 
+    emk::Stage & stage = control.Stage();
     stage.Add(layer_static);
     stage.Add(layer_grid);
     stage.Add(layer_gridmouse);
@@ -196,7 +203,7 @@ public:
     merits[1830] = 1.0;
     sched.Adjust(1830, 1.0);
 
-    layer_grid.BatchDraw();
+    control.Layer("grid").BatchDraw();
   }
 
   void PauseRun() {
@@ -293,7 +300,7 @@ public:
 
   void Draw_Gridclick() {
     click_text.SetText(std::string("Click Col:") + std::to_string(grid.GetClickCol()) + std::string(" Row:") + std::to_string(grid.GetClickRow()));
-    layer_info.BatchDraw();
+    control.Layer("info").BatchDraw();
   }
 
   void DrawPopulationModeButton(emk::Canvas & canvas) {

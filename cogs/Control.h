@@ -4,6 +4,11 @@
 #include <map>
 
 #include "../libs/Kinetic.h"
+#include "Button.h"
+#include "ButtonSet.h"
+#include "Events.h"
+#include "Grid.h"
+#include "Panel.h"
 
 namespace emk {
 
@@ -17,6 +22,7 @@ namespace emk {
     std::map<std::string, Text *> text_map;
 
     std::map<std::string, Button *> button_map;
+    std::map<std::string, ButtonSet *> buttonset_map;
     std::map<std::string, Grid *> grid_map;
     std::map<std::string, Panel *> panel_map;
 
@@ -26,32 +32,51 @@ namespace emk {
 
     Stage * cur_stage;
     Layer * cur_layer;
+    Button * cur_button;
+    ButtonSet * cur_buttonset;
 
   public:
-    Control() : cur_layer(NULL) {
-      AddStage(1200, 800, "container"); // Build the default stage.
+    Control(int width=1200, int height=800, const std::string & name="container") : cur_layer(NULL) {
+      AddStage(name, width, height); // Build the default stage.
     }
     ~Control() { ; }
 
-    Stage & AddStage(int x, int y, const std::string & name) {
-      cur_stage = new Stage(x, y, name);
+    Stage & AddStage(const std::string & name, int x, int y) {
+      cur_stage = new emk::Stage(x, y, name);
       stage_map[name] = cur_stage;
       return *cur_stage;
     }
     Layer & AddLayer(const std::string & name) {
-      cur_layer = new Layer();
+      cur_layer = new emk::Layer();
       layer_map[name] = cur_layer;
       return *cur_layer;
     }
+    template<class T> Button & AddButton(const std::string & name, T * target, void (T::*method_ptr)()) {
+      cur_button = new emk::Button(target, method_ptr, name);
+      button_map[name] = cur_button;
+      return *cur_button;
+    }
+    ButtonSet & AddButtonSet(const std::string & name, int cols, int rows, int x, int y, int width, int height, int spacing=0) {
+      cur_buttonset = new emk::ButtonSet(cols, rows, x, y, width, height, spacing);
+      buttonset_map[name] = cur_buttonset;
+      return *cur_buttonset;
+    }
 
 
-    Stage & Stage(const string & name) {
-      cur_stage = stage_map[name];
+    Stage & Stage(const std::string & name="") {
+      if (name != "") cur_stage = stage_map[name];
+      assert(cur_stage != NULL);
       return *cur_stage;
     }
-    Layer & Layer(const string & name) {
-      cur_layer = layer_map[name];
+    Layer & Layer(const std::string & name="") {
+      if (name != "") cur_layer = layer_map[name];
+      assert(cur_layer != NULL);
       return *cur_layer;
+    }
+    Button & Button(const std::string & name="") {
+      if (name != "") cur_button = button_map[name];
+      assert(cur_button != NULL);
+      return *cur_button;
     }
   };
 

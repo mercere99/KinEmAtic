@@ -15,11 +15,11 @@ namespace emk {
     bool mouse_down;
     bool mouse_over;
 
-    Callback * trigger_cb;
-    Callback * draw_icon_cb;
-
     std::string name;
     std::string tooltip;
+
+    Callback * trigger_cb;
+    Callback * draw_icon_cb;
 
     // By default, this will be a square button with optionally rounded corners, but the draw function can be replaced.
     bool ul_round;
@@ -34,15 +34,29 @@ namespace emk {
     Color color_bg_mousedown;
 
   public:
-    template<class T> Button(T * _target, void (T::*_method_ptr)(), const std::string & _name="")
+    Button(const std::string & _name="")
       : CustomShape(this, &Button::Default_Draw)
       , is_active(true), mouse_down(false), mouse_over(false), name(_name)
+      , trigger_cb(NULL), draw_icon_cb(NULL)
       , ul_round(true), ur_round(true), ll_round(true), lr_round(true)
       , color_bg("rgb(255,250,245)"), color_bg_toggled("rgb(255,255,100)"), color_bg_mouseover("rgb(240,240,255)")
       , color_bg_toggled_mouseover("rgb(250,250,200)"), color_bg_mousedown("blue")
     {
+      On("mousedown", this, &Button::Default_OnMouseDown);
+      On("mouseup", this, &Button::Default_OnMouseUp);
+      On("mouseenter", this, &Button::Default_OnMouseEnter);
+      On("mouseleave", this, &Button::Default_OnMouseLeave);
+    }
+    template<class T> Button(T * _target, void (T::*_method_ptr)(), const std::string & _name="")
+      : CustomShape(this, &Button::Default_Draw)
+      , is_active(true), mouse_down(false), mouse_over(false), name(_name)
+      , trigger_cb(NULL), draw_icon_cb(NULL)
+      , ul_round(true), ur_round(true), ll_round(true), lr_round(true)
+      , color_bg("rgb(255,250,245)"), color_bg_toggled("rgb(255,255,100)"), color_bg_mouseover("rgb(240,240,255)")
+      , color_bg_toggled_mouseover("rgb(250,250,200)"), color_bg_mousedown("blue")
+    {
+      assert(_target && _method_ptr);
       trigger_cb = new emk::MethodCallback<T>(_target, _method_ptr);
-      draw_icon_cb = NULL;
       On("mousedown", this, &Button::Default_OnMouseDown);
       On("mouseup", this, &Button::Default_OnMouseUp);
       On("mouseenter", this, &Button::Default_OnMouseEnter);
@@ -56,6 +70,10 @@ namespace emk {
       ul_round = _ul;      ur_round = _ur;
       ll_round = _ll;      lr_round = _lr;
     }
+    void SetRoundCornerUL(bool round=true) { ul_round = round; }
+    void SetRoundCornerUR(bool round=true) { ur_round = round; }
+    void SetRoundCornerLR(bool round=true) { lr_round = round; }
+    void SetRoundCornerLL(bool round=true) { ll_round = round; }
 
     void SetFillPatternImage(const Image & _image) {
       // Don't automatically draw the image here, just record it.
@@ -68,7 +86,13 @@ namespace emk {
     void SetBGColorToggledMouseover(const Color & _color) { color_bg_toggled_mouseover = _color; }
     void SetBGColorMousedown(const Color & _color) { color_bg_mousedown = _color; }
 
+    template<class T> void SetTrigger(T * _target, void (T::*_method_ptr)()) {
+      if (trigger_cb != NULL) delete trigger_cb;
+      trigger_cb = new emk::MethodCallback<T>(_target, _method_ptr);
+    }
+
     template<class T> void SetupDrawIcon(T * _target, void (T::*_method_ptr)(Canvas &)) {
+      if (draw_icon_cb != NULL) delete draw_icon_cb;
       draw_icon_cb = new Callback_Canvas<T>(_target, _method_ptr);
     }
 

@@ -121,6 +121,13 @@ namespace emk {
   };
 
 
+  // This is a baseclass for other classes that contain a whole set of objects
+  class ObjectSet {
+  public:
+    virtual void AddToLayer(Layer & layer) = 0;  // Add all objects in set to this layer.
+  };
+
+
   class Tween : public Object {
   private:
     Object * target;   // What object is this tween associated with?
@@ -497,6 +504,8 @@ namespace emk {
       EM_ASM_ARGS({emk_info.objs[$0].add(emk_info.objs[$1]);}, obj_id, _obj.GetID());
       return *this;
     }
+
+    Layer & Add(ObjectSet & set) { set.AddToLayer(*this); return *this; }
 
     void BatchDraw() { EM_ASM_ARGS({emk_info.objs[$0].batchDraw();}, obj_id); }
   };
