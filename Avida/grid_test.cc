@@ -33,10 +33,6 @@ private:
   emk::Image image_avida_logo; // Image for Avida Logo
   emk::Rect rect_avida_logo;   // Image holder for Avida Logo
 
-  emk::Button button_mode_population; // Population mode
-  emk::Button button_mode_organism;   // Population mode
-  emk::Button button_mode_analysis;   // Population mode
-
   emk::Grid grid;              // Visual Grid.
   emk::Panel panel_config;     // Congifuration options.
   emk::Button button_rewind;   // BUTTON: Restart a run.
@@ -72,9 +68,6 @@ public:
     , title(650, 10, "Avida Viewer test!", "30", "Calibri", "black")
     , image_avida_logo("../icons/avidalogo.jpg") // ("icons/setting.png")
     , rect_avida_logo(logo_x, logo_y, logo_w, logo_h, "white", "black", 4)
-    , button_mode_population(this, &GridExample::ModePopulation)
-    , button_mode_organism(this, &GridExample::ModeOrganism)
-    , button_mode_analysis(this, &GridExample::ModeAnalysis)
     , grid(grid_x, grid_y, grid_w, grid_h, cols, rows, num_colors+1)
     , panel_config(grid_x+grid_w/2, grid_y, grid_w, grid_h)
     , button_rewind(this, &GridExample::SetupRun)
@@ -92,26 +85,23 @@ public:
   {
     rect_avida_logo.SetFillPatternImage(image_avida_logo);
     rect_avida_logo.SetFillPatternScale( ((double) logo_w) / 205.0  );
-    // emk::Alert(image_avida_logo.GetWidth());
 
-    const int mode_x = rect_avida_logo.GetX();
-    const int mode_y = rect_avida_logo.GetY() + rect_avida_logo.GetHeight() + 10;
-    const int mode_w = rect_avida_logo.GetWidth();
-    const int mode_h = 40;
-    button_mode_population.SetLayout(mode_x, mode_y, mode_w, mode_h);
-    button_mode_population.SetBGColor("white");
-    button_mode_population.SetRoundCorners(true, false, false, true);
-    button_mode_population.SetupDrawIcon(this, &GridExample::DrawPopulationModeButton);
+    
+    emk::ButtonSet & mode_buttons =
+      control.AddButtonSet("modes", 1, 3, rect_avida_logo.GetX(), rect_avida_logo.GetY() + rect_avida_logo.GetHeight() + 10,
+                           rect_avida_logo.GetWidth(), 40, 5);
 
-    button_mode_organism.SetLayout(mode_x, mode_y+mode_h+5, mode_w, mode_h);
-    button_mode_organism.SetBGColor("white");
-    button_mode_organism.SetRoundCorners(true, false, false, true);
-    button_mode_organism.SetupDrawIcon(this, &GridExample::DrawOrganismModeButton);
+    mode_buttons[0].SetTrigger(this, &GridExample::ModePopulation);  // Population mode
+    mode_buttons[1].SetTrigger(this, &GridExample::ModeOrganism);    // Organism mode
+    mode_buttons[2].SetTrigger(this, &GridExample::ModeAnalysis);    // Analysis mode
 
-    button_mode_analysis.SetLayout(mode_x, mode_y+2*mode_h+10, mode_w, mode_h);
-    button_mode_analysis.SetBGColor("white");
-    button_mode_analysis.SetRoundCorners(true, false, false, true);
-    button_mode_analysis.SetupDrawIcon(this, &GridExample::DrawAnalysisModeButton);
+    mode_buttons[0].SetDrawIcon(this, &GridExample::DrawPopulationModeButton);
+    mode_buttons[1].SetDrawIcon(this, &GridExample::DrawOrganismModeButton);
+    mode_buttons[2].SetDrawIcon(this, &GridExample::DrawAnalysisModeButton);
+
+    mode_buttons.SetBGColor("white");
+    mode_buttons.SetRoundCorners(true, false, false, true);
+
  
     // Setup the buttons a long the bottom of the grid.
     const int buttons_x = grid_x;
@@ -119,13 +109,13 @@ public:
     const int button_w = 40;
     const int button_spacing = 5;
     button_rewind.SetLayout(buttons_x + grid_w/2 - button_w * 1.5 - button_spacing, buttons_y, button_w, button_w);
-    button_rewind.SetupDrawIcon(this, &GridExample::DrawRewindButton);
+    button_rewind.SetDrawIcon(this, &GridExample::DrawRewindButton);
     button_pause.SetLayout(buttons_x + (grid_w - button_w)/2, buttons_y, button_w, button_w);
-    button_pause.SetupDrawIcon(this, &GridExample::DrawPauseButton);
+    button_pause.SetDrawIcon(this, &GridExample::DrawPauseButton);
     button_freeze.SetLayout(buttons_x + (grid_w + button_w)/2 + button_spacing, buttons_y, button_w, button_w);
-    button_freeze.SetupDrawIcon(this, &GridExample::DrawFreezeButton);
+    button_freeze.SetDrawIcon(this, &GridExample::DrawFreezeButton);
     button_config.SetLayout(buttons_x + grid_w - button_w, buttons_y, button_w, button_w);
-    button_config.SetupDrawIcon(this, &GridExample::DrawConfigButton);
+    button_config.SetDrawIcon(this, &GridExample::DrawConfigButton);
 
 
     emk::Layer & layer_static = control.AddLayer("static");       // Background layer that should never need to be updated.
@@ -156,9 +146,7 @@ public:
     layer_gridmouse.Add(grid.GetMousePointer());
     layer_gridmouse.Add(mouse_text);
     layer_info.Add(click_text);
-    layer_buttons.Add(button_mode_population);
-    layer_buttons.Add(button_mode_organism);
-    layer_buttons.Add(button_mode_analysis);
+    layer_buttons.Add(mode_buttons);
     layer_buttons.Add(button_rewind);
     layer_buttons.Add(button_pause);
     layer_buttons.Add(button_freeze);

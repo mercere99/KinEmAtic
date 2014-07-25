@@ -13,8 +13,8 @@ namespace emk {
     int rows;
     int x;
     int y;
-    int width;
-    int height;
+    int button_width;
+    int button_height;
     int spacing;
 
     int set_size;
@@ -22,14 +22,11 @@ namespace emk {
 
   public:
     ButtonSet(int _cols, int _rows, int _x, int _y, int _width, int _height, int _spacing=0)
-      : cols(_cols), rows(_rows), x(_x), y(_y), width(_width), height(_height), spacing(_spacing),
+      : cols(_cols), rows(_rows), x(_x), y(_y), button_width(_width), button_height(_height), spacing(_spacing),
         set_size(cols * rows), button_set(set_size)
     {
-      const int extra_width = width + spacing;  // Gives room for all buttons to have spacing on right.
-      const int button_width = extra_width / cols - spacing;
-
-      const int extra_height = height + spacing;  // Gives room for all buttons to have a spacing below.
-      const int button_height = extra_height / cols - spacing;
+      const int extra_width = button_width + spacing;  // Gives room for all buttons to have spacing on right.
+      const int extra_height = button_height + spacing;  // Gives room for all buttons to have a spacing below.
 
       for (int i = 0; i < cols; i++) {
         const int cur_x = x + extra_width * i;

@@ -91,7 +91,7 @@ namespace emk {
       trigger_cb = new emk::MethodCallback<T>(_target, _method_ptr);
     }
 
-    template<class T> void SetupDrawIcon(T * _target, void (T::*_method_ptr)(Canvas &)) {
+    template<class T> void SetDrawIcon(T * _target, void (T::*_method_ptr)(Canvas &)) {
       if (draw_icon_cb != NULL) delete draw_icon_cb;
       draw_icon_cb = new Callback_Canvas<T>(_target, _method_ptr);
     }
