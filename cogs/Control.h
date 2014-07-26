@@ -32,8 +32,16 @@ namespace emk {
 
     Stage * cur_stage;
     Layer * cur_layer;
+    Image * cur_image;
+    Rect * cur_rect;
+    Text * cur_text;
     Button * cur_button;
     ButtonSet * cur_buttonset;
+    Grid * cur_grid;
+    Panel * cur_panel;
+    Callback * cur_callback;
+    EventChain * cur_eventchain;
+    Tween * cur_tween;
 
   public:
     Control(int width=1200, int height=800, const std::string & name="container") : cur_layer(NULL) {
@@ -46,20 +54,54 @@ namespace emk {
       stage_map[name] = cur_stage;
       return *cur_stage;
     }
+
     Layer & AddLayer(const std::string & name) {
       cur_layer = new emk::Layer();
       layer_map[name] = cur_layer;
       return *cur_layer;
     }
+
+    Image & AddImage(const std::string & name, const std::string & filename) {
+      cur_image = new emk::Image(filename);
+      image_map[name] = cur_image;
+      return *cur_image;
+    }
+
+    Rect & AddRect(const std::string & name, int x=0, int y=0, int w=10, int h=10,
+                   std::string fill="white", std::string stroke="black", int stroke_width=1, int draggable=0) {
+      cur_rect = new emk::Rect(x, y, w, h, fill, stroke, stroke_width, draggable);
+      rect_map[name] = cur_rect;
+      return *cur_rect;
+    }
+
+    Text & AddText(const std::string & name, int x=0, int y=0, std::string text="", std::string font_size="30", std::string font_family="Calibri", std::string fill="black") {
+      cur_text = new emk::Text(x, y, text, font_size, font_family, fill);
+      text_map[name] = cur_text;
+      return *cur_text;
+    }
+
     template<class T> Button & AddButton(const std::string & name, T * target, void (T::*method_ptr)()) {
       cur_button = new emk::Button(target, method_ptr, name);
       button_map[name] = cur_button;
       return *cur_button;
     }
+
     ButtonSet & AddButtonSet(const std::string & name, int cols, int rows, int x, int y, int width, int height, int spacing=0) {
       cur_buttonset = new emk::ButtonSet(cols, rows, x, y, width, height, spacing);
       buttonset_map[name] = cur_buttonset;
       return *cur_buttonset;
+    }
+
+    Grid & AddGrid(const std::string & name, int x, int y, int width, int height, int cols, int rows, int num_colors=12, int border_width=1) {
+      cur_grid = new emk::Grid(x, y, width, height, cols, rows, num_colors, border_width);
+      grid_map[name] = cur_grid;
+      return *cur_grid;
+    }
+
+    Tween & AddTween(const std::string & name, Object & target, double seconds) {
+      cur_tween = new emk::Tween(target, seconds);
+      tween_map[name] = cur_tween;
+      return *cur_tween;
     }
 
 
@@ -73,11 +115,42 @@ namespace emk {
       assert(cur_layer != NULL);
       return *cur_layer;
     }
+    Image & Image(const std::string & name="") {
+      if (name != "") cur_image = image_map[name];
+      assert(cur_image != NULL);
+      return *cur_image;
+    }
+    Rect & Rect(const std::string & name="") {
+      if (name != "") cur_rect = rect_map[name];
+      assert(cur_rect != NULL);
+      return *cur_rect;
+    }
+    Text & Text(const std::string & name="") {
+      if (name != "") cur_text = text_map[name];
+      assert(cur_text != NULL);
+      return *cur_text;
+    }
     Button & Button(const std::string & name="") {
       if (name != "") cur_button = button_map[name];
       assert(cur_button != NULL);
       return *cur_button;
     }
+    ButtonSet & ButtonSet(const std::string & name="") {
+      if (name != "") cur_buttonset = buttonset_map[name];
+      assert(cur_buttonset != NULL);
+      return *cur_buttonset;
+    }
+    Grid & Grid(const std::string & name="") {
+      if (name != "") cur_grid = grid_map[name];
+      assert(cur_grid != NULL);
+      return *cur_grid;
+    }
+    Tween & Tween(const std::string & name="") {
+      if (name != "") cur_tween = tween_map[name];
+      assert(cur_tween != NULL);
+      return *cur_tween;
+    }
+
   };
 
 };

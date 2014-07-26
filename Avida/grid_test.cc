@@ -4,6 +4,7 @@
 
 #include "../libs/Kinetic.h"
 #include "../tools/Random.h"
+#include "../tools/debug.h"
 #include "../cogs/Button.h"
 #include "../cogs/ButtonSet.h"
 #include "../cogs/Events.h"
@@ -28,26 +29,14 @@ private:
 
   emk::Control control;           // Main controller for GUI elements
 
-  emk::Text title;
-
   emk::Image image_avida_logo; // Image for Avida Logo
   emk::Rect rect_avida_logo;   // Image holder for Avida Logo
 
   emk::Grid grid;              // Visual Grid.
   emk::Panel panel_config;     // Congifuration options.
-  emk::Button button_rewind;   // BUTTON: Restart a run.
-  emk::Button button_pause;    // BUTTON: Pause a run.
-  emk::Button button_freeze;   // BUTTON: Save a population.
-  emk::Button button_config;   // BUTTON: Save a population.
-
-  emk::Text update_text;       // On main layer
-  emk::Text mouse_text;        // On gridmouse layer
-  emk::Text click_text;        // On info layer
 
   emk::Animation<GridExample> anim_grid_run;
 
-  emk::Tween tween_grid_flip;
-  emk::Tween tween_panel_flip;
   emk::EventChain event_grid_flip;
 
   // Current status 
@@ -65,59 +54,67 @@ public:
     , grid_x(logo_x + logo_w + 10), grid_y(10), grid_w(481), grid_h(481)
     , merits(num_cells)
       //    , stage(1200, 800, "container")
-    , title(650, 10, "Avida Viewer test!", "30", "Calibri", "black")
     , image_avida_logo("../icons/avidalogo.jpg") // ("icons/setting.png")
     , rect_avida_logo(logo_x, logo_y, logo_w, logo_h, "white", "black", 4)
     , grid(grid_x, grid_y, grid_w, grid_h, cols, rows, num_colors+1)
     , panel_config(grid_x+grid_w/2, grid_y, grid_w, grid_h)
-    , button_rewind(this, &GridExample::SetupRun)
-    , button_pause(this, &GridExample::PauseRun)
-    , button_freeze(this, &GridExample::FreezeRun)
-    , button_config(this, &GridExample::ConfigRun)
-    , update_text(650, 50, "Update: 0", "30", "Calibri", "black")
-    , mouse_text(650, 90, "Move mouse over grid to test!", "30", "Calibri", "black")
-    , click_text(650, 130, "Click on grid to test!", "30", "Calibri", "black")
-    , tween_grid_flip(grid, 0.5)
-    , tween_panel_flip(panel_config, 0.5)
     , sched(num_cells)
     , update(0), is_paused(true), is_flipped(false)
     , mut_rate(0.01)
   {
+    emk::Alert("Testing!");
+    assert(false);
+
+    // Setup Avida Logo
     rect_avida_logo.SetFillPatternImage(image_avida_logo);
     rect_avida_logo.SetFillPatternScale( ((double) logo_w) / 205.0  );
 
-    
+
+    // Setup the mode buttons
     emk::ButtonSet & mode_buttons =
-      control.AddButtonSet("modes", 1, 3, rect_avida_logo.GetX(), rect_avida_logo.GetY() + rect_avida_logo.GetHeight() + 10,
+      control.AddButtonSet("modes", 1, 4, rect_avida_logo.GetX(), rect_avida_logo.GetY() + rect_avida_logo.GetHeight() + 10,
                            rect_avida_logo.GetWidth(), 40, 5);
 
     mode_buttons[0].SetTrigger(this, &GridExample::ModePopulation);  // Population mode
     mode_buttons[1].SetTrigger(this, &GridExample::ModeOrganism);    // Organism mode
     mode_buttons[2].SetTrigger(this, &GridExample::ModeAnalysis);    // Analysis mode
+    mode_buttons[3].SetTrigger(this, &GridExample::ModeConfigure);    // Analysis mode
 
     mode_buttons[0].SetDrawIcon(this, &GridExample::DrawPopulationModeButton);
     mode_buttons[1].SetDrawIcon(this, &GridExample::DrawOrganismModeButton);
     mode_buttons[2].SetDrawIcon(this, &GridExample::DrawAnalysisModeButton);
+    mode_buttons[3].SetDrawIcon(this, &GridExample::DrawConfigModeButton);
 
     mode_buttons.SetBGColor("white");
     mode_buttons.SetRoundCorners(true, false, false, true);
 
  
-    // Setup the buttons a long the bottom of the grid.
-    const int buttons_x = grid_x;
-    const int buttons_y = grid_y + grid_h + 5;
+    // Setup the buttons centered along the bottom of the grid.
+
+    const int num_buttons = 3;
     const int button_w = 40;
     const int button_spacing = 5;
-    button_rewind.SetLayout(buttons_x + grid_w/2 - button_w * 1.5 - button_spacing, buttons_y, button_w, button_w);
-    button_rewind.SetDrawIcon(this, &GridExample::DrawRewindButton);
-    button_pause.SetLayout(buttons_x + (grid_w - button_w)/2, buttons_y, button_w, button_w);
-    button_pause.SetDrawIcon(this, &GridExample::DrawPauseButton);
-    button_freeze.SetLayout(buttons_x + (grid_w + button_w)/2 + button_spacing, buttons_y, button_w, button_w);
-    button_freeze.SetDrawIcon(this, &GridExample::DrawFreezeButton);
-    button_config.SetLayout(buttons_x + grid_w - button_w, buttons_y, button_w, button_w);
-    button_config.SetDrawIcon(this, &GridExample::DrawConfigButton);
+    const int button_set_w = button_w * num_buttons + button_spacing * (num_buttons-1);
+    const int buttons_x = grid_x + (grid_w - button_set_w)/2;
+    emk::ButtonSet & grid_buttons = control.AddButtonSet("grid", 3, 1, buttons_x, grid_y + grid_h + 5, button_w, button_w, button_spacing);
+
+    grid_buttons[0].SetTrigger(this, &GridExample::SetupRun);
+    grid_buttons[1].SetTrigger(this, &GridExample::PauseRun);
+    grid_buttons[2].SetTrigger(this, &GridExample::FreezeRun);
+
+    grid_buttons[0].SetDrawIcon(this, &GridExample::DrawRewindButton);
+    grid_buttons[1].SetDrawIcon(this, &GridExample::DrawPauseButton);
+    grid_buttons[2].SetDrawIcon(this, &GridExample::DrawFreezeButton);
 
 
+    // Setup the text.
+    emk::Text & text_title  = control.AddText("title", 650, 10, "Avida Viewer test!", "30", "Calibri", "black");
+    emk::Text & text_update = control.AddText("update", 650, 50, "Update: 0", "30", "Calibri", "black");
+    emk::Text & text_mouse  = control.AddText("mouse", 650, 90, "Move mouse over grid to test!", "30", "Calibri", "black");
+    emk::Text & text_click  = control.AddText("click", 650, 130, "Click on grid to test!", "30", "Calibri", "black");
+
+
+    // Create all of the layers
     emk::Layer & layer_static = control.AddLayer("static");       // Background layer that should never need to be updated.
     emk::Layer & layer_grid = control.AddLayer("grid");           // Main layer for the grid and anything updated with it.
     emk::Layer & layer_gridmouse = control.AddLayer("gridmouse"); // Fast updating as the mouse is moved over the grid.
@@ -127,10 +124,10 @@ public:
 
 
 
-    // @CAO TESTING!  Fix this!!
-    emk::Grid * grid_spect = new emk::Grid(grid_x, buttons_y+button_w+10, grid_w, grid_w/60, 60, 1, 60);
-    for (int i = 0; i < 61; i++) grid_spect->SetColor(i, i);
-    layer_static.Add(*grid_spect);
+    // Build a range of colors below the main grid.
+    emk::Grid & grid_spect = control.AddGrid("spect", grid_x, grid_y+grid_h+button_w+15, grid_w, grid_w/60, 60, 1, 60);
+    for (int i = 0; i < 61; i++) grid_spect.SetColor(i, i);
+    layer_static.Add(grid_spect);
 
 
     grid.SetMouseMoveCallback(this, &GridExample::Draw_Gridmouse);
@@ -138,19 +135,16 @@ public:
 
     panel_config.SetScale(0.0, 1.0);
 
-    layer_static.Add(title);
+    layer_static.Add(text_title);
     layer_static.Add(rect_avida_logo);
     layer_grid.Add(grid);
     layer_grid.Add(panel_config);
-    layer_grid.Add(update_text);
+    layer_grid.Add(text_update);
     layer_gridmouse.Add(grid.GetMousePointer());
-    layer_gridmouse.Add(mouse_text);
-    layer_info.Add(click_text);
+    layer_gridmouse.Add(text_mouse);
+    layer_info.Add(text_click);
     layer_buttons.Add(mode_buttons);
-    layer_buttons.Add(button_rewind);
-    layer_buttons.Add(button_pause);
-    layer_buttons.Add(button_freeze);
-    layer_buttons.Add(button_config);
+    layer_buttons.Add(grid_buttons);
 
     emk::Stage & stage = control.Stage();
     stage.Add(layer_static);
@@ -162,6 +156,8 @@ public:
     SetupRun();
 
     // Setup potential animations...
+    control.AddTween("grid_flip", grid, 0.5);
+    control.AddTween("panel_flip", panel_config, 0.5);
     anim_grid_run.Setup(this, &GridExample::Animate_Grid, layer_grid);
   }
 
@@ -175,6 +171,42 @@ public:
 
   void ModeAnalysis() {
     // Nothing here yet...
+  }
+
+  void ModeConfigure() {  // Other side of grid is config.
+    // If we're on the config side...
+    if (is_flipped) {
+      // Stop the config panel from listening for inputs.
+      panel_config.SetListening(false);
+
+      // Setup the animation
+      emk::Tween & part1 = control.Tween("panel_flip").SetX(grid_x+grid_w/2).SetScaleX(0.0);
+      emk::Tween & part2 = control.Tween("grid_flip").SetX(grid_x).SetScaleX(1.0);
+      grid.GetMousePointer().SetVisible(true);
+      event_grid_flip.First(part1).Then(part2).Trigger();
+
+      // Restart the grid if it's not paused.
+      if (is_paused == false) anim_grid_run.Start();
+      is_flipped = false;
+      grid.SetListening(true);
+    }
+
+    // If we're on the grid side...
+    else {
+      // Stop the grid before flipping.
+      grid.SetListening(false);
+      if (is_paused == false) anim_grid_run.Stop();
+      is_flipped = true;
+      
+      emk::Tween & part1 = control.Tween("grid_flip").SetX(grid_x+grid_w/2).SetScaleX(0.0);
+      emk::Tween & part2 = control.Tween("panel_flip").SetX(grid_x).SetScaleX(1.0);
+      grid.GetMousePointer().SetVisible(false);
+      grid.GetMousePointer().DrawLayer();
+      
+      event_grid_flip.First(part1).Then(part2).Trigger();
+      panel_config.SetListening(true);
+    }
+    
   }
 
   void SetupRun() {
@@ -203,60 +235,9 @@ public:
     emk::Alert("Sorry, freezing not implemented yet!");
   }
 
-  void ConfigRun() {  // Other side of grid is config.
-    // If we're on the config side...
-    if (is_flipped) {
-      // Stop the config panel from listening for inputs.
-      panel_config.SetListening(false);
-
-      // Setup the animation
-      tween_grid_flip.SetX(grid_x);
-      tween_grid_flip.SetScaleX(1.0);
-      tween_panel_flip.SetX(grid_x+grid_w/2);
-      tween_panel_flip.SetScaleX(0.0);
-      grid.GetMousePointer().SetVisible(true);
-      event_grid_flip.Clear();
-      event_grid_flip.First(tween_panel_flip).Then(tween_grid_flip);
-      event_grid_flip.Trigger();
-
-      // Restart the grid if it's not paused.
-      if (is_paused == false) anim_grid_run.Start();
-      is_flipped = false;
-      grid.SetListening(true);
-    }
-
-    // If we're on the grid side...
-    else {
-      // Stop the grid before flipping.
-      grid.SetListening(false);
-      if (is_paused == false) anim_grid_run.Stop();
-      is_flipped = true;
-
-      tween_grid_flip.SetX(grid_x+grid_w/2);
-      tween_grid_flip.SetScaleX(0.0);
-      tween_panel_flip.SetX(grid_x);
-      tween_panel_flip.SetScaleX(1.0);
-      grid.GetMousePointer().SetVisible(false);
-      grid.GetMousePointer().DrawLayer();
-      
-      event_grid_flip.Clear();
-      event_grid_flip.First(tween_grid_flip).Then(tween_panel_flip);
-      event_grid_flip.Trigger();
-      panel_config.SetListening(true);
-    }
-    
-    // @CAO Shut off listening on grid!
-    // anim_grid_flip.Start();
-
-    // static bool status = false;
-    // status = !status;
-    // if (status) grid.SetListening(false);
-    // else grid.SetListening(true);
-  }
-
   void Animate_Grid(const emk::AnimationFrame & frame) {
     update++;
-    update_text.SetText(std::string("Update: ") + std::to_string(update));
+    control.Text("update").SetText(std::string("Update: ") + std::to_string(update));
     for (int i = 0; i < 100; i++) {
       int from = sched.NextID();
       int to = from + (random.GetInt(3) - 1) + (random.GetInt(3) - 1) * 60;
@@ -283,11 +264,11 @@ public:
 
 
   void Draw_Gridmouse() {
-    mouse_text.SetText(std::string("Mouse Col:") + std::to_string(grid.GetMouseCol()) + std::string(" Row:") + std::to_string(grid.GetMouseRow()));
+    control.Text("mouse").SetText(std::string("Mouse Col:") + std::to_string(grid.GetMouseCol()) + std::string(" Row:") + std::to_string(grid.GetMouseRow()));
   }
 
   void Draw_Gridclick() {
-    click_text.SetText(std::string("Click Col:") + std::to_string(grid.GetClickCol()) + std::string(" Row:") + std::to_string(grid.GetClickRow()));
+    control.Text("click").SetText(std::string("Click Col:") + std::to_string(grid.GetClickCol()) + std::string(" Row:") + std::to_string(grid.GetClickRow()));
     control.Layer("info").BatchDraw();
   }
 
@@ -388,6 +369,44 @@ public:
     canvas.Text("Analysis", 120, 65);
   }
 
+  void DrawConfigModeButton(emk::Canvas & canvas) {
+    // canvas.SetStroke("#008800");
+    // canvas.SetFillStyle("#008800");
+    canvas.SetStroke("#708090");
+    canvas.SetFillStyle("#708090");
+
+    // Draw Gear 1
+    canvas.Translate(35, 35);
+    canvas.SetLineWidth(10);
+    canvas.BeginPath();
+    canvas.Arc(0, 0, 30, 0, 2.0*emk::PI);
+    canvas.Stroke();
+
+    for (int i=0; i < 12; i++) {
+      canvas.Rect(-5, 30, 10, 15, true);
+      canvas.Rotate(emk::PI/6);
+    }
+
+    // Draw Gear 2
+    canvas.Translate(45, 40);
+    canvas.SetLineWidth(10);
+    canvas.BeginPath();
+    canvas.Arc(0, 0, 20, 0, 2.0*emk::PI);
+    canvas.Stroke();
+
+    for (int i=0; i < 8; i++) {
+      canvas.Rect(-5, 20, 10, 12, true);
+      canvas.Rotate(emk::PI/4);
+    }
+
+
+    canvas.Stroke();
+
+    canvas.SetFillStyle("black");
+    canvas.SetFont("50px Arial");
+    canvas.Text("Configure", 40, -10);
+  }
+
   void DrawRewindButton(emk::Canvas & canvas) {
     canvas.SetStroke("#440000");
     canvas.SetFillStyle("#440000");
@@ -451,39 +470,6 @@ public:
     canvas.Stroke();
   }
 
-  void DrawConfigButton(emk::Canvas & canvas) {
-    // canvas.SetStroke("#008800");
-    // canvas.SetFillStyle("#008800");
-    canvas.SetStroke("#708090");
-    canvas.SetFillStyle("#708090");
-
-    // Draw Gear 1
-    canvas.Translate(35, 35);
-    canvas.SetLineWidth(10);
-    canvas.BeginPath();
-    canvas.Arc(0, 0, 30, 0, 2.0*emk::PI);
-    canvas.Stroke();
-
-    for (int i=0; i < 12; i++) {
-      canvas.Rect(-5, 30, 10, 15, true);
-      canvas.Rotate(emk::PI/6);
-    }
-
-    // Draw Gear 2
-    canvas.Translate(45, 40);
-    canvas.SetLineWidth(10);
-    canvas.BeginPath();
-    canvas.Arc(0, 0, 20, 0, 2.0*emk::PI);
-    canvas.Stroke();
-
-    for (int i=0; i < 8; i++) {
-      canvas.Rect(-5, 20, 10, 12, true);
-      canvas.Rotate(emk::PI/4);
-    }
-
-
-    canvas.Stroke();
-  }
 };
 
 

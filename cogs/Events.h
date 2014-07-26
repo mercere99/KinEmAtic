@@ -64,7 +64,7 @@ namespace emk {
     int GetSize() { return length; }
     bool IsRunning() const { return is_running; }
 
-    void Clear() { if (first) delete first; }
+    void Clear() { if (first) delete first; first = NULL; last = NULL; }
 
     void DoCallback(int * next) {
       // The previous event must have fiinshed.  Move on to the next one!
@@ -73,8 +73,8 @@ namespace emk {
     }
 
     template <class T> EventChain & First(T & _in) {
-      assert(first == NULL && last == NULL);
       assert(is_running == false);
+      if (first != NULL) Clear();      // Since we're starting over, clear any existing events.
       first = last = BuildEvent(_in);
       length = 1;
       return *this;

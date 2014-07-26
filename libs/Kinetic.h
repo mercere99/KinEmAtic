@@ -149,18 +149,19 @@ namespace emk {
 
     // void SetTarget(Object & _target) { target = &_target; needs_config=true; }
     // void SetTime(double _seconds) { seconds = _seconds; needs_config=true; }
-    void SetX(int _in) { EM_ASM_ARGS({ emk_info.objs[$0].x = $1; }, settings_id, _in); needs_config=true; }
-    void SetY(int _in) { EM_ASM_ARGS({ emk_info.objs[$0].y = $1; }, settings_id, _in); needs_config=true; }
-    void SetScaleX(int _in) { EM_ASM_ARGS({ emk_info.objs[$0].scaleX = $1; }, settings_id, _in); needs_config=true; }
-    void SetScaleY(int _in) { EM_ASM_ARGS({ emk_info.objs[$0].scaleY = $1; }, settings_id, _in); needs_config=true; }
+    Tween & SetX(int _in) { EM_ASM_ARGS({ emk_info.objs[$0].x = $1; }, settings_id, _in); needs_config=true; return *this; }
+    Tween & SetY(int _in) { EM_ASM_ARGS({ emk_info.objs[$0].y = $1; }, settings_id, _in); needs_config=true; return *this; }
+    Tween & SetScaleX(int _in) { EM_ASM_ARGS({ emk_info.objs[$0].scaleX = $1; }, settings_id, _in); needs_config=true; return *this; }
+    Tween & SetScaleY(int _in) { EM_ASM_ARGS({ emk_info.objs[$0].scaleY = $1; }, settings_id, _in); needs_config=true; return *this; }
 
-    void SetXY(int _x, int _y) { SetX(_x); SetY(_y); }
-    void SetScaleXY(double _x, double _y) { SetScaleX(_x); SetScaleY(_y); }
+    Tween & SetXY(int _x, int _y) { SetX(_x); SetY(_y); return *this; }
+    Tween & SetScaleXY(double _x, double _y) { SetScaleX(_x); SetScaleY(_y); return *this; }
 
-    void SetFinishedCallback(Callback * callback, int * info_ptr) {
+    Tween & SetFinishedCallback(Callback * callback, int * info_ptr) {
       EM_ASM_ARGS({
           emk_info.objs[$0].onFinish = function() { emkJSDoCallback($1, $2); };
         }, settings_id, (int) (callback), (int) info_ptr);
+      return *this;
     }
 
     void Play() {
