@@ -10,7 +10,7 @@
 #include "../tools/Callbacks.h"
 #include "../tools/Colors.h"
 
-#include "../tools/debug.h"
+#include "../tools/assert.h"
 
 extern "C" {
   extern int EMK_Tween_Build(int target_id, double seconds);

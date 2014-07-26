@@ -2,9 +2,12 @@
 #include <iostream>
 #include <cmath>
 
+// Turn on DEBUG mode...
+// #define EMK_DEBUG true
+
 #include "../libs/Kinetic.h"
 #include "../tools/Random.h"
-#include "../tools/debug.h"
+#include "../tools/assert.h"
 #include "../cogs/Button.h"
 #include "../cogs/ButtonSet.h"
 #include "../cogs/Events.h"
@@ -12,8 +15,6 @@
 #include "../cogs/Panel.h"
 
 #include "../cogs/Control.h"
-
-#define EMK_DEBUG // Turn on DEBUG mode...
 
 class GridExample {
 private:
@@ -53,7 +54,6 @@ public:
     , logo_x(5), logo_y(10), logo_w(130), logo_h(logo_w*181/205)  
     , grid_x(logo_x + logo_w + 10), grid_y(10), grid_w(481), grid_h(481)
     , merits(num_cells)
-      //    , stage(1200, 800, "container")
     , image_avida_logo("../icons/avidalogo.jpg") // ("icons/setting.png")
     , rect_avida_logo(logo_x, logo_y, logo_w, logo_h, "white", "black", 4)
     , grid(grid_x, grid_y, grid_w, grid_h, cols, rows, num_colors+1)
@@ -62,9 +62,6 @@ public:
     , update(0), is_paused(true), is_flipped(false)
     , mut_rate(0.01)
   {
-    emk::Alert("Testing!");
-    assert(false);
-
     // Setup Avida Logo
     rect_avida_logo.SetFillPatternImage(image_avida_logo);
     rect_avida_logo.SetFillPatternScale( ((double) logo_w) / 205.0  );
