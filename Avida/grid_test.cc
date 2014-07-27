@@ -6,8 +6,9 @@
 // #define EMK_DEBUG true
 
 #include "../libs/Kinetic.h"
-#include "../tools/Random.h"
 #include "../tools/assert.h"
+#include "../tools/Coords.h"
+#include "../tools/Random.h"
 #include "../cogs/Button.h"
 #include "../cogs/ButtonSet.h"
 #include "../cogs/Events.h"
@@ -30,15 +31,9 @@ private:
 
   emk::Control control;           // Main controller for GUI elements
 
-  emk::Image image_avida_logo; // Image for Avida Logo
-  emk::Rect rect_avida_logo;   // Image holder for Avida Logo
-
   emk::Grid grid;              // Visual Grid.
   emk::Panel panel_config;     // Congifuration options.
-
   emk::Animation<GridExample> anim_grid_run;
-
-  emk::EventChain event_grid_flip;
 
   // Current status 
   emk::Random random;        // Random number generator
@@ -54,23 +49,21 @@ public:
     , logo_x(5), logo_y(10), logo_w(130), logo_h(logo_w*181/205)  
     , grid_x(logo_x + logo_w + 10), grid_y(10), grid_w(481), grid_h(481)
     , merits(num_cells)
-    , image_avida_logo("../icons/avidalogo.jpg") // ("icons/setting.png")
-    , rect_avida_logo(logo_x, logo_y, logo_w, logo_h, "white", "black", 4)
     , grid(grid_x, grid_y, grid_w, grid_h, cols, rows, num_colors+1)
     , panel_config(grid_x+grid_w/2, grid_y, grid_w, grid_h)
     , sched(num_cells)
     , update(0), is_paused(true), is_flipped(false)
     , mut_rate(0.01)
   {
-    // Setup Avida Logo
-    rect_avida_logo.SetFillPatternImage(image_avida_logo);
-    rect_avida_logo.SetFillPatternScale( ((double) logo_w) / 205.0  );
+    // Setup Avida Logo in corner
+    emk::Rect & logo_rect = control.AddRect("logo", logo_x, logo_y, logo_w, logo_h, "white", "black", 4);
+    emk::Image & logo_image = control.AddImage("logo", "../icons/avidalogo.jpg");
+    logo_rect.SetFillPatternImage(logo_image);
+    logo_rect.SetFillPatternScale( ((double) logo_w) / 205.0  );
 
 
     // Setup the mode buttons
-    emk::ButtonSet & mode_buttons =
-      control.AddButtonSet("modes", 1, 4, rect_avida_logo.GetX(), rect_avida_logo.GetY() + rect_avida_logo.GetHeight() + 10,
-                           rect_avida_logo.GetWidth(), 40, 5);
+    emk::ButtonSet & mode_buttons = control.AddButtonSet("modes", 1, 4, logo_x, logo_y + logo_h + 10, logo_w, 40, 5);
 
     mode_buttons[0].SetTrigger(this, &GridExample::ModePopulation);  // Population mode
     mode_buttons[1].SetTrigger(this, &GridExample::ModeOrganism);    // Organism mode
@@ -133,7 +126,7 @@ public:
     panel_config.SetScale(0.0, 1.0);
 
     layer_static.Add(text_title);
-    layer_static.Add(rect_avida_logo);
+    layer_static.Add(logo_rect);
     layer_grid.Add(grid);
     layer_grid.Add(panel_config);
     layer_grid.Add(text_update);
@@ -155,6 +148,7 @@ public:
     // Setup potential animations...
     control.AddTween("grid_flip", grid, 0.5);
     control.AddTween("panel_flip", panel_config, 0.5);
+    control.AddEventChain("grid_flip");
     anim_grid_run.Setup(this, &GridExample::Animate_Grid, layer_grid);
   }
 
@@ -180,7 +174,7 @@ public:
       emk::Tween & part1 = control.Tween("panel_flip").SetX(grid_x+grid_w/2).SetScaleX(0.0);
       emk::Tween & part2 = control.Tween("grid_flip").SetX(grid_x).SetScaleX(1.0);
       grid.GetMousePointer().SetVisible(true);
-      event_grid_flip.First(part1).Then(part2).Trigger();
+      control.EventChain("grid_flip").First(part1).Then(part2).Trigger();
 
       // Restart the grid if it's not paused.
       if (is_paused == false) anim_grid_run.Start();
@@ -200,7 +194,7 @@ public:
       grid.GetMousePointer().SetVisible(false);
       grid.GetMousePointer().DrawLayer();
       
-      event_grid_flip.First(part1).Then(part2).Trigger();
+      control.EventChain("grid_flip").First(part1).Then(part2).Trigger();
       panel_config.SetListening(true);
     }
     

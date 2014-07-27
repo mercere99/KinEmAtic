@@ -27,7 +27,7 @@ namespace emk {
     std::map<std::string, Panel *> panel_map;
 
     std::map<std::string, Callback *> animation_map;  // Animations are templates so using base class in map.
-    std::map<std::string, EventChain *> event_map;
+    std::map<std::string, EventChain *> eventchain_map;
     std::map<std::string, Tween *> tween_map;
 
     Stage * cur_stage;
@@ -39,7 +39,7 @@ namespace emk {
     ButtonSet * cur_buttonset;
     Grid * cur_grid;
     Panel * cur_panel;
-    Callback * cur_callback;
+    // cur_animation ??
     EventChain * cur_eventchain;
     Tween * cur_tween;
 
@@ -98,6 +98,12 @@ namespace emk {
       return *cur_grid;
     }
 
+    EventChain & AddEventChain(const std::string & name) {
+      cur_eventchain = new emk::EventChain();
+      eventchain_map[name] = cur_eventchain;
+      return *cur_eventchain;
+    }
+
     Tween & AddTween(const std::string & name, Object & target, double seconds) {
       cur_tween = new emk::Tween(target, seconds);
       tween_map[name] = cur_tween;
@@ -144,6 +150,11 @@ namespace emk {
       if (name != "") cur_grid = grid_map[name];
       assert(cur_grid != NULL);
       return *cur_grid;
+    }
+    EventChain & EventChain(const std::string & name="") {
+      if (name != "") cur_eventchain = eventchain_map[name];
+      assert(cur_eventchain != NULL);
+      return *cur_eventchain;
     }
     Tween & Tween(const std::string & name="") {
       if (name != "") cur_tween = tween_map[name];

@@ -1,38 +1,31 @@
 --== Development Notes ==--
 
-* Implement other shapes (circles, etc.)
-* Split up Kinetic.h into multiple files
-
 Once we have a first draft of the basic framework:
-* Refactor to parallel the object heirarchy of Kinetic for easier compatability.
-* Come up with more intelligent default values
 * Make sure copy constructors work properly, and encourage the use of template objects
-* Most set methods should return the class object so that they can be chained.
-* Clean up accessor locations to make sure they're on the lowest levels possible.
+* Most Set methods should return the class object so that they can be chained.
 * Build a library of canvas shapes (lattice, arrow, etc.) to easily plug into things like button images.
 * Add a .OK() to many classes that will use emk::Alerts to warn of problems?
 
+Specific class improvements:
+* Fix images so that they don't try to draw if they're not loaded.
+* Control class should allow for easy relationships to track when building objects (and perhaps maintained through size changes?)
+* Buttonsets should allow dynamic spacers.
+* EventChains need to be able to handle callbacks and animations
+* Images need to be retuned and made so things like GetWdith work (while other methods explicitly don't)
+
 Several new classes to incorporate:
-* Setup EventChain base class to allow for different types of objects triggering each other.
-  The should include Tween, Animation, and Callback (or at least CallbackChain, since Callback should be lightweight)
-  Links should include .Then(next) and .With(sametime)  (should work in both directions!)
-  Tween onFinish http://www.html5canvastutorials.com/kineticjs/html5-canvas-transition-callback-with-kineticjs/
-* A Control class that allows for dynamic creation of objects with easy relationships to track.
-  (and perhaps maintained through size changes?)
+* Other shapes (circles, etc.)
 * A font class that handles font family, size, color, etc.
-* A coordinates class.
-* Flippable container.  (Run .Flip() to flip to the alternate object)
-* Buttonset container.  (handles all sorts of button layouts on a matrix, including spacers.)
+* A coordinates class.  This can both be absolute coordinates (100,40) or relative coordinates (5 pixels to the left of this rectangle)
+* ObjectCollections that allow shifting between objects  (E.g., Run .Flip() to flip to the alternate object)
 
 Optimizations / cleanup:
+* Split up Kinetic.h into multiple files
 * Grid class would be faster if it only did updates rather than full redraws with every change.
 * When we pass back an object from JS, can we just plug in the memory block rather than copying it?
 * Setting "canvas.mozOpaque = true;" will cause layers to be opaque but crisper text in Firefox.
-* Similarly, adding 0.5 to coordinate values is supposed to make lines crisper... (not seeing it...)
-* Fix images so that they don't try to draw if they're not loaded.
 * Setup a map<string, emkJSCallback *> to keep track of "On" callbacks and replace them properly (i.e., deleting the
   older ones) when needed.
-* Merge images back into main array of kinetic objects so that GetX, GetWidth, etc. work.
 
 
 Stack Overflow Questions
