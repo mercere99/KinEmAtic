@@ -2,6 +2,8 @@
 #include <iostream>
 #include <cmath>
 
+#include <html5.h>
+
 // Turn on DEBUG mode...
 // #define EMK_DEBUG true
 
@@ -55,6 +57,8 @@ public:
     , update(0), is_paused(true), is_flipped(false)
     , mut_rate(0.01)
   {
+    emscripten_request_fullscreen(0, true);
+
     // Setup Avida Logo in corner
     emk::Rect & logo_rect = control.AddRect("logo", logo_x, logo_y, logo_w, logo_h, "white", "black", 4);
     emk::Image & logo_image = control.AddImage("logo", "../icons/avidalogo.jpg");
@@ -467,9 +471,33 @@ public:
 
 GridExample * example;
 
+EM_BOOL key_callback(int eventType, const EmscriptenKeyboardEvent *e, void *userData) 
+{                                                                                     
+  if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "f") || e->which == 102)) {
+    emk::Alert("Made it!");
+    EmscriptenFullscreenChangeEvent fsce;
+    EMSCRIPTEN_RESULT ret = emscripten_get_fullscreen_status(&fsce);                  
+    if (!fsce.isFullscreen) {                                                         
+      emk::Alert("Requesting fullscreen..");
+      ret = emscripten_request_fullscreen(0, 1);                                      
+    } else {                                                                          
+      emk::Alert("Exiting fullscreen..");                                               
+      ret = emscripten_exit_fullscreen();                                             
+      ret = emscripten_get_fullscreen_status(&fsce);                                  
+      if (fsce.isFullscreen) {                                                        
+        emk::Alert("Fullscreen exit did not work!");
+      }                                                                               
+    }                                                                                 
+  }                                                                                   
+                                                                                      
+  return 0;                                                                           
+}
+
 extern "C" int emkMain()
 {
   example = new GridExample(60, 60, 60);
+
+  EMSCRIPTEN_RESULT ret = emscripten_set_keypress_callback(0, 0, 1, key_callback);
 
   return 0;
 }
