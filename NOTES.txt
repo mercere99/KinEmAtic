@@ -4,7 +4,7 @@ Once we have a first draft of the basic framework:
 * Make sure copy constructors work properly, and encourage the use of template objects
 * Most Set methods should return the class object so that they can be chained.
 * Build a library of canvas shapes (lattice, arrow, etc.) to easily plug into things like button images.
-* Add a .OK() to many classes that will use emk::Alerts to warn of problems?
+* Add an OK() method to many classes that will use emk::Alerts to warn of problems?
 
 Specific class improvements:
 * Fix images so that they don't try to draw if they're not loaded.
@@ -16,7 +16,6 @@ Specific class improvements:
 Several new classes to incorporate:
 * Other shapes (circles, etc.)
 * A font class that handles font family, size, color, etc.
-* A coordinates class.  This can both be absolute coordinates (100,40) or relative coordinates (5 pixels to the left of this rectangle)
 * ObjectCollections that allow shifting between objects  (E.g., Run .Flip() to flip to the alternate object)
 
 Optimizations / cleanup:
