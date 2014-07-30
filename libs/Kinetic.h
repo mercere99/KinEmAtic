@@ -122,6 +122,7 @@ namespace emk {
 
 
   // This is a baseclass for other classes that contain a whole set of objects
+  // @CAO Should this be an object itself?
   class ObjectSet {
   public:
     virtual void AddToLayer(Layer & layer) = 0;  // Add all objects in set to this layer.
@@ -508,6 +509,7 @@ namespace emk {
 
     Layer & Add(ObjectSet & set) { set.AddToLayer(*this); return *this; }
 
+    void Draw() { EM_ASM_ARGS({emk_info.objs[$0].draw();}, obj_id); }
     void BatchDraw() { EM_ASM_ARGS({emk_info.objs[$0].batchDraw();}, obj_id); }
   };
 
@@ -541,7 +543,7 @@ namespace emk {
   // The text object from Kinetic...
   class Text : public Shape {
   public:
-    Text(int x=0, int y=0, std::string text="", std::string font_size="30", std::string font_family="Calibri", std::string fill="black")
+    Text(int x=0, int y=0, std::string text="", int font_size=30, std::string font_family="Calibri", std::string fill="black")
     {
       obj_id = EM_ASM_INT( {
           var obj_id = emk_info.objs.length;         // Determine the next free id for a Kinetic object.
@@ -559,7 +561,7 @@ namespace emk {
               fill: _fill
           });
           return obj_id;                                       // Return the Kinetic object id.
-      }, x, y, text.c_str(), font_size.c_str(), font_family.c_str(), fill.c_str());
+      }, x, y, text.c_str(), std::to_string(font_size).c_str(), font_family.c_str(), fill.c_str());
     }
     ~Text() { ; }
 
@@ -614,6 +616,9 @@ namespace emk {
     void (T::*method_ptr_nf)();
     bool is_running;
   public:
+    Animation(T * _target, void (T::*_method_ptr)(), Layer & layer) : target(_target), method_ptr(NULL), method_ptr_nf(_method_ptr) {
+      obj_id = EMK_Animation_Build_NoFrame((int) this, layer.GetID());
+    }
     Animation() : target(NULL), method_ptr(NULL), method_ptr_nf(NULL), is_running(false) { ; }
     ~Animation() { ; }
 

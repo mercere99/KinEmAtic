@@ -13,7 +13,7 @@
 namespace emk {
 
   class Control {
-  private:
+  protected:
     std::map<std::string, Stage *> stage_map;
     std::map<std::string, Layer *> layer_map;
 
@@ -30,6 +30,8 @@ namespace emk {
     std::map<std::string, EventChain *> eventchain_map;
     std::map<std::string, Tween *> tween_map;
 
+    std::map<std::string, Shape *> shape_map; // Fill map of all objects, by name.
+
     Stage * cur_stage;
     Layer * cur_layer;
     Image * cur_image;
@@ -42,12 +44,15 @@ namespace emk {
     // cur_animation ??
     EventChain * cur_eventchain;
     Tween * cur_tween;
-
+    
   public:
     Control(int width=1200, int height=800, const std::string & name="container") : cur_layer(NULL) {
       AddStage(name, width, height); // Build the default stage.
+      Stage().ResizeMax();
     }
-    ~Control() { ; }
+    ~Control() {
+      // @CAO We need to delete all objects created as part of the controller.
+    }
 
     Stage & AddStage(const std::string & name, int x, int y) {
       cur_stage = new emk::Stage(x, y, name);
@@ -71,18 +76,21 @@ namespace emk {
                    std::string fill="white", std::string stroke="black", int stroke_width=1, int draggable=0) {
       cur_rect = new emk::Rect(x, y, w, h, fill, stroke, stroke_width, draggable);
       rect_map[name] = cur_rect;
+      shape_map[name] = cur_rect;
       return *cur_rect;
     }
 
-    Text & AddText(const std::string & name, int x=0, int y=0, std::string text="", std::string font_size="30", std::string font_family="Calibri", std::string fill="black") {
+    Text & AddText(const std::string & name, int x=0, int y=0, std::string text="", int font_size=30, std::string font_family="Calibri", std::string fill="black") {
       cur_text = new emk::Text(x, y, text, font_size, font_family, fill);
       text_map[name] = cur_text;
+      shape_map[name] = cur_text;
       return *cur_text;
     }
 
     template<class T> Button & AddButton(const std::string & name, T * target, void (T::*method_ptr)()) {
       cur_button = new emk::Button(target, method_ptr, name);
       button_map[name] = cur_button;
+      shape_map[name] = cur_button;
       return *cur_button;
     }
 
@@ -95,6 +103,7 @@ namespace emk {
     Grid & AddGrid(const std::string & name, int x, int y, int width, int height, int cols, int rows, int num_colors=12, int border_width=1) {
       cur_grid = new emk::Grid(x, y, width, height, cols, rows, num_colors, border_width);
       grid_map[name] = cur_grid;
+      shape_map[name] = cur_grid;
       return *cur_grid;
     }
 

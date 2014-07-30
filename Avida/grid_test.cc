@@ -62,6 +62,7 @@ public:
     // Setup Avida Logo in corner
     emk::Rect & logo_rect = control.AddRect("logo", logo_x, logo_y, logo_w, logo_h, "white", "black", 4);
     emk::Image & logo_image = control.AddImage("logo", "../icons/avidalogo.jpg");
+    //emk::Image & logo_image = control.AddImage("logo", "../Presentation/BeaconLogo.png");
     logo_rect.SetFillPatternImage(logo_image);
     logo_rect.SetFillPatternScale( ((double) logo_w) / 205.0  );
 
@@ -102,10 +103,11 @@ public:
 
 
     // Setup the text.
-    emk::Text & text_title  = control.AddText("title", 650, 10, "Avida Viewer test!", "30", "Calibri", "black");
-    emk::Text & text_update = control.AddText("update", 650, 50, "Update: 0", "30", "Calibri", "black");
-    emk::Text & text_mouse  = control.AddText("mouse", 650, 90, "Move mouse over grid to test!", "30", "Calibri", "black");
-    emk::Text & text_click  = control.AddText("click", 650, 130, "Click on grid to test!", "30", "Calibri", "black");
+    const int text_size = 30;
+    emk::Text & text_title  = control.AddText("title", 650, 10, "Avida Viewer test!", text_size, "Calibri", "black");
+    emk::Text & text_update = control.AddText("update", 650, 50, "Update: 0", text_size, "Calibri", "black");
+    emk::Text & text_mouse  = control.AddText("mouse", 650, 90, "Move mouse over grid to test!", text_size, "Calibri", "black");
+    emk::Text & text_click  = control.AddText("click", 650, 130, "Click on grid to test!", text_size, "Calibri", "black");
 
 
     // Create all of the layers

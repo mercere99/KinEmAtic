@@ -1,3 +1,7 @@
+--== For Slideshow ==--
+See if we can make layers non-transparent.
+Simlify scaling as window changes size.
+
 --== Development Notes ==--
 
 Once we have a first draft of the basic framework:
