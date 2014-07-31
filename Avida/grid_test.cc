@@ -235,7 +235,8 @@ public:
   void Animate_Grid(const emk::AnimationFrame & frame) {
     update++;
     control.Text("update").SetText(std::string("Update: ") + std::to_string(update));
-    for (int i = 0; i < 100; i++) {
+    const int steps = std::min(100, update/2+1);
+    for (int i = 0; i < steps; i++) {
       int from = sched.NextID();
       int to = from + (random.GetInt(3) - 1) + (random.GetInt(3) - 1) * 60;
       if (from == to) continue;
