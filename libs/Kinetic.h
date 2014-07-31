@@ -190,6 +190,8 @@ namespace emk {
 
     void DoCallback(int * arg_ptr); // Called back when image is loaded
 
+    static int NumImages() { return EM_ASM_INT_V({return emk_info.images.length;}); }
+    static int NumLoaded() { return EM_ASM_INT_V({return emk_info.image_load_count;}); }
     static bool AllLoaded() { return EM_ASM_INT_V({return (emk_info.images.length == emk_info.image_load_count);}); }
   };
 

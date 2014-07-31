@@ -15,6 +15,8 @@ emk::SlideShow show;
 
 extern "C" int emkMain()
 {
+  // @CAO Setup this function to repeatedly call itself on a timeout until images are loaded!! (?)
+
   // Load all images upfront and then pause before starting show... ?
   // emk::Image image_beacon("BeaconLogo.jpg");
   // emk::Image image_beacon("../icons/BeaconLogo.png");
