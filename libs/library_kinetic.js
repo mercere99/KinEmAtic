@@ -24,24 +24,6 @@ mergeInto(LibraryManager.library, {
 
 
 
-    // Function to load images into an image object and return the ID.
-    EMK_Image_Load__deps: ['$emk_info'],
-    EMK_Image_Load: function(file, callback_ptr) {
-        file = Pointer_stringify(file);
-        var img_id = emk_info.images.length;
-        var obj_id = emk_info.objs.length;
-        emk_info.images[img_id] = new Image();
-        emk_info.images[img_id].src = file;
-        emk_info.objs[obj_id] = emk_info.images[img_id]; // Make accessible by obj_id.
-
-        emk_info.images[img_id].onload = function() {
-            emk_info.image_load_count += 1;
-            emkJSDoCallback(callback_ptr, 0);
-        };
-        return obj_id;
-    },
-
-
     EMK_Stage_Build__deps: ['$emk_info'],
     EMK_Stage_Build: function(_w, _h, _name) {
         _name = Pointer_stringify(_name);
@@ -69,20 +51,6 @@ mergeInto(LibraryManager.library, {
         var obj_id = emk_info.objs.length;                   // Determine the next free id for a Kinetic object.
         emk_info.objs[obj_id] = new Kinetic.Layer();         // Build the new layer and save it as a Kinetic object.
         return obj_id;                                       // Return the Kinetic object id.
-    },
-
-
-    EMK_Image_Build__deps: ['$emk_info'],
-    EMK_Image_Build: function(_x, _y, img_id, _w, _h) {
-        var obj_id = emk_info.objs.length;
-        emk_info.objs[obj_id] = new Kinetic.Image({
-            x: _x,
-            y: _y,
-            image: emk_info.objs[img_id],
-            width: _w,
-            height: _h
-        });
-        return obj_id;
     },
 
 
@@ -179,11 +147,6 @@ mergeInto(LibraryManager.library, {
             emkJSDoCallback(callback_ptr, 0);
             emk_info.ctx = null;
         } );
-    },
-
-
-    EMK_Cursor_Set__deps: ['$emk_info'],
-    EMK_Cursor_Set: function(cur_type) {
     },
 
 

@@ -19,7 +19,10 @@ extern "C" int emkMain()
 
   // Load all images upfront and then pause before starting show... ?
   // emk::Image image_beacon("BeaconLogo.jpg");
-  // emk::Image image_beacon("../icons/BeaconLogo.png");
+  emk::Image & image_beacon = show.AddImage("image_beacon", "../icons/BeaconLogo.png");
+
+
+
   int stage_w = show.Stage().GetWidth() - 12;
   int stage_h = show.Stage().GetHeight() - 12;
   
@@ -38,8 +41,8 @@ extern "C" int emkMain()
 
   show.Pause();
 
-  emk::Rect & logo = show.AddRect("beacon_logo", 10, 10, 100, 100, "white", "black", 4);
-  // show.Appear(logo, image_beacon);
+  emk::Rect & logo = show.AddRect("beacon_logo", 10, 10, 500, 500, "white", "black", 0);
+  show.Appear(logo, image_beacon);  // @CAO Hack to get images working -- should make this work better.
 
 
   show.NewSlide();

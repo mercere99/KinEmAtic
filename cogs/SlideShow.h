@@ -136,7 +136,7 @@ namespace emk {
 
 
   void SlideAction_Appear::Trigger(SlideShow * show) {
-    if (image) target->SetFillPatternImage(*image);
+    if (image) { target->SetFillPatternImage(*image); }
     show->DoAppear(*target);
   }
   void SlideAction_Pause::Trigger(SlideShow * show) { show->DoPause(); }

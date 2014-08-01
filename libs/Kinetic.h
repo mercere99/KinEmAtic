@@ -15,14 +15,10 @@
 extern "C" {
   extern int EMK_Tween_Build(int target_id, double seconds);
 
-  extern int EMK_Image_Load(const char * file, int callback_ptr);
-
   extern int EMK_Stage_Build(int _w, int _h, const char * _name);
   extern int EMK_Stage_ResizeMax(int stage_obj_id, int min_x, int min_y);
 
   extern int EMK_Layer_Build();
-
-  extern int EMK_Image_Build(int _x, int _y, int img_id, int _w, int _h);
 
   extern int EMK_Rect_Build(int _x, int _y, int _w, int _h, const char * _fill, const char * _stroke, int _stroke_width, int _draggable);
   extern int EMK_RegularPolygon_Build(int _x, int _y, int _sides, int _radius,
@@ -172,19 +168,35 @@ namespace emk {
   };
 
 
-  class Image : public Callback, public Object {
+  class Image : public Callback { //, public Object {
   private:
     const std::string filename;
+    int img_id;
     mutable bool has_loaded;
     mutable std::list<Layer *> layers_waiting;
   public:
     Image(const std::string & _filename) : filename(_filename), has_loaded(false) {
-      obj_id = EMK_Image_Load(filename.c_str(), (int) this);   // Start loading the image.
+      img_id = EM_ASM_INT({
+        file = Pointer_stringify($0);
+        var img_id = emk_info.images.length;
+        emk_info.images[img_id] = new Image();
+        emk_info.images[img_id].src = file;
+
+        emk_info.images[img_id].onload = function() {
+            emk_info.image_load_count += 1;
+            emkJSDoCallback($1, 0);
+        };
+        return img_id;
+      }, filename.c_str(), (int) this);
     }
 
     virtual std::string GetType() { return "emkImage"; }
 
+    int GetImgID() const { return img_id; }
     bool HasLoaded() const { return has_loaded; }
+
+    int GetWidth() const { return EM_ASM_INT({return emk_info.images[$0].width;}, img_id); }
+    int GetHeight() const { return EM_ASM_INT({return emk_info.images[$0].heigth;}, img_id); }
 
     void DrawOnLoad(Layer * _layer) const { layers_waiting.push_back(_layer); }
 
@@ -246,11 +258,11 @@ namespace emk {
 
     inline static void DrawImage(const Image & image, int x, int y) {
       // @CAO Do something different if the image hasn't loaded yet?  Maybe draw a placeholder rectangle?
-      EM_ASM_ARGS({emk_info.ctx.drawImage(emk_info.objs[$0], $1, $2);}, image.GetID(), x, y);
+      EM_ASM_ARGS({emk_info.ctx.drawImage(emk_info.images[$0], $1, $2);}, image.GetImgID(), x, y);
     }
 
     inline static void DrawImage(const Image & image, int x, int y, int w, int h) {
-      EM_ASM_ARGS({emk_info.ctx.drawImage(emk_info.objs[$0], $1, $2, $3, $4);}, image.GetID(), x, y, w, h);
+      EM_ASM_ARGS({emk_info.ctx.drawImage(emk_info.images[$0], $1, $2, $3, $4);}, image.GetImgID(), x, y, w, h);
     }
 
     // Paths
@@ -352,8 +364,8 @@ namespace emk {
       image = &_image;
       EM_ASM_ARGS({
         emk_info.objs[$0].setFillPriority('pattern');
-        emk_info.objs[$0].setFillPatternImage(emk_info.objs[$1]);
-      }, obj_id, image->GetID());
+        emk_info.objs[$0].setFillPatternImage(emk_info.images[$1]);
+      }, obj_id, image->GetImgID());
     }
 
 
