@@ -46,20 +46,12 @@ mergeInto(LibraryManager.library, {
     },
 
 
-    EMK_Layer_Build__deps: ['$emk_info'],
-    EMK_Layer_Build: function() {
-        var obj_id = emk_info.objs.length;                   // Determine the next free id for a Kinetic object.
-        emk_info.objs[obj_id] = new Kinetic.Layer();         // Build the new layer and save it as a Kinetic object.
-        return obj_id;                                       // Return the Kinetic object id.
-    },
-
-
     EMK_Rect_Build__deps: ['$emk_info'],
     EMK_Rect_Build: function(_x, _y, _w, _h, _fill, _stroke, _stroke_width, _draggable) {
-        var obj_id = emk_info.objs.length;                   // Determine the next free id for a Kinetic object.
+        var obj_id = emk_info.objs.length;               // Determine the next free id for a Kinetic object.
         _fill = Pointer_stringify(_fill);                // Make sure string values are properly converted (colors)
         _stroke = Pointer_stringify(_stroke);
-        emk_info.objs[obj_id] = new Kinetic.Rect({           // Build the new rectangle!
+        emk_info.objs[obj_id] = new Kinetic.Rect({       // Build the new rectangle!
             x: _x,
             y: _y,
             width: _w,
@@ -69,14 +61,14 @@ mergeInto(LibraryManager.library, {
             strokeWidth: _stroke_width,
             draggable: _draggable
         });
-        return obj_id;                                       // Return the Kinetic object id.
+        return obj_id;                                   // Return the Kinetic object id.
     },
 
 
     EMK_RegularPolygon_Build__deps: ['$emk_info'],
     EMK_RegularPolygon_Build: function(_x, _y, _sides, _radius, _fill, _stroke, _stroke_width, _draggable) {
         var obj_id = emk_info.objs.length;                   // Determine the next free id for a Kinetic object.
-        _fill = Pointer_stringify(_fill);                // Make sure string values are properly converted (colors)
+        _fill = Pointer_stringify(_fill);                    // Make sure string values are properly converted (colors)
         _stroke = Pointer_stringify(_stroke);
         emk_info.objs[obj_id] = new Kinetic.RegularPolygon({ // Build the new regular polygon!
                 x: _x,

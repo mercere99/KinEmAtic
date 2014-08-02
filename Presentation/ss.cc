@@ -15,34 +15,37 @@ emk::SlideShow show;
 
 extern "C" int emkMain()
 {
-  // @CAO Setup this function to repeatedly call itself on a timeout until images are loaded!! (?)
-
-  // Load all images upfront and then pause before starting show... ?
-  // emk::Image image_beacon("BeaconLogo.jpg");
-  emk::Image & image_beacon = show.AddImage("image_beacon", "../icons/BeaconLogo.png");
-
-
-
+  // @CAO Setup background slides...
   int stage_w = show.Stage().GetWidth() - 12;
-  int stage_h = show.Stage().GetHeight() - 12;
-  
+  int stage_h = show.Stage().GetHeight() - 12;  
   show.AddRect("white_bg", 5, 5, stage_w, stage_h, "white", "black", 3);
   show.Appear("white_bg");
 
-  const int title_size = stage_w/15;
-  emk::Text & title = show.AddText("title", 0, stage_w/12, "[          ] Evolution in Action", title_size, "Helvetica");
+  show << "This is a test!!!" << emk::Font("Helvetica", 80, "red") << "  ... and so it this!";
+
+  show.AddFont("title", emk::Font()).SetSize(stage_w/15);
+  emk::Text & title = show.AddText("title", 0, stage_w/12, "[          ] Evolution in Action");
   const int title_x = (stage_w - title.GetWidth())/2;
   title.SetX(title_x);
-  emk::Text bracket(0, 0, "[", title_size, "Helvetica");
-  emk::Text & title_blue = show.AddText("title_blue", title_x + bracket.GetWidth(), stage_w/12, "Digital", title_size, "Helvetica");
+  emk::Text bracket(0, 0, "[");
+  emk::Text & title_blue = show.AddText("title_blue", title_x + bracket.GetWidth(), stage_w/12, "Digital");
   title_blue.SetFill("blue");
   show.Appear("title");
   show.Appear("title_blue");
 
+  show.AddFont("my_info", emk::Font()).SetSize(stage_w/25);
+  emk::Text & my_info = show.AddText("my_info", show.ScaleX(0.45), show.ScaleY(0.35), "Charles Ofria\nMichigan State University");
+  show.Appear(my_info);
+
+  show.AddFont("my_info2", emk::Font()).SetSize(stage_w/35).SetColor(emk::Color(0,0,64));
+  emk::Text & my_info2 = show.AddText("my_info2", show.ScaleX(0.45), show.ScaleY(0.50), "Professor of Computer Science\nDeputy Director, BEACON Center");
+  show.Appear(my_info2);
+
   show.Pause();
 
-  emk::Rect & logo = show.AddRect("beacon_logo", 10, 10, 500, 500, "white", "black", 0);
-  show.Appear(logo, image_beacon);  // @CAO Hack to get images working -- should make this work better.
+  const int logo_scale = show.ScaleY(0.6);
+  emk::Image & image_beacon = show.AddImage("image_beacon", "../icons/BeaconLogo.png", show.ScaleX(0.03), show.ScaleY(0.35), logo_scale, logo_scale);
+  show.Appear(image_beacon);
 
 
   show.NewSlide();

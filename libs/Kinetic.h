@@ -7,18 +7,16 @@
 #include <string>
 #include <vector>
 
+#include "../tools/assert.h"
 #include "../tools/Callbacks.h"
 #include "../tools/Colors.h"
-
-#include "../tools/assert.h"
+#include "../tools/Font.h"
 
 extern "C" {
   extern int EMK_Tween_Build(int target_id, double seconds);
 
   extern int EMK_Stage_Build(int _w, int _h, const char * _name);
   extern int EMK_Stage_ResizeMax(int stage_obj_id, int min_x, int min_y);
-
-  extern int EMK_Layer_Build();
 
   extern int EMK_Rect_Build(int _x, int _y, int _w, int _h, const char * _fill, const char * _stroke, int _stroke_width, int _draggable);
   extern int EMK_RegularPolygon_Build(int _x, int _y, int _sides, int _radius,
@@ -168,14 +166,23 @@ namespace emk {
   };
 
 
-  class Image : public Callback { //, public Object {
+  class Image : public Callback, public Object { // @CAO Move callback to internal object??
   private:
     const std::string filename;
     int img_id;
     mutable bool has_loaded;
     mutable std::list<Layer *> layers_waiting;
+
+    // Kinetic details to store until image is loaded.
+    int x;
+    int y;
+    int width;
+    int height;
   public:
-    Image(const std::string & _filename) : filename(_filename), has_loaded(false) {
+    Image(const std::string & _filename, int _x=0, int _y=0, int _w=-1, int _h=-1)
+      : filename(_filename), has_loaded(false)
+      , x(_x), y(_y), width(_w), height(_h)
+    {
       img_id = EM_ASM_INT({
         file = Pointer_stringify($0);
         var img_id = emk_info.images.length;
@@ -192,11 +199,11 @@ namespace emk {
 
     virtual std::string GetType() { return "emkImage"; }
 
+    int GetWidth() const { return width; }
+    int GetHeight() const { return height; }
+
     int GetImgID() const { return img_id; }
     bool HasLoaded() const { return has_loaded; }
-
-    int GetWidth() const { return EM_ASM_INT({return emk_info.images[$0].width;}, img_id); }
-    int GetHeight() const { return EM_ASM_INT({return emk_info.images[$0].heigth;}, img_id); }
 
     void DrawOnLoad(Layer * _layer) const { layers_waiting.push_back(_layer); }
 
@@ -503,20 +510,31 @@ namespace emk {
   class Layer : public Object {
   public:
   public:
-    Layer() { obj_id = EMK_Layer_Build(); }
+    Layer() {
+      obj_id = EM_ASM_INT_V({
+          var obj_id = emk_info.objs.length;                   // Determine the next free id for a Kinetic object.
+          emk_info.objs[obj_id] = new Kinetic.Layer();         // Build the new layer and save it as a Kinetic object.
+          return obj_id;                                       // Return the Kinetic object id.
+      });
+    }
     ~Layer() { ; }
-
+    
     virtual std::string GetType() { return "emkLayer"; }
 
-    // Add other types of stage objects; always place them in the current layer.
     Layer & Add(Shape & _obj) {
-      _obj.SetLayer(this);
+      _obj.SetLayer(this);    // Track what layer this shape is in.
 
       // If the object we are adding has an image that hasn't been loaded, setup a callback.
       const Image * image = _obj.GetImage();
       if (image && image->HasLoaded() == false) {
         image->DrawOnLoad(this);
       }
+      EM_ASM_ARGS({emk_info.objs[$0].add(emk_info.objs[$1]);}, obj_id, _obj.GetID());
+      return *this;
+    }
+
+    Layer & Add(Image & _obj) {
+      _obj.SetLayer(this);   // Track what layer this image is in.
       EM_ASM_ARGS({emk_info.objs[$0].add(emk_info.objs[$1]);}, obj_id, _obj.GetID());
       return *this;
     }
@@ -545,6 +563,8 @@ namespace emk {
 
     // Sizing
     void ResizeMax(int min_width=0, int min_height=0) { EMK_Stage_ResizeMax(obj_id, min_width, min_height); }
+    int ScaleX(double x_frac) const { return x_frac * GetWidth(); }
+    int ScaleY(double y_frac) const { return y_frac * GetHeight(); }
 
     // Add a layer and return this stage itself (so adding can be chained...)
     Stage & Add(Layer & _layer) {
@@ -557,7 +577,7 @@ namespace emk {
   // The text object from Kinetic...
   class Text : public Shape {
   public:
-    Text(int x=0, int y=0, std::string text="", int font_size=30, std::string font_family="Calibri", std::string fill="black")
+    Text(int x=0, int y=0, const std::string & text="", int font_size=30, const std::string & font_family="Calibri", const emk::Color & fill="black")
     {
       obj_id = EM_ASM_INT( {
           var obj_id = emk_info.objs.length;         // Determine the next free id for a Kinetic object.
@@ -575,7 +595,27 @@ namespace emk {
               fill: _fill
           });
           return obj_id;                                       // Return the Kinetic object id.
-      }, x, y, text.c_str(), std::to_string(font_size).c_str(), font_family.c_str(), fill.c_str());
+      }, x, y, text.c_str(), std::to_string(font_size).c_str(), font_family.c_str(), fill.AsString().c_str());
+    }
+    Text(int x, int y, std::string text, const Font & font)
+    {
+      obj_id = EM_ASM_INT( {
+          var obj_id = emk_info.objs.length;         // Determine the next free id for a Kinetic object.
+          _text = Pointer_stringify($2);             // Make sure string values are properly converted (text)
+          _font_size = Pointer_stringify($3);        // Make sure string values are properly converted (size)
+          _font_family = Pointer_stringify($4);      // Make sure string values are properly converted (font)
+          _fill = Pointer_stringify($5);             // Make sure string values are properly converted (color)
+        
+          emk_info.objs[obj_id] = new Kinetic.Text({           // Build the new text object!
+              x: $0,
+              y: $1,
+              text: _text,
+              fontSize: _font_size,
+              fontFamily: _font_family,
+              fill: _fill
+          });
+          return obj_id;                                       // Return the Kinetic object id.
+        }, x, y, text.c_str(), std::to_string(font.GetSize()).c_str(), font.GetFamily().c_str(), font.GetColor().AsString().c_str());
     }
     ~Text() { ; }
 
@@ -683,6 +723,23 @@ namespace emk {
   void Image::DoCallback(int * arg_ptr) { // Called back when image is loaded
     (void) arg_ptr;
     has_loaded = true;
+
+    if (width == -1) width = EM_ASM_INT({return emk_info.images[$0].width;}, img_id);
+    if (height == -1) height = EM_ASM_INT({return emk_info.images[$0].heigth;}, img_id);
+
+    // Build the kinetic image object not that the image has loaded.
+    obj_id = EM_ASM_INT({
+        var obj_id = emk_info.objs.length;       // Determine the next free id for a Kinetic object.
+        emk_info.objs[obj_id] = new Kinetic.Image({
+          x: $1,
+          y: $2,
+          image: emk_info.images[$0],
+          width: $3,
+          height: $4
+        });
+        return obj_id;                           // Pass back the object ID for long-term storage.
+      }, img_id, x, y, width, height);
+    
     while (layers_waiting.size()) {
       Layer * cur_layer = layers_waiting.front();
       layers_waiting.pop_front();

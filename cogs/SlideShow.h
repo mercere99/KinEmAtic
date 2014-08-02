@@ -34,6 +34,16 @@ namespace emk {
     void Trigger(SlideShow * show);
   };
     
+  class SlideAction_Appear_Image : public SlideAction {
+  private:
+    Image * image;
+  public:
+    SlideAction_Appear_Image(Image * _image) : image(_image) { ; }
+    ~SlideAction_Appear_Image() { ; }
+    
+    void Trigger(SlideShow * show);
+  };
+    
   class SlideAction_Pause : public SlideAction {
   private:
   public:
@@ -64,17 +74,25 @@ namespace emk {
 
     int next_action;
     bool pause;
+
+    int temp_id;
+
+    std::string GetTempName() { return std::string("temp") + std::to_string(temp_id++); }
   public:
     SlideShow() 
       : layer(AddLayer("main_layer"))
       , run_anim(this, &SlideShow::Go, layer)
       , next_action(0)
       , pause(false)
+      , temp_id(0)
     {
       Stage().Add(layer);
       emscripten_set_keypress_callback(0, this, 1, slideshow_callback);
     }
     ~SlideShow() { ; }
+
+    inline int ScaleX(double x_frac) const { assert(cur_stage != NULL); return cur_stage->ScaleX(x_frac); }
+    inline int ScaleY(double y_frac) const { assert(cur_stage != NULL); return cur_stage->ScaleY(y_frac); }
     
     void Go() {
       while (!pause && next_action < (int) action_list.size()) {
@@ -94,6 +112,7 @@ namespace emk {
     // Setup pre-programmed actions!
     void Appear(Shape & shape) { action_list.push_back( new SlideAction_Appear(&shape) ); }
     void Appear(Shape & shape, emk::Image & image) { action_list.push_back( new SlideAction_Appear(&shape, &image) ); }
+    void Appear(emk::Image & image) { action_list.push_back( new SlideAction_Appear_Image(&image) ); }
     void Appear(const std::string & name) {
       action_list.push_back( new SlideAction_Appear(shape_map[name]) );
       // @CAO need to make sure shape exists!
@@ -101,6 +120,20 @@ namespace emk {
     void Pause() { action_list.push_back( new SlideAction_Pause() ); }
     void Clear() { action_list.push_back( new SlideAction_Clear() ); }
     void NewSlide() { Pause(); Clear(); }
+
+    SlideShow & operator<<(const std::string & msg) {
+      // Build a text message on the screen using the default information.
+      emk::Text & temp_text = AddText(GetTempName(), cur_point->GetX(), cur_point->GetY(), msg, *cur_font);
+      Appear( temp_text );
+      cur_point->TransX(temp_text.GetWidth());
+      return *this;
+    }
+
+    SlideShow & operator<<(const emk::Font & font) {
+      // Change the default font.
+      AddFont( GetTempName(), font );
+      return *this;
+    }
 
     // And make the pre-programed actions happen!
     void DoPause() { pause = true; }
@@ -112,6 +145,14 @@ namespace emk {
       layer.Add(shape);
       layer.Draw();
       visible_set.push_back(&shape);
+    }
+
+    void DoAppear(emk::Image & image)
+    {
+      image.SetVisible(true);
+      layer.Add(image);
+      layer.Draw();
+      visible_set.push_back(&image);
     }
 
     void DoClear() {
@@ -136,8 +177,11 @@ namespace emk {
 
 
   void SlideAction_Appear::Trigger(SlideShow * show) {
-    if (image) { target->SetFillPatternImage(*image); }
+    if (image) { target->SetFillPatternImage(*image); emk::Alert(image->GetWidth()); }
     show->DoAppear(*target);
+  }
+  void SlideAction_Appear_Image::Trigger(SlideShow * show) {
+    show->DoAppear(*image);
   }
   void SlideAction_Pause::Trigger(SlideShow * show) { show->DoPause(); }
   void SlideAction_Clear::Trigger(SlideShow * show) { show->DoClear(); }
