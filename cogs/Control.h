@@ -121,7 +121,7 @@ namespace emk {
     }
 
     Rect & BuildRect(const std::string & name, int x=0, int y=0, int w=10, int h=10,
-                   std::string fill="white", std::string stroke="black", int stroke_width=1, int draggable=0) {
+                     std::string fill="white", std::string stroke="black", int stroke_width=1, int draggable=0) {
       cur_rect = new emk::Rect(x, y, w, h, fill, stroke, stroke_width, draggable);
       if (rect_map.find(name) != rect_map.end()) delete rect_map[name]; // If we a replacing a rect, delete the old one.
       rect_map[name] = cur_rect;

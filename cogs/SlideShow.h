@@ -20,6 +20,7 @@ namespace emk {
     virtual ~SlideAction() { ; }
 
     virtual void Trigger(SlideShow * show) = 0;
+    virtual void Reverse(SlideShow * show) = 0;
   };
   
   class SlideAction_Appear : public SlideAction {
@@ -32,6 +33,7 @@ namespace emk {
     ~SlideAction_Appear() { ; }
     
     void Trigger(SlideShow * show);
+    void Reverse(SlideShow * show);
   };
     
   class SlideAction_Appear_Image : public SlideAction {
@@ -42,6 +44,7 @@ namespace emk {
     ~SlideAction_Appear_Image() { ; }
     
     void Trigger(SlideShow * show);
+    void Reverse(SlideShow * show);
   };
     
   class SlideAction_Pause : public SlideAction {
@@ -51,6 +54,7 @@ namespace emk {
     ~SlideAction_Pause() { ; }
     
     void Trigger(SlideShow * show);
+    void Reverse(SlideShow * show);
   };
     
   class SlideAction_Clear : public SlideAction {
@@ -60,6 +64,7 @@ namespace emk {
     ~SlideAction_Clear() { ; }
     
     void Trigger(SlideShow * show);
+    void Reverse(SlideShow * show);
   };
     
 
@@ -152,6 +157,9 @@ namespace emk {
 
     SlideShow & operator<<(const char * msg) { return this->operator<<(std::string(msg)); }
 
+    SlideShow & operator<<(emk::Shape & shape) { Appear(shape); return *this; }
+    SlideShow & operator<<(emk::Image & image) { Appear(image); return *this; }
+
     SlideShow & operator<<(const emk::Font & font) {
       // Change the default font.
       default_font = font;
@@ -184,12 +192,30 @@ namespace emk {
       visible_set.push_back(&shape);
     }
 
+    void DoDisappear(Shape & shape)
+    {
+      shape.SetVisible(false);
+      // layer.Remove(shape);   // @CAO Make work!!
+      layer.Draw();
+      assert(visible_set.back() == &shape);
+      visible_set.pop_back();
+    }
+
     void DoAppear(emk::Image & image)
     {
       image.SetVisible(true);
       layer.Add(image);
       layer.Draw();
       visible_set.push_back(&image);
+    }
+
+    void DoDisappear(emk::Image & image)
+    {
+      image.SetVisible(false);
+      // layer.Remove(image);  // @CAO Make work!!!
+      layer.Draw();
+      assert(visible_set.back() == &image);
+      visible_set.pop_back();
     }
 
     void DoClear() {
@@ -200,6 +226,9 @@ namespace emk {
       visible_set.resize(0);
     }
 
+    void DoRestore() {
+      // Make work!!
+    }
   };
 
 
@@ -213,15 +242,17 @@ namespace emk {
   }
 
 
-  void SlideAction_Appear::Trigger(SlideShow * show) {
-    if (image) { target->SetFillPatternImage(*image); emk::Alert(image->GetWidth()); }
-    show->DoAppear(*target);
-  }
-  void SlideAction_Appear_Image::Trigger(SlideShow * show) {
-    show->DoAppear(*image);
-  }
+  void SlideAction_Appear::Trigger(SlideShow * show) { show->DoAppear(*target); }
+  void SlideAction_Appear::Reverse(SlideShow * show) { show->DoDisappear(*target); }
+
+  void SlideAction_Appear_Image::Trigger(SlideShow * show) { show->DoAppear(*image); }
+  void SlideAction_Appear_Image::Reverse(SlideShow * show) { show->DoDisappear(*image); }
+
   void SlideAction_Pause::Trigger(SlideShow * show) { show->DoPause(); }
+  void SlideAction_Pause::Reverse(SlideShow * show) { ; }
+
   void SlideAction_Clear::Trigger(SlideShow * show) { show->DoClear(); }
+  void SlideAction_Clear::Reverse(SlideShow * show) { show->DoRestore(); }
 };
 
 #endif

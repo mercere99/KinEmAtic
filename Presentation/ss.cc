@@ -33,8 +33,9 @@ extern "C" int emkMain()
   show.Pause();
 
   const int logo_scale = show.ScaleY(0.6);
-  emk::Image & image_beacon = show.BuildImage("image_beacon", "../icons/BeaconLogo.png", show.ScaleX(0.03), show.ScaleY(0.35), logo_scale, logo_scale);
-  show.Appear(image_beacon);
+  show << show.BuildImage("image_beacon", "../icons/BeaconLogo.png", show.ScaleX(0.03), show.ScaleY(0.35), logo_scale, logo_scale);
+  //  emk::Image & image_beacon = show.BuildImage("image_beacon", "../icons/BeaconLogo.png", show.ScaleX(0.03), show.ScaleY(0.35), logo_scale, logo_scale);
+  //  show.Appear(image_beacon);
 
 
   show.NewSlide();
