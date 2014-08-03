@@ -219,7 +219,7 @@ namespace emk {
   class Canvas {
   public:
     // Setting values
-    inline static void SetFillStyle(const Color & color) { 
+    inline static void SetFill(const Color & color) { 
       EM_ASM_ARGS({var fs = Pointer_stringify($0); emk_info.ctx.fillStyle = fs;}, color.AsString().c_str());
     }
 
@@ -235,6 +235,12 @@ namespace emk {
 
     inline static void SetFont(const std::string & font) {
       EM_ASM_ARGS({var font = Pointer_stringify($0); emk_info.ctx.font = font;}, font.c_str());
+    }
+
+    inline static void SetFont(const Font & font) {
+      std::string font_str = std::to_string(font.GetSize()) + std::string("pt ") + font.GetFamily();
+      // @CAO Also set font color?
+      EM_ASM_ARGS({var font = Pointer_stringify($0); emk_info.ctx.font = font;}, font_str.c_str());
     }
 
     inline static void SetTextAlign(const std::string & align) {
@@ -541,6 +547,12 @@ namespace emk {
 
     Layer & Add(ObjectSet & set) { set.AddToLayer(*this); return *this; }
 
+    Layer & Remove(Object & _obj) {
+      EM_ASM_ARGS({emk_info.objs[$0].remove();}, _obj.GetID());
+      _obj.SetLayer(NULL);
+      return *this;
+    }
+
     void Draw() { EM_ASM_ARGS({emk_info.objs[$0].draw();}, obj_id); }
     void BatchDraw() { EM_ASM_ARGS({emk_info.objs[$0].batchDraw();}, obj_id); }
   };
@@ -577,7 +589,7 @@ namespace emk {
   // The text object from Kinetic...
   class Text : public Shape {
   public:
-    Text(int x=0, int y=0, const std::string & text="", int font_size=30, const std::string & font_family="Calibri", const emk::Color & fill="black")
+    Text(int x=0, int y=0, const std::string & text="", int font_size=30, const std::string & font_family="Helvetica", const emk::Color & fill="black")
     {
       obj_id = EM_ASM_INT( {
           var obj_id = emk_info.objs.length;         // Determine the next free id for a Kinetic object.

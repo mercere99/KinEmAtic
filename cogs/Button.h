@@ -119,14 +119,14 @@ namespace emk {
       const int y2_in = y2 - corner_r;   // Inner y2 for corner arcs
   
       // Set the button color
-      if (mouse_down) canvas.SetFillStyle(color_bg_mousedown);
+      if (mouse_down) canvas.SetFill(color_bg_mousedown);
       else if (mouse_over) {
-        if (ToggleOn()) canvas.SetFillStyle(color_bg_toggled_mouseover);
-        else canvas.SetFillStyle(color_bg_mouseover);
+        if (ToggleOn()) canvas.SetFill(color_bg_toggled_mouseover);
+        else canvas.SetFill(color_bg_mouseover);
       }
       else {
-        if (ToggleOn()) canvas.SetFillStyle(color_bg_toggled);
-        else canvas.SetFillStyle(color_bg);
+        if (ToggleOn()) canvas.SetFill(color_bg_toggled);
+        else canvas.SetFill(color_bg);
       }
   
       // Draw the button outline
@@ -185,7 +185,7 @@ namespace emk {
 
       canvas.ClosePath();
       if (is_active == false) {
-        canvas.SetFillStyle("rgba(200,200,200,0.5)");
+        canvas.SetFill("rgba(200,200,200,0.5)");
         canvas.Fill();
       }
       canvas.SetupTarget(*this);

@@ -30,12 +30,18 @@ extern "C" int emkMain()
   show << show(0.45, 0.35) << emk::Font(stage_w/25) << "Charles Ofria\nMichigan State University";
   show << show(0.45, 0.50) << emk::Font(stage_w/35) << "Professor of Computer Science\nDeputy Director, BEACON Center";
 
-  show.Pause();
+  // show.Pause();
 
   const int logo_scale = show.ScaleY(0.6);
   show << show.BuildImage("image_beacon", "../icons/BeaconLogo.png", show.ScaleX(0.03), show.ScaleY(0.35), logo_scale, logo_scale);
   //  emk::Image & image_beacon = show.BuildImage("image_beacon", "../icons/BeaconLogo.png", show.ScaleX(0.03), show.ScaleY(0.35), logo_scale, logo_scale);
   //  show.Appear(image_beacon);
+
+  show.BuildImage("image_beacon1", "../icons/BeaconLogo1.png", show.ScaleX(0.03), show.ScaleY(0.35), logo_scale, logo_scale);
+  show.BuildImage("image_beacon2", "../icons/BeaconLogo2.png", show.ScaleX(0.03), show.ScaleY(0.35), logo_scale, logo_scale);
+  show.BuildImage("image_beacon3", "../icons/BeaconLogo3.png", show.ScaleX(0.03), show.ScaleY(0.35), logo_scale, logo_scale);
+  show.BuildImage("image_beacon4", "../icons/BeaconLogo4.png", show.ScaleX(0.03), show.ScaleY(0.35), logo_scale, logo_scale);
+  show.BuildImage("image_beacon5", "../icons/BeaconLogo5.png", show.ScaleX(0.03), show.ScaleY(0.35), logo_scale, logo_scale);
 
 
   show.NewSlide();

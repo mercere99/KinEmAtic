@@ -60,10 +60,23 @@ For Web-Avida:
               - Metabolic rate
               - ?Blank (just leave updates flipping by...)
 
+
+Ongoing Projects:
+* Avida
+* Presenetation Manager (Empower?)
+* Evopuzzler
+* Gambling? I'm in! games
+* P:vN (not started)
+* HiveMind (not started)
+
 Other libraries to think about:
-d3.js
-Processing.js
-http://fastly.github.io/epoch/
+* Graphical:
+   d3.js
+   Processing.js
+   http://fastly.github.io/epoch/
+* Database?
+* Web sockets?
+* General text management (non-canvas)
 
 
 Possible names:

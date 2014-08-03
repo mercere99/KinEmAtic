@@ -14,7 +14,7 @@ namespace emk {
 
     void Draw(Canvas & canvas) {
       // Setup the background black...
-      canvas.SetFillStyle("#AAAAAA");
+      canvas.SetFill("#AAAAAA");
       canvas.Rect(0, 0, GetWidth(), GetHeight(), true);
       canvas.SetStroke("#000000");
       canvas.Rect(0, 0, GetWidth(), GetHeight(), false);

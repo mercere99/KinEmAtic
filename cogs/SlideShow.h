@@ -6,6 +6,7 @@
 #include <html5.h>
 
 #include "Control.h"
+#include "../cogs/ProgressBar.h"
 
 namespace emk {
   
@@ -74,14 +75,16 @@ namespace emk {
     emk::Layer & layer;
     emk::Animation<SlideShow> run_anim;
 
-    std::vector<Object *> visible_set;
+    std::vector<Object *> visible_set;       // Set of all objects currently visible in the show.
+    std::vector<SlideAction *> action_list;  // List of all actions to be taken in the show.
+    int next_action;                         // What show action needs to be taken next?
+    bool pause;                              // Is the show currently running or paused?
 
-    std::vector<SlideAction *> action_list;
+    int temp_id;        // What id should be used next for constructing temporary shapes and images?
 
-    int next_action;
-    bool pause;
-
-    int temp_id;
+    // Other configuration information.
+    int display_image_load;  // Should we indicate progress on loading images at show start? 0=no, 1=yes, 2=already in progress.
+    emk::ProgressBar progress_image_load;
 
     std::string GetTempName() { return std::string("temp") + std::to_string(temp_id++); }
   public:
@@ -91,7 +94,10 @@ namespace emk {
       , next_action(0)
       , pause(false)
       , temp_id(0)
+      , display_image_load(1)
+      , progress_image_load(Stage().GetWidth()/2-200, Stage().GetHeight()/2-60, 400, 120)
     {
+      progress_image_load.SetMessage("Images Loaded: ");
       Stage().Add(layer);
       emscripten_set_keypress_callback(0, this, 1, slideshow_callback);
     }
@@ -114,11 +120,44 @@ namespace emk {
     inline emk::Point operator()(double x_frac, double y_frac) { return emk::Point( ScaleX(x_frac), ScaleY(y_frac) ); }
 
     void Go() {
+      // Make sure all images are loaded before we start the show...
+      if (emk::Image::AllLoaded() == false) {
+        progress_image_load.SetMaxCount(emk::Image::NumImages());
+        progress_image_load.SetCurCount(emk::Image::NumLoaded());
+
+        // If this is our first time through, setup image loading progress bar.
+        if (display_image_load == 1) {
+          Layer().Add(progress_image_load);
+          display_image_load = 2;
+        }
+
+        // Otherwise just draw the updated progress bar.
+        else progress_image_load.DrawLayer();
+
+        return;
+      }
+      
+      else if (display_image_load == 2) {
+        progress_image_load.SetMaxCount(emk::Image::NumImages());
+        progress_image_load.SetCurCount(emk::Image::NumLoaded());
+
+        static int countdown = 100;
+        if (countdown > 0) {
+          countdown--;
+          return;
+        }
+
+        Layer().Remove(progress_image_load);
+        display_image_load = 0;
+      }
+
+      // Run through actions until we hit a pause.  Unpause occurs by users hitting a key.
       while (!pause && next_action < (int) action_list.size()) {
         action_list[next_action]->Trigger(this);
         next_action++;
       }
 
+      // If we are done with the entire show, stop running this method.
       if (next_action == (int) action_list.size()) {
         emk::Alert("Finished Actions!");
         Stop();
@@ -181,7 +220,13 @@ namespace emk {
     void DoAdvance() { pause = false; }
 
     void DoRewind() {
-      emk::Alert("Rewind!!");
+      pause = false;
+      next_action--;
+      while (!pause && next_action-- > 0) {
+        action_list[next_action]->Reverse(this);
+      }
+      next_action++;
+      pause = true;
     }
 
     void DoAppear(Shape & shape)
@@ -197,6 +242,7 @@ namespace emk {
       shape.SetVisible(false);
       // layer.Remove(shape);   // @CAO Make work!!
       layer.Draw();
+      // cur_stage->Draw();
       assert(visible_set.back() == &shape);
       visible_set.pop_back();
     }
@@ -258,7 +304,7 @@ namespace emk {
   void SlideAction_Appear_Image::Reverse(SlideShow * show) { show->DoDisappear(*image); }
 
   void SlideAction_Pause::Trigger(SlideShow * show) { show->DoPause(); }
-  void SlideAction_Pause::Reverse(SlideShow * show) { ; }
+  void SlideAction_Pause::Reverse(SlideShow * show) { show->DoPause(); }
 
   void SlideAction_Clear::Trigger(SlideShow * show) { show->DoClear(cleared_set); }
   void SlideAction_Clear::Reverse(SlideShow * show) { show->DoRestore(cleared_set); }

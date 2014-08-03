@@ -128,7 +128,7 @@ namespace emk {
 
     void Draw(Canvas & canvas) {
       // Setup the background black...
-      canvas.SetFillStyle("black");
+      canvas.SetFill("black");
       canvas.Rect(0, 0, grid_width, grid_height, true);
 
       // Draw each individual cell.
@@ -138,7 +138,7 @@ namespace emk {
           const int y_pos = border_width + cell_y_space * row;
           const int id = col + row * num_cols;
           
-          canvas.SetFillStyle(color_map[grid_colors[id]].AsString());
+          canvas.SetFill( color_map[grid_colors[id]] );
           canvas.Rect(x_pos, y_pos, cell_width, cell_height, true);
         }
       }

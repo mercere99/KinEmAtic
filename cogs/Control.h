@@ -59,7 +59,7 @@ namespace emk {
     Color default_color;
     Font default_font;
     Point default_point;
-    
+
   public:
     Control(int width=1200, int height=800, const std::string & name="container")
       : cur_layer(NULL)
