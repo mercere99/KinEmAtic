@@ -9,7 +9,7 @@
 
 #include "../libs/Kinetic.h"
 #include "../tools/assert.h"
-#include "../tools/Coords.h"
+//#include "../tools/Point.h"
 #include "../tools/Random.h"
 #include "../cogs/Button.h"
 #include "../cogs/ButtonSet.h"
@@ -60,15 +60,15 @@ public:
     emscripten_request_fullscreen(0, true);
 
     // Setup Avida Logo in corner
-    emk::Rect & logo_rect = control.AddRect("logo", logo_x, logo_y, logo_w, logo_h, "white", "black", 4);
-    emk::Image & logo_image = control.AddImage("logo", "../icons/avidalogo.jpg");
-    //emk::Image & logo_image = control.AddImage("logo", "../Presentation/BeaconLogo.png");
+    emk::Rect & logo_rect = control.BuildRect("logo", logo_x, logo_y, logo_w, logo_h, "white", "black", 4);
+    emk::Image & logo_image = control.BuildImage("logo", "../icons/avidalogo.jpg");
+    //emk::Image & logo_image = control.BuildImage("logo", "../Presentation/BeaconLogo.png");
     logo_rect.SetFillPatternImage(logo_image);
     logo_rect.SetFillPatternScale( ((double) logo_w) / 205.0  );
 
 
     // Setup the mode buttons
-    emk::ButtonSet & mode_buttons = control.AddButtonSet("modes", 1, 4, logo_x, logo_y + logo_h + 10, logo_w, 40, 5);
+    emk::ButtonSet & mode_buttons = control.BuildButtonSet("modes", 1, 4, logo_x, logo_y + logo_h + 10, logo_w, 40, 5);
 
     mode_buttons[0].SetTrigger(this, &GridExample::ModePopulation);  // Population mode
     mode_buttons[1].SetTrigger(this, &GridExample::ModeOrganism);    // Organism mode
@@ -91,7 +91,7 @@ public:
     const int button_spacing = 5;
     const int button_set_w = button_w * num_buttons + button_spacing * (num_buttons-1);
     const int buttons_x = grid_x + (grid_w - button_set_w)/2;
-    emk::ButtonSet & grid_buttons = control.AddButtonSet("grid", 3, 1, buttons_x, grid_y + grid_h + 5, button_w, button_w, button_spacing);
+    emk::ButtonSet & grid_buttons = control.BuildButtonSet("grid", 3, 1, buttons_x, grid_y + grid_h + 5, button_w, button_w, button_spacing);
 
     grid_buttons[0].SetTrigger(this, &GridExample::SetupRun);
     grid_buttons[1].SetTrigger(this, &GridExample::PauseRun);
@@ -103,25 +103,25 @@ public:
 
 
     // Setup the text.
-    const int text_size = 30;
-    emk::Text & text_title  = control.AddText("title", 650, 10, "Avida Viewer test!", text_size, "Calibri", "black");
-    emk::Text & text_update = control.AddText("update", 650, 50, "Update: 0", text_size, "Calibri", "black");
-    emk::Text & text_mouse  = control.AddText("mouse", 650, 90, "Move mouse over grid to test!", text_size, "Calibri", "black");
-    emk::Text & text_click  = control.AddText("click", 650, 130, "Click on grid to test!", text_size, "Calibri", "black");
+    emk::Font font("Calibri", 30, "black");
+    emk::Text & text_title  = control.BuildText("title", 650, 10, "Avida Viewer test!", font);
+    emk::Text & text_update = control.BuildText("update", 650, 50, "Update: 0", font);
+    emk::Text & text_mouse  = control.BuildText("mouse", 650, 90, "Move mouse over grid to test!", font);
+    emk::Text & text_click  = control.BuildText("click", 650, 130, "Click on grid to test!", font);
 
 
     // Create all of the layers
-    emk::Layer & layer_static = control.AddLayer("static");       // Background layer that should never need to be updated.
-    emk::Layer & layer_grid = control.AddLayer("grid");           // Main layer for the grid and anything updated with it.
-    emk::Layer & layer_gridmouse = control.AddLayer("gridmouse"); // Fast updating as the mouse is moved over the grid.
-    emk::Layer & layer_info = control.AddLayer("info");           // Layer to print the side information.
-    emk::Layer & layer_buttons = control.AddLayer("buttons");     // Layer for all of the buttons on the screen.
+    emk::Layer & layer_static = control.BuildLayer("static");       // Background layer that should never need to be updated.
+    emk::Layer & layer_grid = control.BuildLayer("grid");           // Main layer for the grid and anything updated with it.
+    emk::Layer & layer_gridmouse = control.BuildLayer("gridmouse"); // Fast updating as the mouse is moved over the grid.
+    emk::Layer & layer_info = control.BuildLayer("info");           // Layer to print the side information.
+    emk::Layer & layer_buttons = control.BuildLayer("buttons");     // Layer for all of the buttons on the screen.
 
 
 
 
     // Build a range of colors below the main grid.
-    emk::Grid & grid_spect = control.AddGrid("spect", grid_x, grid_y+grid_h+button_w+15, grid_w, grid_w/60, 60, 1, 60);
+    emk::Grid & grid_spect = control.BuildGrid("spect", grid_x, grid_y+grid_h+button_w+15, grid_w, grid_w/60, 60, 1, 60);
     for (int i = 0; i < 61; i++) grid_spect.SetColor(i, i);
     layer_static.Add(grid_spect);
 
@@ -152,9 +152,9 @@ public:
     SetupRun();
 
     // Setup potential animations...
-    control.AddTween("grid_flip", grid, 0.5);
-    control.AddTween("panel_flip", panel_config, 0.5);
-    control.AddEventChain("grid_flip");
+    control.BuildTween("grid_flip", grid, 0.5);
+    control.BuildTween("panel_flip", panel_config, 0.5);
+    control.BuildEventChain("grid_flip");
     anim_grid_run.Setup(this, &GridExample::Animate_Grid, layer_grid);
   }
 

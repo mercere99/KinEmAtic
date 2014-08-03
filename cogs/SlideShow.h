@@ -80,7 +80,7 @@ namespace emk {
     std::string GetTempName() { return std::string("temp") + std::to_string(temp_id++); }
   public:
     SlideShow() 
-      : layer(AddLayer("main_layer"))
+      : layer(BuildLayer("main_layer"))
       , run_anim(this, &SlideShow::Go, layer)
       , next_action(0)
       , pause(false)
@@ -91,9 +91,27 @@ namespace emk {
     }
     ~SlideShow() { ; }
 
-    inline int ScaleX(double x_frac) const { assert(cur_stage != NULL); return cur_stage->ScaleX(x_frac); }
-    inline int ScaleY(double y_frac) const { assert(cur_stage != NULL); return cur_stage->ScaleY(y_frac); }
+    inline double ScaleX(double x_frac) const {
+      assert(cur_stage != NULL);
+      assert(x_frac >= 0.0 && x_frac <= 1.0);
+      return cur_stage->ScaleX(x_frac);
+    }
+    inline double ScaleY(double y_frac) const {
+      assert(cur_stage != NULL);
+      assert(y_frac >= 0.0 && y_frac <= 1.0);
+      return cur_stage->ScaleY(y_frac);
+    }
+    inline emk::Point ScaleXY(double x_frac, double y_frac) { return emk::Point( ScaleX(x_frac), ScaleY(y_frac) ); }
     
+    // Setup basic parentheses usage for scaling to new positions...
+    inline double operator()(double x_frac) { return ScaleX(x_frac); }
+    inline emk::Point operator()(double x_frac, double y_frac) { return emk::Point( ScaleX(x_frac), ScaleY(y_frac) ); }
+    /*
+    inline emk::Layout & operator()(double x_frac, double y_frac, double w_frac, double h_frac) {
+      return emk::Layout( ScaleX(x_frac), ScaleY(y_frac), ScaleX(w_frac), ScaleY(h_frac) );
+    }
+    */
+
     void Go() {
       while (!pause && next_action < (int) action_list.size()) {
         action_list[next_action]->Trigger(this);
@@ -121,19 +139,38 @@ namespace emk {
     void Clear() { action_list.push_back( new SlideAction_Clear() ); }
     void NewSlide() { Pause(); Clear(); }
 
+
+    //---- Setup building of slides using << operators  ----
+
     SlideShow & operator<<(const std::string & msg) {
       // Build a text message on the screen using the default information.
-      emk::Text & temp_text = AddText(GetTempName(), cur_point->GetX(), cur_point->GetY(), msg, *cur_font);
+      emk::Text & temp_text = BuildText(GetTempName(), default_point.GetX(), default_point.GetY(), msg, default_font);
       Appear( temp_text );
-      cur_point->TransX(temp_text.GetWidth());
+      default_point.TransX(temp_text.GetWidth());
       return *this;
     }
 
+    SlideShow & operator<<(const char * msg) { return this->operator<<(std::string(msg)); }
+
     SlideShow & operator<<(const emk::Font & font) {
       // Change the default font.
-      AddFont( GetTempName(), font );
+      default_font = font;
       return *this;
     }
+
+    SlideShow & operator<<(const emk::Point & point) {
+      // Change the default position.
+      default_point = point;
+      return *this;
+    }
+
+    SlideShow & operator<<(const emk::Color & color) {
+      // Change the default color
+      default_color = color;
+      default_font.SetColor(color);
+      return *this;
+    }
+    
 
     // And make the pre-programed actions happen!
     void DoPause() { pause = true; }

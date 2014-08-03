@@ -28,6 +28,8 @@ namespace emk {
       colorname = stream.str();
     }
 
+    const Color & operator=(const Color & _in) { colorname = _in.colorname; return *this; }
+
     const std::string & AsString() const { return colorname; }
 
     void Set(const Color & _in) { colorname = _in.colorname; }

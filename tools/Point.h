@@ -11,8 +11,11 @@ namespace emk {
     double y;
 
   public:
+    Point(const Point & _in) : x(_in.x), y(_in.y) { ; }
     Point(double _x, double _y) : x(_x), y(_y) { ; }
     ~Point() { ; }
+
+    const Point & operator=(const Point & _in) { x = _in.x; y = _in.y; return *this; }
 
     inline double GetX() const { return x; }
     inline double GetY() const { return y; }

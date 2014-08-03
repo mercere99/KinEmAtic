@@ -19,7 +19,14 @@ namespace emk {
     Font(const Font & _in) : family(_in.family), size(_in.size), color(_in.color), is_bold(_in.is_bold), is_italic(_in.is_italic) { ; }
     Font(const std::string & _family="Helvetica", int _size=30, const Color & _color="black", bool _bold=false, bool _italic=false)
       : family(_family), size(_size), color(_color), is_bold(_bold), is_italic(_italic)  { ; }
+    Font(int _size, const Color & _color="black", bool _bold=false, bool _italic=false)
+      : family("Helvetica"), size(_size), color(_color), is_bold(_bold), is_italic(_italic)  { ; }
     ~Font() { ; }
+
+    const Font & operator=(const Font & _in) { 
+      family = _in.family;     size = _in.size;     color = _in.color;     is_bold = _in.is_bold;     is_italic = _in.is_italic;
+      return *this;
+    }
 
     const std::string & GetFamily() const { return family; }
     int GetSize() const { return size; }
