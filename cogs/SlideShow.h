@@ -59,6 +59,7 @@ namespace emk {
     
   class SlideAction_Clear : public SlideAction {
   private:
+    std::vector<Object *> cleared_set;
   public:
     SlideAction_Clear() { ; }
     ~SlideAction_Clear() { ; }
@@ -111,11 +112,6 @@ namespace emk {
     // Setup basic parentheses usage for scaling to new positions...
     inline double operator()(double x_frac) { return ScaleX(x_frac); }
     inline emk::Point operator()(double x_frac, double y_frac) { return emk::Point( ScaleX(x_frac), ScaleY(y_frac) ); }
-    /*
-    inline emk::Layout & operator()(double x_frac, double y_frac, double w_frac, double h_frac) {
-      return emk::Layout( ScaleX(x_frac), ScaleY(y_frac), ScaleX(w_frac), ScaleY(h_frac) );
-    }
-    */
 
     void Go() {
       while (!pause && next_action < (int) action_list.size()) {
@@ -184,6 +180,10 @@ namespace emk {
     void DoPause() { pause = true; }
     void DoAdvance() { pause = false; }
 
+    void DoRewind() {
+      emk::Alert("Rewind!!");
+    }
+
     void DoAppear(Shape & shape)
     {
       shape.SetVisible(true);
@@ -218,16 +218,21 @@ namespace emk {
       visible_set.pop_back();
     }
 
-    void DoClear() {
+    void DoClear(std::vector<Object *> & cleared_set) {
       // @CAO Remove all shapes from layer properly?
       for (int i = 0; i < (int) visible_set.size(); i++) {
         visible_set[i]->SetVisible(false);
       }
+      cleared_set = visible_set;
       visible_set.resize(0);
     }
 
-    void DoRestore() {
-      // Make work!!
+    void DoRestore(std::vector<Object *> & cleared_set) {
+      for (int i = 0; i < (int) cleared_set.size(); i++) {
+        visible_set[i]->SetVisible(true);
+      }
+      visible_set = cleared_set;
+      cleared_set.resize(0);
     }
   };
 
@@ -236,6 +241,10 @@ namespace emk {
   {                                                                                     
     if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, " "))) {
       ((SlideShow *) userData)->DoAdvance(); // Unpause the slide show.
+    }                                                                                   
+    
+    if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "p"))) {
+      ((SlideShow *) userData)->DoRewind(); // Rewind the slide show.
     }                                                                                   
     
     return 0;                                                                           
@@ -251,8 +260,8 @@ namespace emk {
   void SlideAction_Pause::Trigger(SlideShow * show) { show->DoPause(); }
   void SlideAction_Pause::Reverse(SlideShow * show) { ; }
 
-  void SlideAction_Clear::Trigger(SlideShow * show) { show->DoClear(); }
-  void SlideAction_Clear::Reverse(SlideShow * show) { show->DoRestore(); }
+  void SlideAction_Clear::Trigger(SlideShow * show) { show->DoClear(cleared_set); }
+  void SlideAction_Clear::Reverse(SlideShow * show) { show->DoRestore(cleared_set); }
 };
 
 #endif

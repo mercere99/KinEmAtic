@@ -3,6 +3,7 @@ See if we can make layers non-transparent for crisper fonts.
 Certain objects don't need to always be stored long-term.
   These include : Font, Color, Position.
   We should have different default versions of these that just get modified on the fly as needed.
+Make sure to swallow keystrokes when acting on them.
 
 --== Development Notes ==--
 
