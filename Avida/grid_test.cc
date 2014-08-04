@@ -4,9 +4,6 @@
 
 #include <html5.h>
 
-// Turn on DEBUG mode...
-// #define EMK_DEBUG true
-
 #include "../libs/Kinetic.h"
 #include "../tools/assert.h"
 //#include "../tools/Point.h"
@@ -276,7 +273,7 @@ public:
     const int cell_width = (100-2*offset)/width_cells;
     const int grid_width = cell_width * width_cells;
 
-    canvas.SetFillStyle("yellow");
+    canvas.SetFill("yellow");
     canvas.Rect(offset + 0*cell_width, offset + 0*cell_width, cell_width, cell_width, true);
     canvas.Rect(offset + 1*cell_width, offset + 0*cell_width, cell_width, cell_width, true);
     canvas.Rect(offset + 2*cell_width, offset + 0*cell_width, cell_width, cell_width, true);
@@ -284,15 +281,15 @@ public:
     canvas.Rect(offset + 1*cell_width, offset + 1*cell_width, cell_width, cell_width, true);
     canvas.Rect(offset + 1*cell_width, offset + 2*cell_width, cell_width, cell_width, true);
 
-    canvas.SetFillStyle("#8000FF");
+    canvas.SetFill("#8000FF");
     canvas.Rect(offset + 3*cell_width, offset + 0*cell_width, cell_width, cell_width, true);
     canvas.Rect(offset + 2*cell_width, offset + 1*cell_width, cell_width, cell_width, true);
 
-    canvas.SetFillStyle("#4444FF");
+    canvas.SetFill("#4444FF");
     canvas.Rect(offset + 0*cell_width, offset + 2*cell_width, cell_width, cell_width, true);
     canvas.Rect(offset + 0*cell_width, offset + 3*cell_width, cell_width, cell_width, true);
 
-    canvas.SetFillStyle("orange");
+    canvas.SetFill("orange");
     canvas.Rect(offset + 3*cell_width, offset + 1*cell_width, cell_width, cell_width, true);
     canvas.Rect(offset + 2*cell_width, offset + 2*cell_width, cell_width, cell_width, true);
     canvas.Rect(offset + 3*cell_width, offset + 2*cell_width, cell_width, cell_width, true);
@@ -311,7 +308,7 @@ public:
     canvas.SetLineWidth(6);
     canvas.Rect(offset, offset, grid_width, grid_width, false);
 
-    canvas.SetFillStyle("black");
+    canvas.SetFill("black");
     canvas.SetFont("50px Arial");
     canvas.Text("Population", 120, 65);
   }
@@ -320,7 +317,7 @@ public:
     canvas.Translate(50, 50);
 
     canvas.SetStroke("#000000");
-    canvas.SetFillStyle("#008800");
+    canvas.SetFill("#008800");
     const int num_circles = 12;
     for (int i = 0; i < num_circles; i++) {
       canvas.BeginPath();
@@ -332,14 +329,14 @@ public:
 
     canvas.Translate(-50, -50);
 
-    canvas.SetFillStyle("black");
+    canvas.SetFill("black");
     canvas.SetFont("50px Arial");
     canvas.Text("Organism", 120, 65);
   }
 
   void DrawAnalysisModeButton(emk::Canvas & canvas) {
     canvas.SetStroke("#888888");
-    canvas.SetFillStyle("white");
+    canvas.SetFill("white");
 
     // White background
     canvas.Rect(5, 5, 90, 90, true);
@@ -362,16 +359,16 @@ public:
     canvas.LineTo(95, 10);
     canvas.Stroke();
 
-    canvas.SetFillStyle("black");
+    canvas.SetFill("black");
     canvas.SetFont("50px Arial");
     canvas.Text("Analysis", 120, 65);
   }
 
   void DrawConfigModeButton(emk::Canvas & canvas) {
     // canvas.SetStroke("#008800");
-    // canvas.SetFillStyle("#008800");
+    // canvas.SetFill("#008800");
     canvas.SetStroke("#708090");
-    canvas.SetFillStyle("#708090");
+    canvas.SetFill("#708090");
 
     // Draw Gear 1
     canvas.Translate(35, 35);
@@ -400,14 +397,14 @@ public:
 
     canvas.Stroke();
 
-    canvas.SetFillStyle("black");
+    canvas.SetFill("black");
     canvas.SetFont("50px Arial");
     canvas.Text("Configure", 40, -10);
   }
 
   void DrawRewindButton(emk::Canvas & canvas) {
     canvas.SetStroke("#440000");
-    canvas.SetFillStyle("#440000");
+    canvas.SetFill("#440000");
 
     
     // Left bar...
@@ -434,7 +431,7 @@ public:
 
   void DrawPauseButton(emk::Canvas & canvas) {
     canvas.SetStroke("black");
-    canvas.SetFillStyle("black");
+    canvas.SetFill("black");
 
     // Draw a play sign if paused or a pause sign if running.
     if (is_paused) {
@@ -455,7 +452,7 @@ public:
 
   void DrawFreezeButton(emk::Canvas & canvas) {
     canvas.SetStroke("#222288");
-    canvas.SetFillStyle("#222288");
+    canvas.SetFill("#222288");
 
     // Draw a snowflake.
     canvas.Translate(50, 50);
