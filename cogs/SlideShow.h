@@ -184,7 +184,7 @@ namespace emk {
 
     SlideShow & operator<<(const std::string & msg) {
       // Build a text message on the screen using the default information.
-      emk::Text & temp_text = BuildText(GetTempName(), default_point.GetX(), default_point.GetY(), msg, default_font);
+      emk::Text & temp_text = BuildText(GetTempName(), default_point, msg, default_font);
       Appear( temp_text );
       default_point.TransX(temp_text.GetWidth());
       return *this;
@@ -232,7 +232,7 @@ namespace emk {
     void DoAppear(Shape & shape)
     {
       shape.SetVisible(true);
-      layer.Add(shape);
+      if (shape.GetLayer() != &layer) layer.Add(shape);
       layer.Draw();
       visible_set.push_back(&shape);
     }
@@ -250,7 +250,7 @@ namespace emk {
     void DoAppear(emk::Image & image)
     {
       image.SetVisible(true);
-      layer.Add(image);
+      if (image.GetLayer() != &layer) layer.Add(image);
       layer.Draw();
       visible_set.push_back(&image);
     }

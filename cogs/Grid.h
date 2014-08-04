@@ -82,6 +82,8 @@ namespace emk {
       On("mouseout", this, &Grid::OnMouseout);
       On("mouseover", this, &Grid::OnMouseover);
     }
+    Grid(const Point & point, int _width, int _height, int _cols, int _rows, int _num_colors=12, int _border_width=1)
+      : Grid::Grid(point.GetX(), point.GetY(), _width, _height, _cols, _rows, _num_colors, _border_width) { ; }
     ~Grid() { ; }
 
     void SetupSize() {

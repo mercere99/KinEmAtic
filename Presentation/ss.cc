@@ -18,7 +18,7 @@ extern "C" int emkMain()
   // @CAO Setup background slides...
   int stage_w = show.Stage().GetWidth() - 12;
   int stage_h = show.Stage().GetHeight() - 12;  
-  show.BuildRect("white_bg", 5, 5, stage_w, stage_h, "white", "black", 3);
+  show.BuildRect("white_bg", emk::Point(5, 5), stage_w, stage_h, "white", "black", 3);
   show.Appear("white_bg");
 
   // TITLE
@@ -30,33 +30,36 @@ extern "C" int emkMain()
   show << show(0.45, 0.35) << emk::Font(stage_w/25) << "Charles Ofria\nMichigan State University";
   show << show(0.45, 0.50) << emk::Font(stage_w/35) << "Professor of Computer Science\nDeputy Director, BEACON Center";
 
-  // show.Pause();
-
   const int logo_scale = show.ScaleY(0.6);
-  show << show.BuildImage("image_beacon", "../icons/BeaconLogo.png", show.ScaleX(0.03), show.ScaleY(0.35), logo_scale, logo_scale);
-  //  emk::Image & image_beacon = show.BuildImage("image_beacon", "../icons/BeaconLogo.png", show.ScaleX(0.03), show.ScaleY(0.35), logo_scale, logo_scale);
-  //  show.Appear(image_beacon);
+  show << show.BuildImage("image_beacon", "images/BeaconLogo.png", show(0.03, 0.35), logo_scale, logo_scale);
 
-  show.BuildImage("image_beacon1", "../icons/BeaconLogo1.png", show.ScaleX(0.03), show.ScaleY(0.35), logo_scale, logo_scale);
-  show.BuildImage("image_beacon2", "../icons/BeaconLogo2.png", show.ScaleX(0.03), show.ScaleY(0.35), logo_scale, logo_scale);
-  show.BuildImage("image_beacon3", "../icons/BeaconLogo3.png", show.ScaleX(0.03), show.ScaleY(0.35), logo_scale, logo_scale);
-  show.BuildImage("image_beacon4", "../icons/BeaconLogo4.png", show.ScaleX(0.03), show.ScaleY(0.35), logo_scale, logo_scale);
-  show.BuildImage("image_beacon5", "../icons/BeaconLogo5.png", show.ScaleX(0.03), show.ScaleY(0.35), logo_scale, logo_scale);
+
+  // ---=== My Thought Process ===---
+  show.NewSlide();
+  show.Appear("white_bg");
+  show << show(0.27, 0.08) << emk::Font(stage_w/20) << "My thought process...";
+
+  show.Pause();
+
+  const int thought_scale = show.ScaleY(0.25);
+  show << show.BuildImage("image_robot", "images/LostInSpace.jpg", show(0.1, 0.2), thought_scale, thought_scale);
+  // show << show.BuildImage("image_HAL", "images/HAL_eye.jpg", show.ScaleX(0.1)+show.Image().GetWidth(), show.ScaleY(0.2), thought_scale, thought_scale);
+  
 
 
   show.NewSlide();
 
-  emk::Rect & rect = show.BuildRect("test", 50, 50, 100, 100);
+  emk::Rect & rect = show.BuildRect("test", emk::Point(50, 50), 100, 100);
   show.Appear(rect);
 
   show.Pause();
 
-  emk::Rect & rect2 = show.BuildRect("test2", 250, 250, 100, 100, "red", "black", 5, true);
+  emk::Rect & rect2 = show.BuildRect("test2", emk::Point(250, 250), 100, 100, "red", "black", 5, true);
   show.Appear(rect2);
 
   show.NewSlide();
 
-  emk::Rect & rect3 = show.BuildRect("test3", 200, 200, 100, 100, "blue", "black", 5, true);
+  emk::Rect & rect3 = show.BuildRect("test3", emk::Point(200, 200), 100, 100, "blue", "black", 5, true);
   show.Appear(rect3);
 
   show.Pause();

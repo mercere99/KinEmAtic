@@ -11,6 +11,7 @@
 #include "../tools/Callbacks.h"
 #include "../tools/Colors.h"
 #include "../tools/Font.h"
+#include "../tools/Point.h"
 
 extern "C" {
   extern int EMK_Tween_Build(int target_id, double seconds);
@@ -92,13 +93,17 @@ namespace emk {
     void SetDraggable(int _in) { EM_ASM_ARGS({emk_info.objs[$0].draggable($1);}, obj_id, _in); }
 
     inline void SetXY(int x, int y) { SetX(x); SetY(y); }
+    inline void SetXY(const Point & point) { SetX(point.GetX()); SetY(point.GetY()); }
     inline void SetSize(int w, int h) { SetWidth(w); SetHeight(h); }
     inline void SetLayout(int x, int y, int w, int h) { SetX(x); SetY(y); SetWidth(w); SetHeight(h); }
+    inline void SetLayout(const Point & point, int w, int h) { SetX(point.GetX()); SetY(point.GetY()); SetWidth(w); SetHeight(h); }
     inline void SetScale(double _x, double _y) { SetScaleX(_x); SetScaleY(_y); }
     inline void SetScale(double _in) { SetScaleX(_in); SetScaleY(_in); }
     inline void SetOffset(int _x, int _y) { SetOffsetX(_x); SetOffsetY(_y); }
+    inline void SetOffset(const Point & point) { SetOffsetX(point.GetX()); SetOffsetY(point.GetY()); }
 
-    void SetLayer(Object * _layer) { layer = _layer; }
+    Layer * GetLayer() { return (Layer *) layer; }
+    void SetLayer(Layer * _layer) { layer = (Object *) _layer; }
 
     // Draw either this object or objects in contains.
     void Draw() { EM_ASM_ARGS({emk_info.objs[$0].draw();}, obj_id); }
@@ -196,6 +201,8 @@ namespace emk {
         return img_id;
       }, filename.c_str(), (int) this);
     }
+    Image(const std::string & _filename, const Point & point, int _w=-1, int _h=-1) 
+      : Image(_filename, point.GetX(), point.GetY(), _w, _h) { ; }
 
     virtual std::string GetType() { return "emkImage"; }
 
@@ -259,23 +266,38 @@ namespace emk {
       if (fill) EM_ASM_ARGS({var msg = Pointer_stringify($0); emk_info.ctx.fillText(msg, $1, $2);}, msg.c_str(), x, y);
       else EM_ASM_ARGS({var msg = Pointer_stringify($0); emk_info.ctx.strokeText(msg, $1, $2);}, msg.c_str(), x, y);
     }
+    inline static void Text(const std::string & msg, const Point & point, bool fill=true) {
+      Text(msg, point.GetX(), point.GetY(), fill);
+    }
 
     inline static void Rect(int x, int y, int width, int height, bool fill=false) {
       if (fill) EM_ASM_ARGS({emk_info.ctx.fillRect($0, $1, $2, $3);}, x, y, width, height);
       else EM_ASM_ARGS({emk_info.ctx.strokeRect($0, $1, $2, $3);}, x, y, width, height);
     }
+    inline static void Rect(const Point & point, int width, int height, bool fill=false) {
+      Rect(point.GetX(), point.GetY(), width, height, fill);
+    }
 
     inline static void Arc(int x, int y, int radius, double start, double end, bool cclockwise=false) {
       EM_ASM_ARGS({emk_info.ctx.arc($0, $1, $2, $3, $4, $5);}, x, y, radius, start, end, cclockwise);
+    }
+    inline static void Arc(const Point & point, int radius, double start, double end, bool cclockwise=false) {
+      Arc(point.GetX(), point.GetY(), radius, start, end, cclockwise);
     }
 
     inline static void DrawImage(const Image & image, int x, int y) {
       // @CAO Do something different if the image hasn't loaded yet?  Maybe draw a placeholder rectangle?
       EM_ASM_ARGS({emk_info.ctx.drawImage(emk_info.images[$0], $1, $2);}, image.GetImgID(), x, y);
     }
+    inline static void DrawImage(const Image & image, const Point & point) {
+      DrawImage(image, point.GetX(), point.GetY());
+    }
 
     inline static void DrawImage(const Image & image, int x, int y, int w, int h) {
       EM_ASM_ARGS({emk_info.ctx.drawImage(emk_info.images[$0], $1, $2, $3, $4);}, image.GetImgID(), x, y, w, h);
+    }
+    inline static void DrawImage(const Image & image, const Point & point, int w, int h) {
+      DrawImage(image, point.GetX(), point.GetY(), w, h);
     }
 
     // Paths
@@ -283,7 +305,9 @@ namespace emk {
     inline static void ClosePath() { EM_ASM( emk_info.ctx.closePath() ); }
     inline static void Fill() { EM_ASM( emk_info.ctx.fill() ); }
     inline static void LineTo(int x, int y) { EM_ASM_ARGS({ emk_info.ctx.lineTo($0, $1); }, x, y); }
+    inline static void LineTo(const Point & point) { LineTo(point.GetX(), point.GetY()); }
     inline static void MoveTo(int x, int y) { EM_ASM_ARGS({ emk_info.ctx.moveTo($0, $1); }, x, y); }
+    inline static void MoveTo(const Point & point) { MoveTo(point.GetX(), point.GetY()); }
 
     // Transformations
     inline static void Restore() { EM_ASM( emk_info.ctx.restore() ); }
@@ -291,6 +315,7 @@ namespace emk {
     inline static void Scale(double x, double y) { EM_ASM_ARGS({ emk_info.ctx.scale($0, $1); }, x, y); }
     inline static void Scale(double new_scale) { EM_ASM_ARGS({ emk_info.ctx.scale($0, $0); }, new_scale); }
     inline static void Translate(int x, int y) { EM_ASM_ARGS({ emk_info.ctx.translate($0, $1); }, x, y); }
+    inline static void Translate(const Point & point) { Translate(point.GetX(), point.GetY()); }
     inline static void Rotate(double angle) { EM_ASM_ARGS({ emk_info.ctx.rotate($0); }, angle); }
  
 
@@ -609,26 +634,9 @@ namespace emk {
           return obj_id;                                       // Return the Kinetic object id.
       }, x, y, text.c_str(), std::to_string(font_size).c_str(), font_family.c_str(), fill.AsString().c_str());
     }
-    Text(int x, int y, std::string text, const Font & font)
-    {
-      obj_id = EM_ASM_INT( {
-          var obj_id = emk_info.objs.length;         // Determine the next free id for a Kinetic object.
-          _text = Pointer_stringify($2);             // Make sure string values are properly converted (text)
-          _font_size = Pointer_stringify($3);        // Make sure string values are properly converted (size)
-          _font_family = Pointer_stringify($4);      // Make sure string values are properly converted (font)
-          _fill = Pointer_stringify($5);             // Make sure string values are properly converted (color)
-        
-          emk_info.objs[obj_id] = new Kinetic.Text({           // Build the new text object!
-              x: $0,
-              y: $1,
-              text: _text,
-              fontSize: _font_size,
-              fontFamily: _font_family,
-              fill: _fill
-          });
-          return obj_id;                                       // Return the Kinetic object id.
-        }, x, y, text.c_str(), std::to_string(font.GetSize()).c_str(), font.GetFamily().c_str(), font.GetColor().AsString().c_str());
-    }
+    Text(int x, int y, std::string text, const Font & font) : Text(x, y, text, font.GetSize(), font.GetFamily(), font.GetColor()) { ; }
+    Text(const Point & point, std::string text, const Font & font)
+      : Text(point.GetX(), point.GetY(), text, font.GetSize(), font.GetFamily(), font.GetColor()) { ; }
     ~Text() { ; }
 
     virtual std::string GetType() { return "emkText"; }
@@ -645,6 +653,10 @@ namespace emk {
     {
       obj_id = EMK_Rect_Build(x, y, w, h, fill.c_str(), stroke.c_str(), stroke_width, draggable);
     }
+    Rect(const Point & point, int w=10, int h=10, std::string fill="white", std::string stroke="black", int stroke_width=1, int draggable=0)
+    {
+      obj_id = EMK_Rect_Build(point.GetX(), point.GetY(), w, h, fill.c_str(), stroke.c_str(), stroke_width, draggable);
+    }
 
     virtual std::string GetType() { return "emkRect"; }
   };
@@ -655,6 +667,11 @@ namespace emk {
     RegularPolygon(int x=0, int y=0, int sides=4, int radius=10, std::string fill="white", std::string stroke="black", int stroke_width=1, int draggable=0)
     {
       obj_id = EMK_RegularPolygon_Build(x, y, sides, radius, fill.c_str(), stroke.c_str(), stroke_width, draggable);
+    }
+
+    RegularPolygon(const Point & point, int sides=4, int radius=10, std::string fill="white", std::string stroke="black", int stroke_width=1, int draggable=0)
+    {
+      obj_id = EMK_RegularPolygon_Build(point.GetX(), point.GetY(), sides, radius, fill.c_str(), stroke.c_str(), stroke_width, draggable);
     }
 
     virtual std::string GetType() { return "emkRegularPolygon"; }

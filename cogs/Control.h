@@ -75,8 +75,8 @@ namespace emk {
     }
 
 
-    Stage & BuildStage(const std::string & name, int x, int y) {
-      cur_stage = new emk::Stage(x, y, name);
+    Stage & BuildStage(const std::string & name, int width, int height) {
+      cur_stage = new emk::Stage(width, height, name);
       if (stage_map.find(name) != stage_map.end()) delete stage_map[name]; // If we a replacing a stage, delete the old one.
       stage_map[name] = cur_stage;
       return *cur_stage;
@@ -113,24 +113,24 @@ namespace emk {
       return *cur_point;
     }
 
-    Image & BuildImage(const std::string & name, const std::string & filename, int x=0, int y=0, int width=0, int height=0) {
-      cur_image = new emk::Image(filename, x, y, width, height);
+    Image & BuildImage(const std::string & name, const std::string & filename, const Point & point, int width=0, int height=0) {
+      cur_image = new emk::Image(filename, point, width, height);
       if (image_map.find(name) != image_map.end()) delete image_map[name]; // If we a replacing a image, delete the old one.
       image_map[name] = cur_image;
       return *cur_image;
     }
 
-    Rect & BuildRect(const std::string & name, int x=0, int y=0, int w=10, int h=10,
+    Rect & BuildRect(const std::string & name, const Point & point, int w=10, int h=10,
                      std::string fill="white", std::string stroke="black", int stroke_width=1, int draggable=0) {
-      cur_rect = new emk::Rect(x, y, w, h, fill, stroke, stroke_width, draggable);
+      cur_rect = new emk::Rect(point, w, h, fill, stroke, stroke_width, draggable);
       if (rect_map.find(name) != rect_map.end()) delete rect_map[name]; // If we a replacing a rect, delete the old one.
       rect_map[name] = cur_rect;
       shape_map[name] = cur_rect;
       return *cur_rect;
     }
 
-    Text & BuildText(const std::string & name, int x, int y, std::string text, const emk::Font & font) {
-      cur_text = new emk::Text(x, y, text, font);
+    Text & BuildText(const std::string & name, const Point & point, std::string text, const emk::Font & font) {
+      cur_text = new emk::Text(point, text, font);
       if (text_map.find(name) != text_map.end()) delete text_map[name]; // If we a replacing a text, delete the old one.
       text_map[name] = cur_text;
       shape_map[name] = cur_text;
@@ -138,7 +138,7 @@ namespace emk {
     }
 
     // If no explicit font is provided for the text use the cur_font (plus other default values).
-    Text & BuildText(const std::string & name, int x=0, int y=0, std::string text="") { return BuildText(name, x, y, text, default_font); }
+    Text & BuildText(const std::string & name, const Point & point, std::string text="") { return BuildText(name, point, text, default_font); }
 
 
     template<class T> Button & BuildButton(const std::string & name, T * target, void (T::*method_ptr)()) {
@@ -149,15 +149,15 @@ namespace emk {
       return *cur_button;
     }
 
-    ButtonSet & BuildButtonSet(const std::string & name, int cols, int rows, int x, int y, int width, int height, int spacing=0) {
-      cur_buttonset = new emk::ButtonSet(cols, rows, x, y, width, height, spacing);
+    ButtonSet & BuildButtonSet(const std::string & name, int cols, int rows, const Point & point, int width, int height, int spacing=0) {
+      cur_buttonset = new emk::ButtonSet(cols, rows, point, width, height, spacing);
       if (buttonset_map.find(name) != buttonset_map.end()) delete buttonset_map[name]; // If we a replacing a buttonset, delete the old one.
       buttonset_map[name] = cur_buttonset;
       return *cur_buttonset;
     }
 
-    Grid & BuildGrid(const std::string & name, int x, int y, int width, int height, int cols, int rows, int num_colors=12, int border_width=1) {
-      cur_grid = new emk::Grid(x, y, width, height, cols, rows, num_colors, border_width);
+    Grid & BuildGrid(const std::string & name, const Point & point, int width, int height, int cols, int rows, int num_colors=12, int border_width=1) {
+      cur_grid = new emk::Grid(point, width, height, cols, rows, num_colors, border_width);
       if (grid_map.find(name) != grid_map.end()) delete grid_map[name]; // If we a replacing a grid, delete the old one.
       grid_map[name] = cur_grid;
       shape_map[name] = cur_grid;

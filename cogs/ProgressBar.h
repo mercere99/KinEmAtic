@@ -2,6 +2,7 @@
 #define EMK_PROGRESS_BAR_H
 
 #include "../libs/Kinetic.h"
+#include "canvas_tools.h"
 
 namespace emk {
 
@@ -39,22 +40,26 @@ namespace emk {
       const int bar_x = width/10;
       const int bar_y = height/4;
       const int inner_width = width - 2*bar_x;
-      const int inner_height = height/3;
+      const int inner_height = height/4;
       const int msg_y = 2*bar_y + inner_height;
       const int bar_min = 3;
       const double frac_done = (((double) cur_count) / (double) max_count);
 
       canvas.SetStroke(stroke_color);
       canvas.SetFill(panel_color);
-      canvas.Rect(0, 0, width, height, true);
-      canvas.Rect(0, 0, width, height, false);
+
+      DrawRoundedRect(canvas, 0, 0, width, height, 8, true, true);
+
+      // canvas.Rect(0, 0, width, height, true);
+      // canvas.Rect(0, 0, width, height, false);
+
       canvas.SetFill(bar_color_empty);
       canvas.Rect(bar_x, bar_y, inner_width, inner_height, true);
       canvas.SetFill(bar_color_full);
       canvas.Rect(bar_x, bar_y, bar_min + (inner_width-bar_min) * frac_done, inner_height, true);
       canvas.Rect(bar_x, bar_y, inner_width, inner_height, false);
 
-      canvas.SetFont(Font(height/6));
+      canvas.SetFont(Font(height/8));
       canvas.SetFill(text_color);
       std::string out_msg = msg + std::to_string(cur_count) + std::string("/") + std::to_string(max_count);
       canvas.Text(out_msg, bar_x, msg_y);

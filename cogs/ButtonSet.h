@@ -39,6 +39,8 @@ namespace emk {
       }
 
     }
+    ButtonSet(int _cols, int _rows, const Point & point, int _width, int _height, int _spacing=0)
+      : ButtonSet(_cols, _rows, point.GetX(), point.GetY(), _width, _height, _spacing) { ; }
 
     ~ButtonSet() {
       for (int i = 0; i < (int) button_set.size(); i++) {
