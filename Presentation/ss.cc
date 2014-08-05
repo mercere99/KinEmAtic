@@ -43,8 +43,22 @@ extern "C" int emkMain()
 
   const int thought_scale = show.ScaleY(0.25);
   show << show.BuildImage("image_robot", "images/LostInSpace.jpg", show(0.1, 0.2), thought_scale, thought_scale);
-  // show << show.BuildImage("image_HAL", "images/HAL_eye.jpg", show.ScaleX(0.1)+show.Image().GetWidth(), show.ScaleY(0.2), thought_scale, thought_scale);
-  
+  show << show.BuildImage("image_HAL", "images/HAL_eye.jpg", show.Image().GetUR(3,0), thought_scale, thought_scale);
+  show << show(0.1, 0.5) << emk::Font(stage_w/35) << "Artificial Intelligence";
+
+  show.Pause();
+
+  show << show.BuildImage("image_Darwin", "images/Darwin.jpg", show(0.6, 0.2), thought_scale, thought_scale);
+  show << show.BuildImage("image_finches", "images/Finches.jpg", show.Image().GetUR(3,0), thought_scale, thought_scale);
+  show << show(0.6, 0.5) << emk::Font(stage_w/35) << "Evolution";
+
+  show.Pause();
+
+  const int shadow_scale = show.ScaleY(0.4);
+  show << show.BuildImage("image_descent", "images/DescentShadow.jpg", show(0.1, 0.58), shadow_scale*2.73, shadow_scale);
+
+
+  // ---=== Evolution is Hard to Study! ===---
 
 
   show.NewSlide();

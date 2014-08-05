@@ -66,8 +66,13 @@ namespace emk {
     // Retrieve info from JS Kinetic::Node objects
     int GetX() const { return EM_ASM_INT({return emk_info.objs[$0].x();}, obj_id); }
     int GetY() const { return EM_ASM_INT({return emk_info.objs[$0].y();}, obj_id); }
+    Point GetPos() const { return Point(GetX(), GetY()); }
     int GetWidth() const { return EM_ASM_INT({return emk_info.objs[$0].width();}, obj_id); }
     int GetHeight() const { return EM_ASM_INT({return emk_info.objs[$0].height();}, obj_id); }
+    Point GetUL(int x_offset=0, int y_offset=0) const { return Point(GetX()+x_offset, GetY()+y_offset); }
+    Point GetUR(int x_offset=0, int y_offset=0) const { return Point(GetX()+GetWidth()+x_offset, GetY()+y_offset); }
+    Point GetLR(int x_offset=0, int y_offset=0) const { return Point(GetX()+GetWidth()+x_offset, GetY()+GetHeight()+y_offset); }
+    Point GetLL(int x_offset=0, int y_offset=0) const { return Point(GetX()+x_offset, GetY()+GetHeight()+y_offset); }
     bool GetVisible() const { return EM_ASM_INT({return emk_info.objs[$0].visible();}, obj_id); }
     double GetOpacity() const { return EM_ASM_DOUBLE({return emk_info.objs[$0].opacity();}, obj_id); }
     bool GetListening() const { return EM_ASM_INT({return emk_info.objs[$0].listening();}, obj_id); }
@@ -206,8 +211,14 @@ namespace emk {
 
     virtual std::string GetType() { return "emkImage"; }
 
+    int GetX() const { return x; }
+    int GetY() const { return y; }
     int GetWidth() const { return width; }
     int GetHeight() const { return height; }
+    Point GetUL(int x_offset=0, int y_offset=0) const { return Point(GetX()+x_offset, GetY()+y_offset); }
+    Point GetUR(int x_offset=0, int y_offset=0) const { return Point(GetX()+GetWidth()+x_offset, GetY()+y_offset); }
+    Point GetLR(int x_offset=0, int y_offset=0) const { return Point(GetX()+GetWidth()+x_offset, GetY()+GetHeight()+y_offset); }
+    Point GetLL(int x_offset=0, int y_offset=0) const { return Point(GetX()+x_offset, GetY()+GetHeight()+y_offset); }
 
     int GetImgID() const { return img_id; }
     bool HasLoaded() const { return has_loaded; }

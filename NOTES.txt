@@ -1,9 +1,12 @@
 --== For Slideshow ==--
 See if we can make layers non-transparent for crisper fonts.
-Certain objects don't need to always be stored long-term.
-  These include : Font, Color, Position.
-  We should have different default versions of these that just get modified on the fly as needed.
 Make sure to swallow keystrokes when acting on them.
+Throw errors if there is a problem loading an image; don't just go invisible.
+Setup some basic configurations
+- Lock in aspect ratio.
+- Title of slide included in NewSlide()
+- Default background to be laid down before title.
+- Color scheme?
 
 --== Development Notes ==--
 
