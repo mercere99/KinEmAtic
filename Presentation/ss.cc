@@ -19,14 +19,13 @@ extern "C" int emkMain()
   int stage_w = show.Stage().GetWidth() - 12;
   int stage_h = show.Stage().GetHeight() - 12;  
   show.BuildRect("white_bg", emk::Point(5, 5), stage_w, stage_h, "white", "black", 3);
-  show.Appear("white_bg");
+  show.AddBackground(show.Rect());
 
-  // TITLE
-  show << show(0.1, 0.08) << emk::Font(stage_w/15) << "["
-       << emk::Color("blue") << "Digital"
+  // ---=== TITLE Slide ===---
+  show.NewSlide(); // Create the title slide.
+  show << show(0.1, 0.08) << emk::Font(stage_w/15) << "[" << emk::Color("blue") << "Digital"
        << emk::Color("black") << "] Evolution in Action";
 
-  // Personal Info
   show << show(0.45, 0.35) << emk::Font(stage_w/25) << "Charles Ofria\nMichigan State University";
   show << show(0.45, 0.50) << emk::Font(stage_w/35) << "Professor of Computer Science\nDeputy Director, BEACON Center";
 
@@ -35,9 +34,7 @@ extern "C" int emkMain()
 
 
   // ---=== My Thought Process ===---
-  show.NewSlide();
-  show.Appear("white_bg");
-  show << show(0.27, 0.08) << emk::Font(stage_w/20) << "My thought process...";
+  show.NewSlide("My thought processs...");
 
   show.Pause();
 
@@ -61,7 +58,8 @@ extern "C" int emkMain()
   // ---=== Evolution is Hard to Study! ===---
 
 
-  show.NewSlide();
+  show.NewSlide("Evolution is hard to study!");
+
 
   emk::Rect & rect = show.BuildRect("test", emk::Point(50, 50), 100, 100);
   show.Appear(rect);

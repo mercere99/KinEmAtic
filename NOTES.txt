@@ -17,7 +17,8 @@ Once we have a first draft of the basic framework:
 * Add an OK() method to many classes that will use emk::Alerts to warn of problems?
 
 Specific class improvements:
-* Fix images so that they don't try to draw if they're not loaded.
+* Fix images so that they don't try to draw if they're not loaded.  Perhaps separate Image from ImageRaw (which is the raw HTML version).
+  Then Image can be a Shape, making other portions of the code easier.
 * Control class should allow for easy relationships to track when building objects (and perhaps maintained through size changes?)
 * Buttonsets should allow dynamic spacers.
 * EventChains need to be able to handle callbacks and animations

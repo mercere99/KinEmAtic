@@ -75,27 +75,39 @@ namespace emk {
     emk::Layer & layer;
     emk::Animation<SlideShow> run_anim;
 
-    std::vector<Object *> visible_set;       // Set of all objects currently visible in the show.
+    // Variables to track while the show is being created.
     std::vector<SlideAction *> action_list;  // List of all actions to be taken in the show.
+    std::vector<Shape *> bg_shapes;          // Shapes to put on the background of each slide. // @CAO should also handle Images
+    int slide_id;                            // Current slide number.
+    int temp_id;                             // ID to be used next for constructing temporary shapes and images
+
+    // Variable to track while the show is running.
+    std::vector<Object *> visible_set;       // Set of all objects currently visible in the show.
     int next_action;                         // What show action needs to be taken next?
     bool pause;                              // Is the show currently running or paused?
 
-    int temp_id;        // What id should be used next for constructing temporary shapes and images?
-
-    // Other configuration information.
+    // Configuration information.
     int display_image_load;  // Should we indicate progress on loading images at show start? 0=no, 1=yes, 2=already in progress.
     emk::ProgressBar progress_image_load;
 
+    emk::Font title_font;   // What font should the title be in?
+    int title_y;            // How far down should the title be?  // @CAO assuming cenetered, but should give control over that.
+
+    // Private methods
     std::string GetTempName() { return std::string("temp") + std::to_string(temp_id++); }
+
   public:
     SlideShow() 
       : layer(BuildLayer("main_layer"))
       , run_anim(this, &SlideShow::Go, layer)
+      , slide_id(0)
+      , temp_id(0)
       , next_action(0)
       , pause(false)
-      , temp_id(0)
       , display_image_load(1)
       , progress_image_load(Stage().GetWidth()/2-200, Stage().GetHeight()/2-60, 400, 120)
+      , title_font(Stage().GetWidth()/20)
+      , title_y(ScaleY(0.08))
     {
       progress_image_load.SetMessage("Images Loaded: ");
       Stage().Add(layer);
@@ -177,8 +189,30 @@ namespace emk {
     }
     void Pause() { action_list.push_back( new SlideAction_Pause() ); }
     void Clear() { action_list.push_back( new SlideAction_Clear() ); }
-    void NewSlide() { Pause(); Clear(); }
+ 
+    // What should we do when we create a new slide?
+    void NewSlide(const std::string & title="", bool include_bg=true) {
+      if (slide_id++ > 0) Pause();  // Pause between slides, but only after the first.
+      Clear();                      // Start each new slide with a clear screen.
+      
+      // Unless it is being surpressed, we should include all background objects on this slide.
+      if (include_bg) {
+        for (int i = 0; i < (int) bg_shapes.size(); i++) Appear(*(bg_shapes[i]));
+      }
 
+      // If a title is provided, include it centered on the screen. // @CAO eventually include proper alignment cues.
+      if (title.size() > 0) {
+        std::string title_name = std::string("slide") + std::to_string(slide_id) + std::string("_title");
+        emk::Text & title_text = BuildText(title_name, emk::Point(0,0), title, title_font);
+        int title_x = (Stage().GetWidth() - title_text.GetWidth()) / 2;
+        title_text.SetXY(title_x, title_y);
+        Appear(title_text);
+      }
+    }
+
+    void AddBackground(Shape & new_bg) {
+      bg_shapes.push_back(&new_bg);
+    }
 
     //---- Setup building of slides using << operators  ----
 
