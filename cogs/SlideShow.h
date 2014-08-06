@@ -48,6 +48,28 @@ namespace emk {
     void Reverse(SlideShow * show);
   };
     
+  class SlideAction_NextSlide : public SlideAction {
+  private:
+  public:
+    SlideAction_NextSlide() { ; }
+    ~SlideAction_NextSlide() { ; }
+    
+    void Trigger(SlideShow * show);
+    void Reverse(SlideShow * show);
+  };
+
+  class SlideAction_Tween : public SlideAction {
+  private:
+    emk::Tween * tween;
+  public:
+    SlideAction_Tween(emk::Tween * _tween) : tween(_tween) { ; }
+    ~SlideAction_Tween() { ; }
+    
+    void Trigger(SlideShow * show);
+    void Reverse(SlideShow * show);
+  };
+  
+
   class SlideAction_Pause : public SlideAction {
   private:
   public:
@@ -78,12 +100,13 @@ namespace emk {
     // Variables to track while the show is being created.
     std::vector<SlideAction *> action_list;  // List of all actions to be taken in the show.
     std::vector<Shape *> bg_shapes;          // Shapes to put on the background of each slide. // @CAO should also handle Images
-    int slide_id;                            // Current slide number.
+    int slide_id;                            // Current slide being built
     int temp_id;                             // ID to be used next for constructing temporary shapes and images
 
     // Variable to track while the show is running.
     std::vector<Object *> visible_set;       // Set of all objects currently visible in the show.
     int next_action;                         // What show action needs to be taken next?
+    int active_slide_id;                     // What slide are we actively running?
     bool pause;                              // Is the show currently running or paused?
 
     // Configuration information.
@@ -103,12 +126,14 @@ namespace emk {
       , slide_id(0)
       , temp_id(0)
       , next_action(0)
+      , active_slide_id(0)
       , pause(false)
       , display_image_load(1)
       , progress_image_load(Stage().GetWidth()/2-200, Stage().GetHeight()/2-60, 400, 120)
       , title_font(Stage().GetWidth()/20)
       , title_y(ScaleY(0.08))
     {
+      SetAspect(1.778);
       progress_image_load.SetMessage("Images Loaded: ");
       Stage().Add(layer);
       emscripten_set_keypress_callback(0, this, 1, slideshow_callback);
@@ -153,7 +178,7 @@ namespace emk {
         progress_image_load.SetMaxCount(emk::Image::NumImages());
         progress_image_load.SetCurCount(emk::Image::NumLoaded());
 
-        static int countdown = 100;
+        static int countdown = 50;
         if (countdown > 0) {
           countdown--;
           return;
@@ -187,13 +212,15 @@ namespace emk {
       action_list.push_back( new SlideAction_Appear(shape_map[name]) );
       // @CAO need to make sure shape exists!
     }
+    void SetAction(emk::Tween & tween) { action_list.push_back( new SlideAction_Tween(&tween) ); }
     void Pause() { action_list.push_back( new SlideAction_Pause() ); }
     void Clear() { action_list.push_back( new SlideAction_Clear() ); }
  
     // What should we do when we create a new slide?
     void NewSlide(const std::string & title="", bool include_bg=true) {
-      if (slide_id++ > 0) Pause();  // Pause between slides, but only after the first.
-      Clear();                      // Start each new slide with a clear screen.
+      if (slide_id++ > 0) Pause();                           // Pause between slides, but only after the first.
+      action_list.push_back( new SlideAction_NextSlide() );  // Track that this is where the new slide officially starts.
+      Clear();                                               // Start each new slide with a clear screen.
       
       // Unless it is being surpressed, we should include all background objects on this slide.
       if (include_bg) {
@@ -298,6 +325,12 @@ namespace emk {
       visible_set.pop_back();
     }
 
+    void DoNextSlide() { active_slide_id++; }
+    void DoPrevSlide() { active_slide_id--; }
+
+    void DoTween(emk::Tween & tween) { tween.Play(); }
+    void DoReverseTween(emk::Tween & tween) { tween.Reverse(); }
+
     void DoClear(std::vector<Object *> & cleared_set) {
       // @CAO Remove all shapes from layer properly?
       for (int i = 0; i < (int) visible_set.size(); i++) {
@@ -319,13 +352,20 @@ namespace emk {
 
   EM_BOOL slideshow_callback(int eventType, const EmscriptenKeyboardEvent *e, void *userData)
   {                                                                                     
-    if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, " "))) {
-      ((SlideShow *) userData)->DoAdvance(); // Unpause the slide show.
-    }                                                                                   
+    // Handle Keypresses...
+    if (eventType == EMSCRIPTEN_EVENT_KEYPRESS) {
+      if (!strcmp(e->key, " ")) {
+        ((SlideShow *) userData)->DoAdvance(); // Unpause the slide show.
+        return 1;
+      }                                                                                   
     
-    if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "p"))) {
-      ((SlideShow *) userData)->DoRewind(); // Rewind the slide show.
-    }                                                                                   
+      if (!strcmp(e->key, "p")) {
+        ((SlideShow *) userData)->DoRewind(); // Rewind the slide show.
+        return 1;
+      }
+
+      // emk::Alert(std::string("::") + std::string(e->key) + std::string("::"));
+    }                                                                       
     
     return 0;                                                                           
   }
@@ -336,6 +376,12 @@ namespace emk {
 
   void SlideAction_Appear_Image::Trigger(SlideShow * show) { show->DoAppear(*image); }
   void SlideAction_Appear_Image::Reverse(SlideShow * show) { show->DoDisappear(*image); }
+
+  void SlideAction_NextSlide::Trigger(SlideShow * show) { show->DoNextSlide(); }
+  void SlideAction_NextSlide::Reverse(SlideShow * show) { show->DoPrevSlide(); }
+
+  void SlideAction_Tween::Trigger(SlideShow * show) { show->DoTween(*tween); }
+  void SlideAction_Tween::Reverse(SlideShow * show) { show->DoReverseTween(*tween); }
 
   void SlideAction_Pause::Trigger(SlideShow * show) { show->DoPause(); }
   void SlideAction_Pause::Reverse(SlideShow * show) { show->DoPause(); }

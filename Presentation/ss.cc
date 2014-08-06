@@ -38,21 +38,26 @@ extern "C" int emkMain()
 
   show.Pause();
 
-  const int thought_scale = show.ScaleY(0.25);
+  const int thought_scale = show.ScaleY(0.30);
   show << show.BuildImage("image_robot", "images/LostInSpace.jpg", show(0.1, 0.2), thought_scale, thought_scale);
   show << show.BuildImage("image_HAL", "images/HAL_eye.jpg", show.Image().GetUR(3,0), thought_scale, thought_scale);
-  show << show(0.1, 0.5) << emk::Font(stage_w/35) << "Artificial Intelligence";
+  show << show(0.14, 0.52) << emk::Font(stage_w/35) << "Artificial Intelligence";
 
   show.Pause();
 
-  show << show.BuildImage("image_Darwin", "images/Darwin.jpg", show(0.6, 0.2), thought_scale, thought_scale);
+  show << show.BuildImage("image_Darwin", "images/Darwin.jpg", show(0.56, 0.2), thought_scale, thought_scale);
   show << show.BuildImage("image_finches", "images/Finches.jpg", show.Image().GetUR(3,0), thought_scale, thought_scale);
-  show << show(0.6, 0.5) << emk::Font(stage_w/35) << "Evolution";
+  show << show(0.66, 0.52) << emk::Font(stage_w/35) << "Evolution";
+
+  show.Pause();
+  show.SetAction( show.BuildTween("image_move", show.Text(), 3).SetXY( show(0.8, 0.88) ).SetScaleXY(5.0, 5.0).SetRotation(900).SetEasing(emk::Tween::) );
+
 
   show.Pause();
 
   const int shadow_scale = show.ScaleY(0.4);
-  show << show.BuildImage("image_descent", "images/DescentShadow.jpg", show(0.1, 0.58), shadow_scale*2.73, shadow_scale);
+  show << show.BuildImage("image_descent", "images/DescentShadow.jpg", show(0.2, 0.58), shadow_scale*2.73, shadow_scale);
+
 
 
   // ---=== Evolution is Hard to Study! ===---

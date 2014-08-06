@@ -4,8 +4,6 @@ Make sure to swallow keystrokes when acting on them.
 Throw errors if there is a problem loading an image; don't just go invisible.
 Setup some basic configurations
 - Lock in aspect ratio.
-- Title of slide included in NewSlide()
-- Default background to be laid down before title.
 - Color scheme?
 
 --== Development Notes ==--

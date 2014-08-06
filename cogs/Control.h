@@ -16,6 +16,10 @@ namespace emk {
 
   class Control {
   protected:
+    // What aspect ratio should the screen have?
+    // aspect_ratio = width/height; a 16:9 ratio would be 1.778 (use values <= 0 to adjust values freely)
+    double aspect_ratio;
+
     std::map<std::string, Stage *> stage_map;
     std::map<std::string, Layer *> layer_map;
 
@@ -62,7 +66,8 @@ namespace emk {
 
   public:
     Control(int width=1200, int height=800, const std::string & name="container")
-      : cur_layer(NULL)
+      : aspect_ratio(0.0)
+      , cur_layer(NULL)
       , default_color("black")
       , default_font("Helvetica", 30, "black")
       , default_point(10, height/2)
@@ -74,6 +79,7 @@ namespace emk {
       // @CAO We need to delete all objects created as part of the controller.
     }
 
+    void SetAspect(double aspect_ratio) { Stage().SetAspect(aspect_ratio); }
 
     Stage & BuildStage(const std::string & name, int width, int height) {
       cur_stage = new emk::Stage(width, height, name);

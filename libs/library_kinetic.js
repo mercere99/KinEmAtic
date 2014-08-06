@@ -139,12 +139,6 @@ mergeInto(LibraryManager.library, {
             emkJSDoCallback(callback_ptr, 0);
             emk_info.ctx = null;
         } );
-    },
-
-
-    // Stand-alone functions
-    EMK_ScheduleCallback__deps: ['$emk_info'],
-    EMK_ScheduleCallback: function(callback_ptr, delay) {
-        window.setTimeout(function() { emkJSDoCallback(callback_ptr); }, delay);
     }
+
 });

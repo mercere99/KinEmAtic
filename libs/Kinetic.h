@@ -69,10 +69,16 @@ namespace emk {
     Point GetPos() const { return Point(GetX(), GetY()); }
     int GetWidth() const { return EM_ASM_INT({return emk_info.objs[$0].width();}, obj_id); }
     int GetHeight() const { return EM_ASM_INT({return emk_info.objs[$0].height();}, obj_id); }
-    Point GetUL(int x_offset=0, int y_offset=0) const { return Point(GetX()+x_offset, GetY()+y_offset); }
-    Point GetUR(int x_offset=0, int y_offset=0) const { return Point(GetX()+GetWidth()+x_offset, GetY()+y_offset); }
-    Point GetLR(int x_offset=0, int y_offset=0) const { return Point(GetX()+GetWidth()+x_offset, GetY()+GetHeight()+y_offset); }
-    Point GetLL(int x_offset=0, int y_offset=0) const { return Point(GetX()+x_offset, GetY()+GetHeight()+y_offset); }
+    Point GetUL(int x_offset=0, int y_offset=0) const { return Point(GetX()+x_offset,              GetY()+y_offset); }
+    Point GetUM(int x_offset=0, int y_offset=0) const { return Point(GetX()+GetWidth()/2+x_offset, GetY()+y_offset); }
+    Point GetUR(int x_offset=0, int y_offset=0) const { return Point(GetX()+GetWidth()+x_offset,   GetY()+y_offset); }
+    Point GetML(int x_offset=0, int y_offset=0) const { return Point(GetX()+x_offset,              GetY()+GetHeight()/2+y_offset); }
+    Point GetMM(int x_offset=0, int y_offset=0) const { return Point(GetX()+GetWidth()/2+x_offset, GetY()+GetHeight()/2+y_offset); }
+    Point GetMR(int x_offset=0, int y_offset=0) const { return Point(GetX()+GetWidth()+x_offset,   GetY()+GetHeight()/2+y_offset); }
+    Point GetLL(int x_offset=0, int y_offset=0) const { return Point(GetX()+x_offset,              GetY()+GetHeight()+y_offset); }
+    Point GetLM(int x_offset=0, int y_offset=0) const { return Point(GetX()+GetWidth()/2+x_offset, GetY()+GetHeight()+y_offset); }
+    Point GetLR(int x_offset=0, int y_offset=0) const { return Point(GetX()+GetWidth()+x_offset,   GetY()+GetHeight()+y_offset); }
+    Point GetCenter(int x_offset=0, int y_offset=0) const { return GetMM(x_offset, y_offset); }
     bool GetVisible() const { return EM_ASM_INT({return emk_info.objs[$0].visible();}, obj_id); }
     double GetOpacity() const { return EM_ASM_DOUBLE({return emk_info.objs[$0].opacity();}, obj_id); }
     bool GetListening() const { return EM_ASM_INT({return emk_info.objs[$0].listening();}, obj_id); }
@@ -107,6 +113,18 @@ namespace emk {
     inline void SetOffset(int _x, int _y) { SetOffsetX(_x); SetOffsetY(_y); }
     inline void SetOffset(const Point & point) { SetOffsetX(point.GetX()); SetOffsetY(point.GetY()); }
 
+    inline void SetUL(const Point & point) { SetXY(point); }
+    inline void SetUM(const Point & point) { SetXY(point.GetX()-GetWidth()/2, point.GetY()); }
+    inline void SetUR(const Point & point) { SetXY(point.GetX()-GetWidth(),   point.GetY()); }
+    inline void SetML(const Point & point) { SetXY(point.GetX(),              point.GetY()-GetHeight()/2); }
+    inline void SetMM(const Point & point) { SetXY(point.GetX()-GetWidth()/2, point.GetY()-GetHeight()/2); }
+    inline void SetMR(const Point & point) { SetXY(point.GetX()-GetWidth(),   point.GetY()-GetHeight()/2); }
+    inline void SetLL(const Point & point) { SetXY(point.GetX(),              point.GetY()-GetHeight()); }
+    inline void SetLM(const Point & point) { SetXY(point.GetX()-GetWidth()/2, point.GetY()-GetHeight()); }
+    inline void SetLR(const Point & point) { SetXY(point.GetX()-GetWidth(),   point.GetY()-GetHeight()); }
+
+    inline void SetCenter(const Point & point) { SetXY(point.GetX()-GetWidth()/2, point.GetY()-GetHeight()/2); }
+
     Layer * GetLayer() { return (Layer *) layer; }
     void SetLayer(Layer * _layer) { layer = (Object *) _layer; }
 
@@ -132,7 +150,6 @@ namespace emk {
     virtual void AddToLayer(Layer & layer) = 0;  // Add all objects in set to this layer.
   };
 
-
   class Tween : public Object {
   private:
     Object * target;   // What object is this tween associated with?
@@ -152,15 +169,54 @@ namespace emk {
     }
     ~Tween() { ; }
 
+    enum easing { 
+      Linear,
+      EaseIn, EaseOut, EaseInOut,
+      BackEaseIn, BackEaseOut, BackEaseInOut,
+      ElasticEaseIn, ElasticEaseOut, ElasticEaseInOut,
+      BounceEaseIn, BounceEaseOut, BounceEaseInOut,
+      StrongEaseIn, StrongEaseOut, StrongEaseInOut
+    };
+
     // void SetTarget(Object & _target) { target = &_target; needs_config=true; }
     // void SetTime(double _seconds) { seconds = _seconds; needs_config=true; }
     Tween & SetX(int _in) { EM_ASM_ARGS({ emk_info.objs[$0].x = $1; }, settings_id, _in); needs_config=true; return *this; }
     Tween & SetY(int _in) { EM_ASM_ARGS({ emk_info.objs[$0].y = $1; }, settings_id, _in); needs_config=true; return *this; }
     Tween & SetScaleX(int _in) { EM_ASM_ARGS({ emk_info.objs[$0].scaleX = $1; }, settings_id, _in); needs_config=true; return *this; }
     Tween & SetScaleY(int _in) { EM_ASM_ARGS({ emk_info.objs[$0].scaleY = $1; }, settings_id, _in); needs_config=true; return *this; }
+    Tween & SetRotation(double _in) { EM_ASM_ARGS({emk_info.objs[$0].rotation = $1; }, settings_id, _in); needs_config=true; return *this; }
+    Tween & SetOpacity(double _in) { EM_ASM_ARGS({emk_info.objs[$0].opacity = $1; }, settings_id, _in); needs_config=true; return *this; }
+    Tween & SetStrokeWidth(double _in) { EM_ASM_ARGS({emk_info.objs[$0].strokeWidth = $1; }, settings_id, _in); needs_config=true; return *this; }
+    Tween & SetEasing(easing in_ease) {
+      switch (in_ease) {
+      case Linear: EM_ASM_ARGS({emk_info.objs[$0].easing = Kinetic.Easings.Linear; }, settings_id); break;
+      case EaseIn: EM_ASM_ARGS({emk_info.objs[$0].easing = Kinetic.Easings.EaseIn; }, settings_id); break;
+      case EaseOut: EM_ASM_ARGS({emk_info.objs[$0].easing = Kinetic.Easings.EaseOut; }, settings_id); break;
+      case EaseInOut: EM_ASM_ARGS({emk_info.objs[$0].easing = Kinetic.Easings.EaseInOut; }, settings_id); break;
+      case BackEaseIn: EM_ASM_ARGS({emk_info.objs[$0].easing = Kinetic.Easings.BackEaseIn; }, settings_id); break;
+      case BackEaseOut: EM_ASM_ARGS({emk_info.objs[$0].easing = Kinetic.Easings.BackEaseOut; }, settings_id); break;
+      case BackEaseInOut: EM_ASM_ARGS({emk_info.objs[$0].easing = Kinetic.Easings.BackEaseInOut; }, settings_id); break;
+      case ElasticEaseIn: EM_ASM_ARGS({emk_info.objs[$0].easing = Kinetic.Easings.ElasticEaseIn; }, settings_id); break;
+      case ElasticEaseOut: EM_ASM_ARGS({emk_info.objs[$0].easing = Kinetic.Easings.ElasticEaseOut; }, settings_id); break;
+      case ElasticEaseInOut: EM_ASM_ARGS({emk_info.objs[$0].easing = Kinetic.Easings.ElasticEaseInOut; }, settings_id); break;
+      case BounceEaseIn: EM_ASM_ARGS({emk_info.objs[$0].easing = Kinetic.Easings.BounceEaseIn; }, settings_id); break;
+      case BounceEaseOut: EM_ASM_ARGS({emk_info.objs[$0].easing = Kinetic.Easings.BounceEaseOut; }, settings_id); break;
+      case BounceEaseInOut: EM_ASM_ARGS({emk_info.objs[$0].easing = Kinetic.Easings.BounceEaseInOut; }, settings_id); break;
+      case StrongEaseIn: EM_ASM_ARGS({emk_info.objs[$0].easing = Kinetic.Easings.StrongEaseIn; }, settings_id); break;
+      case StrongEaseOut: EM_ASM_ARGS({emk_info.objs[$0].easing = Kinetic.Easings.StrongEaseOut; }, settings_id); break;
+      case StrongEaseInOut: EM_ASM_ARGS({emk_info.objs[$0].easing = Kinetic.Easings.StrongEaseInOut; }, settings_id); break;
+      default: Alert("Unknown Easing..."); break;
+      };
+      
+      
+      needs_config=true;
+      return *this;
+    }
 
     Tween & SetXY(int _x, int _y) { SetX(_x); SetY(_y); return *this; }
+    Tween & SetXY(const Point & point) { SetX(point.GetX()); SetY(point.GetY()); return *this; }
     Tween & SetScaleXY(double _x, double _y) { SetScaleX(_x); SetScaleY(_y); return *this; }
+    Tween & SetScale(double scale) { SetScaleX(scale); SetScaleY(scale); return *this; }
 
     Tween & SetFinishedCallback(Callback * callback, int * info_ptr) {
       EM_ASM_ARGS({
@@ -172,6 +228,10 @@ namespace emk {
     void Play() {
       if (needs_config) ConfigureTween();
       EM_ASM_ARGS({ emk_info.objs[$0].play(); }, obj_id);
+    }
+    void Reverse() {
+      if (needs_config) ConfigureTween();
+      EM_ASM_ARGS({ emk_info.objs[$0].reverse(); }, obj_id);
     }
   };
 
@@ -610,9 +670,17 @@ namespace emk {
     virtual std::string GetType() { return "emkStage"; }
 
     // Sizing
-    void ResizeMax(int min_width=0, int min_height=0) { EMK_Stage_ResizeMax(obj_id, min_width, min_height); }
+    void ResizeMax(int min_width=0, int min_height=0) {
+      EMK_Stage_ResizeMax(obj_id, min_width, min_height);
+    }
     int ScaleX(double x_frac) const { return x_frac * GetWidth(); }
     int ScaleY(double y_frac) const { return y_frac * GetHeight(); }
+    void SetAspect(double aspect_ratio) {
+      const double width = GetWidth();
+      const double height = GetHeight();
+      if (height * aspect_ratio < width) SetSize(height * aspect_ratio, height);
+      else SetSize(width, width / aspect_ratio);
+    }
 
     // Add a layer and return this stage itself (so adding can be chained...)
     Stage & Add(Layer & _layer) {
