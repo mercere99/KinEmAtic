@@ -65,7 +65,7 @@ namespace emk {
     }
     virtual ~Button() { ; }
 
-    void SetActive(bool _in=true) { is_active = _in; }
+    Button & SetActive(bool _in=true) { is_active = _in; return *this; }
     void SetToolTip(const std::string & msg) { tooltip = msg; }
     void SetRoundCorners(bool _ul=true, bool _ur=true, bool _lr=true, bool _ll=true) {
       ul_round = _ul;      ur_round = _ur;
@@ -76,9 +76,10 @@ namespace emk {
     void SetRoundCornerLR(bool round=true) { lr_round = round; }
     void SetRoundCornerLL(bool round=true) { ll_round = round; }
 
-    void SetFillPatternImage(const Image & _image) {
+    Shape & SetFillPatternImage(const Image & _image) {
       // Don't automatically draw the image here, just record it.
       image = &_image;
+      return *this;
     }
 
     void SetBGColor(const Color & _color) { color_bg = _color; }

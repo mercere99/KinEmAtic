@@ -469,120 +469,128 @@ namespace emk {
 
     virtual std::string GetType() { return "emkShape"; }
 
-    virtual void SetFillPatternImage(const Image & _image) {
+    virtual Shape & SetFillPatternImage(const Image & _image) {
       image = &_image;
       EM_ASM_ARGS({
         emk_info.objs[$0].setFillPriority('pattern');
         emk_info.objs[$0].setFillPatternImage(emk_info.images[$1]);
       }, obj_id, image->GetImgID());
+      return *this;
     }
 
 
-    void SetFill(const Color & color) {
+    Shape & SetFill(const Color & color) {
       EM_ASM_ARGS({var fill = Pointer_stringify($1); emk_info.objs[$0].fill(fill);}, obj_id, color.AsString().c_str());
+      return *this;
     }
 
     int GetFillPatternX() const { return EM_ASM_INT({return emk_info.objs[$0].fillPatternX();}, obj_id); }
-    void SetFillPatternX(int _in) { EM_ASM_ARGS({emk_info.objs[$0].fillPatternX($1);}, obj_id, _in); }
+    Shape & SetFillPatternX(int _in) { EM_ASM_ARGS({emk_info.objs[$0].fillPatternX($1);}, obj_id, _in); return *this; }
 
     int GetFillPatternY() const { return EM_ASM_INT({return emk_info.objs[$0].fillPatternY();}, obj_id); }
-    void SetFillPatternY(int _in) { EM_ASM_ARGS({emk_info.objs[$0].fillPatternY($1);}, obj_id, _in); }
+    Shape & SetFillPatternY(int _in) { EM_ASM_ARGS({emk_info.objs[$0].fillPatternY($1);}, obj_id, _in); return *this; }
 
-    void SetFillPatternXY(int _x, int _y) { SetFillPatternX(_x); SetFillPatternY(_y); }
+    Shape & SetFillPatternXY(int _x, int _y) { SetFillPatternX(_x); SetFillPatternY(_y); return *this; }
 
 
     int GetFillPatternOffsetX() const { return EM_ASM_INT({return emk_info.objs[$0].fillPatternOffsetX();}, obj_id); }
-    void SetFillPatternOffsetX(int _in) { EM_ASM_ARGS({emk_info.objs[$0].fillPatternOffsetX($1);}, obj_id, _in); }
+    Shape & SetFillPatternOffsetX(int _in) { EM_ASM_ARGS({emk_info.objs[$0].fillPatternOffsetX($1);}, obj_id, _in); return *this; }
 
     int GetFillPatternOffsetY() const { return EM_ASM_INT({return emk_info.objs[$0].fillPatternOffsetY();}, obj_id); }
-    void SetFillPatternOffsetY(int _in) { EM_ASM_ARGS({emk_info.objs[$0].fillPatternOffsetY($1);}, obj_id, _in); }
+    Shape & SetFillPatternOffsetY(int _in) { EM_ASM_ARGS({emk_info.objs[$0].fillPatternOffsetY($1);}, obj_id, _in); return *this; }
 
-    void SetFillPatternOffsetXY(int _x, int _y) { SetFillPatternOffsetX(_x); SetFillPatternOffsetY(_y); }
+    Shape & SetFillPatternOffsetXY(int _x, int _y) { SetFillPatternOffsetX(_x); SetFillPatternOffsetY(_y); return *this; }
 
 
     double GetFillPatternScaleX() const { return EM_ASM_DOUBLE({return emk_info.objs[$0].fillPatternScaleX();}, obj_id); }
-    void SetFillPatternScaleX(double _in) { EM_ASM_ARGS({emk_info.objs[$0].fillPatternScaleX($1);}, obj_id, _in); }
+    Shape & SetFillPatternScaleX(double _in) { EM_ASM_ARGS({emk_info.objs[$0].fillPatternScaleX($1);}, obj_id, _in); return *this; }
 
     double GetFillPatternScaleY() const { return EM_ASM_DOUBLE({return emk_info.objs[$0].fillPatternScaleY();}, obj_id); }
-    void SetFillPatternScaleY(double _in) { EM_ASM_ARGS({emk_info.objs[$0].fillPatternScaleY($1);}, obj_id, _in); }
+    Shape & SetFillPatternScaleY(double _in) { EM_ASM_ARGS({emk_info.objs[$0].fillPatternScaleY($1);}, obj_id, _in); return *this; }
 
-    void SetFillPatternScale(double _x, double _y) { SetFillPatternScaleX(_x); SetFillPatternScaleY(_y); }
-    void SetFillPatternScale(double scale) { SetFillPatternScaleX(scale); SetFillPatternScaleY(scale); }
+    Shape & SetFillPatternScale(double _x, double _y) { SetFillPatternScaleX(_x); SetFillPatternScaleY(_y); return *this; }
+    Shape & SetFillPatternScale(double scale) { SetFillPatternScaleX(scale); SetFillPatternScaleY(scale); return *this; }
 
 
     double GetFillPatternRotation() const { return EM_ASM_DOUBLE({return emk_info.objs[$0].fillPatternRotation();}, obj_id); }
-    void SetFillPatternRotation(double _in) { EM_ASM_ARGS({emk_info.objs[$0].fillPatternRotation($1);}, obj_id, _in); }
+    Shape & SetFillPatternRotation(double _in) { EM_ASM_ARGS({emk_info.objs[$0].fillPatternRotation($1);}, obj_id, _in); return *this; }
 
 
-    void SetFillPatternRepeat(int _in) { EM_ASM_ARGS({emk_info.objs[$0].fillPatternRepeat($1);}, obj_id, _in); }
+    Shape & SetFillPatternRepeat(int _in) { EM_ASM_ARGS({emk_info.objs[$0].fillPatternRepeat($1);}, obj_id, _in); return *this; }
 
 
     bool GetFillEnabled() const { return EM_ASM_INT({return emk_info.objs[$0].fillEnabled();}, obj_id); }
-    void SetFillEnabled(bool _in) { EM_ASM_ARGS({emk_info.objs[$0].fillEnabled($1);}, obj_id, (int) _in); }
+    Shape & SetFillEnabled(bool _in) { EM_ASM_ARGS({emk_info.objs[$0].fillEnabled($1);}, obj_id, (int) _in); return *this; }
 
 
-    void SetFillPriority(const std::string & _in) {
+    Shape & SetFillPriority(const std::string & _in) {
       EM_ASM_ARGS({var priority = Pointer_stringify($1); emk_info.objs[$0].fillPriority(priority);}, obj_id, (int) _in.c_str());
+      return *this;
     }
 
 
-    void SetStroke(const std::string & _in) {
+    Shape & SetStroke(const std::string & _in) {
       EM_ASM_ARGS({var stroke = Pointer_stringify($1); emk_info.objs[$0].stroke(stroke);}, obj_id, _in.c_str());
+      return *this;
     }
 
     int GetStrokeWidth() const { return EM_ASM_INT({return emk_info.objs[$0].strokeWidth();}, obj_id); }
-    void SetStrokeWidth(int _in) { EM_ASM_ARGS({emk_info.objs[$0].strokeWidth($1);}, obj_id, _in); }
+    Shape & SetStrokeWidth(int _in) { EM_ASM_ARGS({emk_info.objs[$0].strokeWidth($1);}, obj_id, _in); return *this; }
 
     bool GetStrokeScaleEnabled() const { return EM_ASM_INT({return emk_info.objs[$0].strokeScaleEnabled();}, obj_id); }
-    void SetStrokeScaleEnabled(bool _in) { EM_ASM_ARGS({emk_info.objs[$0].strokeScaleEnabled($1);}, obj_id, (int) _in); }
+    Shape & SetStrokeScaleEnabled(bool _in) { EM_ASM_ARGS({emk_info.objs[$0].strokeScaleEnabled($1);}, obj_id, (int) _in); return *this; }
 
     bool GetStrokeEnabled() const { return EM_ASM_INT({return emk_info.objs[$0].strokeEnabled();}, obj_id); }
-    void SetStrokeEnabled(bool _in) { EM_ASM_ARGS({emk_info.objs[$0].strokeEnabled($1);}, obj_id, (int) _in); }
+    Shape & SetStrokeEnabled(bool _in) { EM_ASM_ARGS({emk_info.objs[$0].strokeEnabled($1);}, obj_id, (int) _in); return *this; }
 
 
-    void SetLineJoin(const std::string & _in) {
+    Shape & SetLineJoin(const std::string & _in) {
       EM_ASM_ARGS({var lj = Pointer_stringify($1); emk_info.objs[$0].lineJoin(lj);}, obj_id, _in.c_str());
+      return *this;
     }
-    void SetLineCap(const std::string & _in) {
+    Shape & SetLineCap(const std::string & _in) {
       EM_ASM_ARGS({var lc = Pointer_stringify($1); emk_info.objs[$0].lineCap(lc);}, obj_id, _in.c_str());
+      return *this;
     }
 
-    void SetShadowColor(const Color & _in) {
+    Shape & SetShadowColor(const Color & _in) {
       EM_ASM_ARGS({var sc = Pointer_stringify($1); emk_info.objs[$0].shadowColor($1);}, obj_id, _in.AsString().c_str());
+      return *this;
     }
 
     double GetShadowBlur() const { return EM_ASM_DOUBLE({return emk_info.objs[$0].shadowBlur();}, obj_id); }
-    void SetShadowBlur(double _in) { EM_ASM_ARGS({emk_info.objs[$0].shadowBlur($1);}, obj_id, _in); }
+    Shape & SetShadowBlur(double _in) { EM_ASM_ARGS({emk_info.objs[$0].shadowBlur($1);}, obj_id, _in); return *this; }
 
 
     int GetShadowOffsetX() const { return EM_ASM_INT({return emk_info.objs[$0].shadowOffsetX();}, obj_id); }
-    void SetShadowOffsetX(int _in) { EM_ASM_ARGS({emk_info.objs[$0].shadowOffsetX($1);}, obj_id, _in); }
+    Shape & SetShadowOffsetX(int _in) { EM_ASM_ARGS({emk_info.objs[$0].shadowOffsetX($1);}, obj_id, _in); return *this; }
 
     int GetShadowOffsetY() const { return EM_ASM_INT({return emk_info.objs[$0].shadowOffsetY();}, obj_id); }
-    void SetShadowOffsetY(int _in) { EM_ASM_ARGS({emk_info.objs[$0].shadowOffsetY($1);}, obj_id, _in); }
+    Shape & SetShadowOffsetY(int _in) { EM_ASM_ARGS({emk_info.objs[$0].shadowOffsetY($1);}, obj_id, _in); return *this; }
 
-    void SetShadowOffset(int _x, int _y) { SetShadowOffsetX(_x); SetShadowOffsetY(_y); }
+    Shape & SetShadowOffset(int _x, int _y) { SetShadowOffsetX(_x); SetShadowOffsetY(_y); return *this; }
 
 
     double GetShadowOpacity() const { return EM_ASM_DOUBLE({return emk_info.objs[$0].shadowOpacity();}, obj_id); }
-    void SetShadowOpacity(double _in) { EM_ASM_ARGS({emk_info.objs[$0].shadowOpacity($1);}, obj_id, _in); }
+    Shape & SetShadowOpacity(double _in) { EM_ASM_ARGS({emk_info.objs[$0].shadowOpacity($1);}, obj_id, _in); return *this; }
 
     bool GetShadowEnabled() const { return EM_ASM_INT({return emk_info.objs[$0].shadowEnabled();}, obj_id); }
-    void SetShadowEnabled(bool _in) { EM_ASM_ARGS({emk_info.objs[$0].shadowEnabled($1);}, obj_id, (int) _in); }
+    Shape & SetShadowEnabled(bool _in) { EM_ASM_ARGS({emk_info.objs[$0].shadowEnabled($1);}, obj_id, (int) _in); return *this; }
 
 
     // @CAO -- not the proper place for this??
-    inline void SetCornerRadius(int radius) { EM_ASM_ARGS({emk_info.objs[$0].cornerRadius($1);}, obj_id, radius); }
+    inline Shape & SetCornerRadius(int radius) { EM_ASM_ARGS({emk_info.objs[$0].cornerRadius($1);}, obj_id, radius); return *this; }
 
 
     // Override the drawing of this shape.
-    template<class T> void SetDrawFunction(T * target, void (T::*draw_ptr)(Canvas &) ) {
+    template<class T> Shape & SetDrawFunction(T * target, void (T::*draw_ptr)(Canvas &) ) {
       if (draw_callback != NULL) delete draw_callback;
       draw_callback = new Callback_Canvas<T>(target, draw_ptr);
       EMK_Shape_SetDrawFunction(obj_id, (int) draw_callback);
+      return *this;
     }
 
-    void DoRotate(double rot) { EM_ASM_ARGS({emk_info.objs[$0].rotate($1);}, obj_id, rot); }
+    Shape & DoRotate(double rot) { EM_ASM_ARGS({emk_info.objs[$0].rotate($1);}, obj_id, rot); return *this; }
 
     const Image * GetImage() { return image; }
   };
