@@ -56,9 +56,10 @@ namespace emk {
     Button & Get(int col, int row) { return *(button_set[col + row*cols]); }
     Button & operator[](int pos) { return *(button_set[pos]); }
 
-    void SetActive(bool active=true) { for (int i = 0; i < set_size; i++) { button_set[i]->SetActive(active); } }
-    void SetRoundCorners(bool ul=true, bool ur=true, bool lr=true, bool ll=true) {
+    ButtonSet & SetActive(bool active=true) { for (int i = 0; i < set_size; i++) { button_set[i]->SetActive(active); } return *this; }
+    ButtonSet & SetRoundCorners(bool ul=true, bool ur=true, bool lr=true, bool ll=true) {
       for (int i = 0; i < set_size; i++) { button_set[i]->SetRoundCorners(ul, ur, lr, ll); }
+      return *this;
     }
     void AutoRoundCorners() {
       for (int i = 0; i < set_size; i++) button_set[i]->SetRoundCorners(false, false, false, false);
@@ -67,15 +68,31 @@ namespace emk {
       button_set[(rows-1) * cols + 1]->SetRoundCornerLR();
       button_set[set_size-1]->SetRoundCornerLL();
     }
-    void SetFillPatternImage(const Image & image) {
+    ButtonSet & SetFillPatternImage(const Image & image) {
       for (int i = 0; i < set_size; i++) { button_set[i]->SetFillPatternImage(image); }
+      return *this;
     }
 
-    void SetBGColor(const Color & color) { for (int i = 0; i < set_size; i++) { button_set[i]->SetBGColor(color); } }
-    void SetBGColorToggled(const Color & color) { for (int i = 0; i < set_size; i++) { button_set[i]->SetBGColorToggled(color); } }
-    void SetBGColorMouseover(const Color & color) { for (int i = 0; i < set_size; i++) { button_set[i]->SetBGColorMouseover(color); } }
-    void SetBGColorToggledMouseover(const Color & color) { for (int i = 0; i < set_size; i++) { button_set[i]->SetBGColorToggledMouseover(color); } }
-    void SetBGColorMousedown(const Color & color) { for (int i = 0; i < set_size; i++) { button_set[i]->SetBGColorMousedown(color); } }
+    ButtonSet & SetBGColor(const Color & color) { 
+      for (int i = 0; i < set_size; i++) { button_set[i]->SetBGColor(color); }
+      return *this;
+    }
+    ButtonSet & SetBGColorToggled(const Color & color) {
+      for (int i = 0; i < set_size; i++) { button_set[i]->SetBGColorToggled(color); }
+      return *this;
+    }
+    ButtonSet & SetBGColorMouseover(const Color & color) {
+      for (int i = 0; i < set_size; i++) { button_set[i]->SetBGColorMouseover(color); }
+      return *this;
+    }
+    ButtonSet & SetBGColorToggledMouseover(const Color & color) {
+      for (int i = 0; i < set_size; i++) { button_set[i]->SetBGColorToggledMouseover(color); }
+      return *this;
+    }
+    ButtonSet & SetBGColorMousedown(const Color & color) {
+      for (int i = 0; i < set_size; i++) { button_set[i]->SetBGColorMousedown(color); }
+      return *this;
+    }
 
   };
   
