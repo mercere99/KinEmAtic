@@ -66,15 +66,16 @@ namespace emk {
     virtual ~Button() { ; }
 
     Button & SetActive(bool _in=true) { is_active = _in; return *this; }
-    void SetToolTip(const std::string & msg) { tooltip = msg; }
-    void SetRoundCorners(bool _ul=true, bool _ur=true, bool _lr=true, bool _ll=true) {
+    Button & SetToolTip(const std::string & msg) { tooltip = msg; return *this; }
+    Button & SetRoundCorners(bool _ul=true, bool _ur=true, bool _lr=true, bool _ll=true) {
       ul_round = _ul;      ur_round = _ur;
       ll_round = _ll;      lr_round = _lr;
+      return *this;
     }
-    void SetRoundCornerUL(bool round=true) { ul_round = round; }
-    void SetRoundCornerUR(bool round=true) { ur_round = round; }
-    void SetRoundCornerLR(bool round=true) { lr_round = round; }
-    void SetRoundCornerLL(bool round=true) { ll_round = round; }
+    Button & SetRoundCornerUL(bool round=true) { ul_round = round; return *this; }
+    Button & SetRoundCornerUR(bool round=true) { ur_round = round; return *this; }
+    Button & SetRoundCornerLR(bool round=true) { lr_round = round; return *this; }
+    Button & SetRoundCornerLL(bool round=true) { ll_round = round; return *this; }
 
     Shape & SetFillPatternImage(const Image & _image) {
       // Don't automatically draw the image here, just record it.
@@ -82,20 +83,22 @@ namespace emk {
       return *this;
     }
 
-    void SetBGColor(const Color & _color) { color_bg = _color; }
-    void SetBGColorToggled(const Color & _color) { color_bg_toggled = _color; }
-    void SetBGColorMouseover(const Color & _color) { color_bg_mouseover = _color; }
-    void SetBGColorToggledMouseover(const Color & _color) { color_bg_toggled_mouseover = _color; }
-    void SetBGColorMousedown(const Color & _color) { color_bg_mousedown = _color; }
+    Button & SetBGColor(const Color & _color) { color_bg = _color; return *this; }
+    Button & SetBGColorToggled(const Color & _color) { color_bg_toggled = _color; return *this; }
+    Button & SetBGColorMouseover(const Color & _color) { color_bg_mouseover = _color; return *this; }
+    Button & SetBGColorToggledMouseover(const Color & _color) { color_bg_toggled_mouseover = _color; return *this; }
+    Button & SetBGColorMousedown(const Color & _color) { color_bg_mousedown = _color; return *this; }
 
-    template<class T> void SetTrigger(T * _target, void (T::*_method_ptr)()) {
+    template<class T> Button & SetTrigger(T * _target, void (T::*_method_ptr)()) {
       if (trigger_cb != NULL) delete trigger_cb;
       trigger_cb = new emk::MethodCallback<T>(_target, _method_ptr);
+      return *this;
     }
 
-    template<class T> void SetDrawIcon(T * _target, void (T::*_method_ptr)(Canvas &)) {
+    template<class T> Button & SetDrawIcon(T * _target, void (T::*_method_ptr)(Canvas &)) {
       if (draw_icon_cb != NULL) delete draw_icon_cb;
       draw_icon_cb = new Callback_Canvas<T>(_target, _method_ptr);
+      return *this;
     }
 
     virtual void Toggle() { ; }  // If this is a toggle button, switch its state.
