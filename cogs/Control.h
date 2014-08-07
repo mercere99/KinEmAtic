@@ -79,7 +79,7 @@ namespace emk {
       // @CAO We need to delete all objects created as part of the controller.
     }
 
-    void SetAspect(double aspect_ratio) { Stage().SetAspect(aspect_ratio); }
+    Control & SetAspect(double aspect_ratio) { Stage().SetAspect(aspect_ratio); return *this; }
 
     Stage & BuildStage(const std::string & name, int width, int height) {
       cur_stage = new emk::Stage(width, height, name);

@@ -53,6 +53,9 @@ namespace emk {
     Object * layer;
 
     Object() : obj_id(-1) {;}  // Protected so that you can't make a direct Object.
+  private:
+    Object(const Object &); // Never allowed.
+    Object & operator=(Object & _in);  // Never allowed.
   public:
     ~Object() {
       EM_ASM_ARGS({
