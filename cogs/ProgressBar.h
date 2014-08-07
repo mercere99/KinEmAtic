@@ -21,7 +21,7 @@ namespace emk {
   public:
     ProgressBar(int x=0, int y=0, int w=100, int h=30)
       : CustomShape(x, y, w, h, this, &ProgressBar::Draw)
-      , stroke_color("black"), panel_color(200, 200, 255), bar_color_full("yellow"), bar_color_empty("blue"), text_color("black")
+      , stroke_color("black"), panel_color(200, 200, 200), bar_color_full("white"), bar_color_empty(50,50,80), text_color("black")
       , max_count(0), cur_count(0)
     { ; }
     ~ProgressBar() { ; }

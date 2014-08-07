@@ -683,11 +683,12 @@ namespace emk {
     }
     int ScaleX(double x_frac) const { return x_frac * GetWidth(); }
     int ScaleY(double y_frac) const { return y_frac * GetHeight(); }
-    void SetAspect(double aspect_ratio) {
+    Stage & SetAspect(double aspect_ratio) {
       const double width = GetWidth();
       const double height = GetHeight();
       if (height * aspect_ratio < width) SetSize(height * aspect_ratio, height);
       else SetSize(width, width / aspect_ratio);
+      return *this;
     }
 
     // Add a layer and return this stage itself (so adding can be chained...)
@@ -728,8 +729,9 @@ namespace emk {
 
     virtual std::string GetType() { return "emkText"; }
 
-    void SetText(const std::string & _text) {
+    Text & SetText(const std::string & _text) {
       EM_ASM_ARGS({var _text = Pointer_stringify($1); emk_info.objs[$0].text(_text);}, obj_id, _text.c_str());
+      return *this;
     }
   };
 
