@@ -20,9 +20,10 @@ namespace emk {
     { ; }
     ~GridPointer() { ; }
 
-    void SetColors(const emk::Color & _outer, const emk::Color & _inner) {
+    GridPointer & SetColors(const emk::Color & _outer, const emk::Color & _inner) {
       outer_color = _outer;
       inner_color = _inner;
+      return *this;
     }
 
     void Draw(Canvas & canvas) {
@@ -112,21 +113,24 @@ namespace emk {
     int GetMouseRow() const { return mouse_row; }
     int GetMouseCellID() const { return (mouse_row == -1) ? -1 : mouse_row * num_cols + mouse_col; }
     GridPointer & GetMousePointer() { return mouse_pointer; }
-    template <class T> void SetMouseMoveCallback(T * target, void (T::*method_ptr)()) {
+    template <class T> Grid & SetMouseMoveCallback(T * target, void (T::*method_ptr)()) {
       mousemove_callback = new emk::MethodCallback<T>(target, method_ptr);
+      return *this;
     }
 
     int GetClickCol() const { return click_col; }
     int GetClickRow() const { return click_row; }
     int GetClickCellID() const { return (click_row == -1) ? -1 : click_row * num_cols + click_col; }
-    template <class T> void SetClickCallback(T * target, void (T::*method_ptr)()) {
+    template <class T> Grid & SetClickCallback(T * target, void (T::*method_ptr)()) {
       click_callback = new emk::MethodCallback<T>(target, method_ptr);
+      return *this;
     }
 
-    inline void SetColor(int id, int color) {
+    inline Grid & SetColor(int id, int color) {
       grid_colors[id] = color;
+      return *this;
     }
-    void SetColor(int row, int col, int color) { SetColor(CellID(row, col), color); }
+    Grid & SetColor(int row, int col, int color) { return SetColor(CellID(row, col), color); }
 
     void Draw(Canvas & canvas) {
       // Setup the background black...
