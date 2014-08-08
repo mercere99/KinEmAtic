@@ -47,8 +47,9 @@ namespace emk {
   protected:
     int obj_id;
     Object * layer;
+    std::string name;
 
-    Object() : obj_id(-1) {;}  // Protected so that you can't make a direct Object.
+    Object(const std::string & _name="") : obj_id(-1), layer(NULL), name(_name) {;}  // Protected so that you can't make a direct Object.
   private:
     Object(const Object &); // Never allowed.
     Object & operator=(Object & _in);  // Never allowed.
@@ -59,6 +60,7 @@ namespace emk {
         }, obj_id);
     }
     int GetID() const { return obj_id; }
+    const std::string & GetName() { return name; }
 
     virtual std::string GetType() { return "emkObject"; }
 
@@ -102,6 +104,7 @@ namespace emk {
     Object & SetRotation(int _in) { EM_ASM_ARGS({emk_info.objs[$0].rotation($1);}, obj_id, _in); return *this; }
     Object & SetDraggable(int _in) { EM_ASM_ARGS({emk_info.objs[$0].draggable($1);}, obj_id, _in); return *this; }
 
+    inline Object & SetName(const std::string & _name) { name = _name; return *this; }
     inline Object & SetXY(int x, int y) { SetX(x); SetY(y); return *this; }
     inline Object & SetXY(const Point & point) { SetX(point.GetX()); SetY(point.GetY()); return *this; }
     inline Object & SetSize(int w, int h) { SetWidth(w); SetHeight(h); return *this; }
