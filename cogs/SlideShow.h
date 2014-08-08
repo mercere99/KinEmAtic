@@ -241,7 +241,7 @@ namespace emk {
       bg_shapes.push_back(&new_bg);
     }
 
-    //---- Setup building of slides using << operators  ----
+    //  ---- Setup building of slides using << operators  ----
 
     SlideShow & operator<<(const std::string & msg) {
       // Build a text message on the screen using the default information.

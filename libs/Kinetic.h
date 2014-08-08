@@ -16,6 +16,7 @@
 
 extern "C" {
   extern int EMK_Tween_Build(int target_id, double seconds);
+  extern int EMK_Tween_Clone(int orig_settings_id);
 
   extern int EMK_Rect_Build(int _x, int _y, int _w, int _h, const char * _fill, const char * _stroke, int _stroke_width, int _draggable);
   extern int EMK_RegularPolygon_Build(int _x, int _y, int _sides, int _radius,
@@ -90,6 +91,7 @@ namespace emk {
     int GetRotation() const { return EM_ASM_INT({return emk_info.objs[$0].rotation();}, obj_id); }
     int GetDraggable() const { return EM_ASM_INT({return emk_info.objs[$0].draggable();}, obj_id); }
 
+    Object & SetName(const std::string & _name) { name = _name; return *this; }
     Object & SetX(int _in) { EM_ASM_ARGS({emk_info.objs[$0].x($1);}, obj_id, _in); return *this; }
     Object & SetY(int _in) { EM_ASM_ARGS({emk_info.objs[$0].y($1);}, obj_id, _in); return *this; }
     Object & SetWidth(int _in) { EM_ASM_ARGS({emk_info.objs[$0].width($1);}, obj_id, _in); return *this; }
@@ -104,7 +106,6 @@ namespace emk {
     Object & SetRotation(int _in) { EM_ASM_ARGS({emk_info.objs[$0].rotation($1);}, obj_id, _in); return *this; }
     Object & SetDraggable(int _in) { EM_ASM_ARGS({emk_info.objs[$0].draggable($1);}, obj_id, _in); return *this; }
 
-    inline Object & SetName(const std::string & _name) { name = _name; return *this; }
     inline Object & SetXY(int x, int y) { SetX(x); SetY(y); return *this; }
     inline Object & SetXY(const Point & point) { SetX(point.GetX()); SetY(point.GetY()); return *this; }
     inline Object & SetSize(int w, int h) { SetWidth(w); SetHeight(h); return *this; }
@@ -168,8 +169,12 @@ namespace emk {
       needs_config = false;
     }
   public:
-    Tween(Object & _target, double _seconds) : target(&_target), seconds(_seconds), needs_config(false) {
+    Tween(Object & _target, double _seconds) : target(&_target), seconds(_seconds), needs_config(true) {
       settings_id = EMK_Tween_Build(target->GetID(), seconds);
+      obj_id = settings_id + 1;
+    }
+    Tween(const Tween & _in) : target(_in.target), seconds(_in.seconds), needs_config(true) {
+      settings_id = EMK_Tween_Clone(_in.settings_id);
       obj_id = settings_id + 1;
     }
     ~Tween() { ; }

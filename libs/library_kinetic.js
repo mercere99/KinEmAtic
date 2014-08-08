@@ -13,15 +13,28 @@ mergeInto(LibraryManager.library, {
 
     EMK_Tween_Build__deps: ['$emk_info'],
     EMK_Tween_Build: function(target_id, seconds) {
-        var obj_id = emk_info.objs.length;
-        emk_info.objs[obj_id] = {
+        var settings_id = emk_info.objs.length;
+        emk_info.objs[settings_id] = {
             node: emk_info.objs[target_id],
             duration: seconds
         };  // Fill out configuration info.
-        emk_info.objs[obj_id+1] = 0; // Preserve for tween.
-        return obj_id;        
+        emk_info.objs[settings_id+1] = 0; // Preserve for tween.
+        return settings_id;        
     },
 
+    EMK_Tween_Clone__deps: ['$emk_info'],
+    EMK_Tween_Clone: function(orig_settings_id) {
+        var settings_id = emk_info.objs.length;
+
+        // Copy the original settings into the new structure.
+        emk_info.objs[settings_id] = {}
+        for( var key in emk_info.objs[orig_settings_id] ) {
+             emk_info.object[settings_id][ key ] = emk_info.objs[orig_settings_id][ key ];
+        }
+
+        emk_info.objs[settings_id+1] = 0; // Preserve for tween object.
+        return settings_id;        
+    },
 
 
     EMK_Rect_Build__deps: ['$emk_info'],
