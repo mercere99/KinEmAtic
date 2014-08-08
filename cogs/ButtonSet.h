@@ -48,9 +48,10 @@ namespace emk {
       }
     }
 
-    void AddToLayer(Layer & layer) {
-      for (int i = 0; i < set_size; i++) layer.Add(*(button_set[i]));
-    }
+    int GetWidth() const { return cols * (button_width + spacing) - spacing; }
+    int GetHeight() const { return rows * (button_height + spacing) - spacing; }
+
+    void AddToLayer(Layer & layer) { for (int i = 0; i < set_size; i++) layer.Add(*(button_set[i]));  }
 
     Button & Get(int pos) { return *(button_set[pos]); }
     Button & Get(int col, int row) { return *(button_set[col + row*cols]); }
@@ -94,6 +95,16 @@ namespace emk {
       return *this;
     }
 
+    Point GetUL(int x_offset=0, int y_offset=0) const { return Point(x+x_offset,               y+y_offset); }
+    Point GetUM(int x_offset=0, int y_offset=0) const { return Point(x+GetWidth()/2+x_offset,  y+y_offset); }
+    Point GetUR(int x_offset=0, int y_offset=0) const { return Point(x+GetWidth()+x_offset,    y+y_offset); }
+    Point GetML(int x_offset=0, int y_offset=0) const { return Point(x+x_offset,               y+GetHeight()/2+y_offset); }
+    Point GetMM(int x_offset=0, int y_offset=0) const { return Point(x+GetWidth()/2+x_offset,  y+GetHeight()/2+y_offset); }
+    Point GetMR(int x_offset=0, int y_offset=0) const { return Point(x+GetWidth()+x_offset,    y+GetHeight()/2+y_offset); }
+    Point GetLL(int x_offset=0, int y_offset=0) const { return Point(x+x_offset,               y+GetHeight()+y_offset); }
+    Point GetLM(int x_offset=0, int y_offset=0) const { return Point(x+GetWidth()/2+x_offset,  y+GetHeight()+y_offset); }
+    Point GetLR(int x_offset=0, int y_offset=0) const { return Point(x+GetWidth()+x_offset,    y+GetHeight()+y_offset); }
+    Point GetCenter(int x_offset=0, int y_offset=0) const { return GetMM(x_offset, y_offset); }
   };
   
 };

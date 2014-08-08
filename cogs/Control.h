@@ -119,7 +119,7 @@ namespace emk {
       return *cur_point;
     }
 
-    Image & BuildImage(const std::string & name, const std::string & filename, const Point & point, int width=0, int height=0) {
+    Image & BuildImage(const std::string & name, const std::string & filename, const Point & point=emk::Point(0,0), int width=0, int height=0) {
       cur_image = new emk::Image(filename, point, width, height);
       if (image_map.find(name) != image_map.end()) delete image_map[name]; // If we a replacing a image, delete the old one.
       image_map[name] = cur_image;

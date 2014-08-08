@@ -23,7 +23,7 @@ private:
   int num_cells;
   int num_colors;
 
-  int logo_x;  int logo_y;  int logo_w;  int logo_h;
+  emk::Point logo_pos;  int logo_w;  int logo_h;
   int grid_x;  int grid_y;  int grid_w;  int grid_h;
 
   std::vector<double> merits;
@@ -45,8 +45,8 @@ private:
 public:
   GridExample(int _cols, int _rows, int _colors)
     : cols(_cols), rows(_rows), num_cells(cols*rows), num_colors(_colors)
-    , logo_x(5), logo_y(10), logo_w(130), logo_h(logo_w*181/205)  
-    , grid_x(logo_x + logo_w + 10), grid_y(10), grid_w(481), grid_h(481)
+    , logo_pos(5, 10), logo_w(130), logo_h(logo_w*181/205)  
+    , grid_x(logo_pos.GetX() + logo_w + 10), grid_y(10), grid_w(481), grid_h(481)
     , merits(num_cells)
     , grid(grid_x, grid_y, grid_w, grid_h, cols, rows, num_colors+1)
     , panel_config(grid_x+grid_w/2, grid_y, grid_w, grid_h)
@@ -57,15 +57,14 @@ public:
     emscripten_request_fullscreen(0, true);
 
     // Setup Avida Logo in corner
-    emk::Rect & logo_rect = control.BuildRect("logo", logo_x, logo_y, logo_w, logo_h, "white", "black", 4);
+    emk::Rect & logo_rect = control.BuildRect("logo", logo_pos, logo_w, logo_h, "white", "black", 4);
     emk::Image & logo_image = control.BuildImage("logo", "../icons/avidalogo.jpg");
-    //emk::Image & logo_image = control.BuildImage("logo", "../Presentation/BeaconLogo.png");
     logo_rect.SetFillPatternImage(logo_image);
     logo_rect.SetFillPatternScale( ((double) logo_w) / 205.0  );
 
 
     // Setup the mode buttons
-    emk::ButtonSet & mode_buttons = control.BuildButtonSet("modes", 1, 4, logo_x, logo_y + logo_h + 10, logo_w, 40, 5);
+    emk::ButtonSet & mode_buttons = control.BuildButtonSet("modes", 1, 4, logo_rect.GetLL(0, 10), logo_w, 40, 5);
 
     mode_buttons[0].SetTrigger(this, &GridExample::ModePopulation);  // Population mode
     mode_buttons[1].SetTrigger(this, &GridExample::ModeOrganism);    // Organism mode
@@ -87,8 +86,8 @@ public:
     const int button_w = 40;
     const int button_spacing = 5;
     const int button_set_w = button_w * num_buttons + button_spacing * (num_buttons-1);
-    const int buttons_x = grid_x + (grid_w - button_set_w)/2;
-    emk::ButtonSet & grid_buttons = control.BuildButtonSet("grid", 3, 1, buttons_x, grid_y + grid_h + 5, button_w, button_w, button_spacing);
+    const emk::Point grid_button_pos( grid_x + (grid_w - button_set_w)/2, grid_y + grid_h + 5);
+    emk::ButtonSet & grid_buttons = control.BuildButtonSet("grid", 3, 1, grid_button_pos, button_w, button_w, button_spacing);
 
     grid_buttons[0].SetTrigger(this, &GridExample::SetupRun);
     grid_buttons[1].SetTrigger(this, &GridExample::PauseRun);
@@ -101,11 +100,10 @@ public:
 
     // Setup the text.
     emk::Font font("Calibri", 30, "black");
-    emk::Text & text_title  = control.BuildText("title", 650, 10, "Avida Viewer test!", font);
-    emk::Text & text_update = control.BuildText("update", 650, 50, "Update: 0", font);
-    emk::Text & text_mouse  = control.BuildText("mouse", 650, 90, "Move mouse over grid to test!", font);
-    emk::Text & text_click  = control.BuildText("click", 650, 130, "Click on grid to test!", font);
-
+    emk::Text & text_title  = control.BuildText("title", emk::Point(650, 10), "Avida Viewer test!", font);
+    emk::Text & text_update = control.BuildText("update", emk::Point(650, 50), "Update: 0", font);
+    emk::Text & text_mouse  = control.BuildText("mouse", emk::Point(650, 90), "Move mouse over grid to test!", font);
+    emk::Text & text_click  = control.BuildText("click", emk::Point(650, 130), "Click on grid to test!", font);
 
     // Create all of the layers
     emk::Layer & layer_static = control.BuildLayer("static");       // Background layer that should never need to be updated.
@@ -118,7 +116,7 @@ public:
 
 
     // Build a range of colors below the main grid.
-    emk::Grid & grid_spect = control.BuildGrid("spect", grid_x, grid_y+grid_h+button_w+15, grid_w, grid_w/60, 60, 1, 60);
+    emk::Grid & grid_spect = control.BuildGrid("spect", emk::Point(grid_x, grid_buttons.GetLL(0,15).GetY()), grid_w, grid_w/60, 60, 1, 60);
     for (int i = 0; i < 61; i++) grid_spect.SetColor(i, i);
     layer_static.Add(grid_spect);
 

@@ -92,41 +92,41 @@ namespace emk {
     int GetRotation() const { return EM_ASM_INT({return emk_info.objs[$0].rotation();}, obj_id); }
     int GetDraggable() const { return EM_ASM_INT({return emk_info.objs[$0].draggable();}, obj_id); }
 
-    void SetX(int _in) { EM_ASM_ARGS({emk_info.objs[$0].x($1);}, obj_id, _in); }
-    void SetY(int _in) { EM_ASM_ARGS({emk_info.objs[$0].y($1);}, obj_id, _in); }
-    void SetWidth(int _in) { EM_ASM_ARGS({emk_info.objs[$0].width($1);}, obj_id, _in); }
-    void SetHeight(int _in) { EM_ASM_ARGS({emk_info.objs[$0].height($1);}, obj_id, _in); }
-    void SetVisible(int _in) { EM_ASM_ARGS({emk_info.objs[$0].visible($1);}, obj_id, _in); }
-    void SetOpacity(double _in) { EM_ASM_ARGS({emk_info.objs[$0].opacity($1);}, obj_id, _in); }
-    void SetListening(int _in) { EM_ASM_ARGS({emk_info.objs[$0].listening($1);}, obj_id, _in); }
-    void SetScaleX(double _in) { EM_ASM_ARGS({emk_info.objs[$0].scaleX($1);}, obj_id, _in); }
-    void SetScaleY(double _in) { EM_ASM_ARGS({emk_info.objs[$0].scaleY($1);}, obj_id, _in); }    
-    void SetOffsetX(int _in) { EM_ASM_ARGS({emk_info.objs[$0].offsetX($1);}, obj_id, _in); }
-    void SetOffsetY(int _in) { EM_ASM_ARGS({emk_info.objs[$0].offsetY($1);}, obj_id, _in); }
-    void SetRotation(int _in) { EM_ASM_ARGS({emk_info.objs[$0].rotation($1);}, obj_id, _in); }
-    void SetDraggable(int _in) { EM_ASM_ARGS({emk_info.objs[$0].draggable($1);}, obj_id, _in); }
+    Object & SetX(int _in) { EM_ASM_ARGS({emk_info.objs[$0].x($1);}, obj_id, _in); return *this; }
+    Object & SetY(int _in) { EM_ASM_ARGS({emk_info.objs[$0].y($1);}, obj_id, _in); return *this; }
+    Object & SetWidth(int _in) { EM_ASM_ARGS({emk_info.objs[$0].width($1);}, obj_id, _in); return *this; }
+    Object & SetHeight(int _in) { EM_ASM_ARGS({emk_info.objs[$0].height($1);}, obj_id, _in); return *this; }
+    Object & SetVisible(int _in) { EM_ASM_ARGS({emk_info.objs[$0].visible($1);}, obj_id, _in); return *this; }
+    Object & SetOpacity(double _in) { EM_ASM_ARGS({emk_info.objs[$0].opacity($1);}, obj_id, _in); return *this; }
+    Object & SetListening(int _in) { EM_ASM_ARGS({emk_info.objs[$0].listening($1);}, obj_id, _in); return *this; }
+    Object & SetScaleX(double _in) { EM_ASM_ARGS({emk_info.objs[$0].scaleX($1);}, obj_id, _in); return *this; }
+    Object & SetScaleY(double _in) { EM_ASM_ARGS({emk_info.objs[$0].scaleY($1);}, obj_id, _in); return *this; }    
+    Object & SetOffsetX(int _in) { EM_ASM_ARGS({emk_info.objs[$0].offsetX($1);}, obj_id, _in); return *this; }
+    Object & SetOffsetY(int _in) { EM_ASM_ARGS({emk_info.objs[$0].offsetY($1);}, obj_id, _in); return *this; }
+    Object & SetRotation(int _in) { EM_ASM_ARGS({emk_info.objs[$0].rotation($1);}, obj_id, _in); return *this; }
+    Object & SetDraggable(int _in) { EM_ASM_ARGS({emk_info.objs[$0].draggable($1);}, obj_id, _in); return *this; }
 
-    inline void SetXY(int x, int y) { SetX(x); SetY(y); }
-    inline void SetXY(const Point & point) { SetX(point.GetX()); SetY(point.GetY()); }
-    inline void SetSize(int w, int h) { SetWidth(w); SetHeight(h); }
-    inline void SetLayout(int x, int y, int w, int h) { SetX(x); SetY(y); SetWidth(w); SetHeight(h); }
-    inline void SetLayout(const Point & point, int w, int h) { SetX(point.GetX()); SetY(point.GetY()); SetWidth(w); SetHeight(h); }
-    inline void SetScale(double _x, double _y) { SetScaleX(_x); SetScaleY(_y); }
-    inline void SetScale(double _in) { SetScaleX(_in); SetScaleY(_in); }
-    inline void SetOffset(int _x, int _y) { SetOffsetX(_x); SetOffsetY(_y); }
-    inline void SetOffset(const Point & point) { SetOffsetX(point.GetX()); SetOffsetY(point.GetY()); }
+    inline Object & SetXY(int x, int y) { SetX(x); SetY(y); return *this; }
+    inline Object & SetXY(const Point & point) { SetX(point.GetX()); SetY(point.GetY()); return *this; }
+    inline Object & SetSize(int w, int h) { SetWidth(w); SetHeight(h); return *this; }
+    inline Object & SetLayout(int x, int y, int w, int h) { SetX(x); SetY(y); SetWidth(w); SetHeight(h); return *this; }
+    inline Object & SetLayout(const Point & point, int w, int h) { SetXY(point); SetWidth(w); SetHeight(h); return *this; }
+    inline Object & SetScale(double _x, double _y) { SetScaleX(_x); SetScaleY(_y); return *this; }
+    inline Object & SetScale(double _in) { SetScaleX(_in); SetScaleY(_in); return *this; }
+    inline Object & SetOffset(int _x, int _y) { SetOffsetX(_x); SetOffsetY(_y); return *this; }
+    inline Object & SetOffset(const Point & point) { SetOffsetX(point.GetX()); SetOffsetY(point.GetY()); return *this; }
 
-    inline void SetUL(const Point & point) { SetXY(point); }
-    inline void SetUM(const Point & point) { SetXY(point.GetX()-GetWidth()/2, point.GetY()); }
-    inline void SetUR(const Point & point) { SetXY(point.GetX()-GetWidth(),   point.GetY()); }
-    inline void SetML(const Point & point) { SetXY(point.GetX(),              point.GetY()-GetHeight()/2); }
-    inline void SetMM(const Point & point) { SetXY(point.GetX()-GetWidth()/2, point.GetY()-GetHeight()/2); }
-    inline void SetMR(const Point & point) { SetXY(point.GetX()-GetWidth(),   point.GetY()-GetHeight()/2); }
-    inline void SetLL(const Point & point) { SetXY(point.GetX(),              point.GetY()-GetHeight()); }
-    inline void SetLM(const Point & point) { SetXY(point.GetX()-GetWidth()/2, point.GetY()-GetHeight()); }
-    inline void SetLR(const Point & point) { SetXY(point.GetX()-GetWidth(),   point.GetY()-GetHeight()); }
+    inline Object & SetUL(const Point & point) { return SetXY(point); }
+    inline Object & SetUM(const Point & point) { return SetXY(point.GetX()-GetWidth()/2, point.GetY()); }
+    inline Object & SetUR(const Point & point) { return SetXY(point.GetX()-GetWidth(),   point.GetY()); }
+    inline Object & SetML(const Point & point) { return SetXY(point.GetX(),              point.GetY()-GetHeight()/2); }
+    inline Object & SetMM(const Point & point) { return SetXY(point.GetX()-GetWidth()/2, point.GetY()-GetHeight()/2); }
+    inline Object & SetMR(const Point & point) { return SetXY(point.GetX()-GetWidth(),   point.GetY()-GetHeight()/2); }
+    inline Object & SetLL(const Point & point) { return SetXY(point.GetX(),              point.GetY()-GetHeight()); }
+    inline Object & SetLM(const Point & point) { return SetXY(point.GetX()-GetWidth()/2, point.GetY()-GetHeight()); }
+    inline Object & SetLR(const Point & point) { return SetXY(point.GetX()-GetWidth(),   point.GetY()-GetHeight()); }
 
-    inline void SetCenter(const Point & point) { SetXY(point.GetX()-GetWidth()/2, point.GetY()-GetHeight()/2); }
+    inline Object & SetCenter(const Point & point) { return SetXY(point.GetX()-GetWidth()/2, point.GetY()-GetHeight()/2); }
 
     Layer * GetLayer() { return (Layer *) layer; }
     void SetLayer(Layer * _layer) { layer = (Object *) _layer; }
@@ -148,7 +148,10 @@ namespace emk {
 
   // This is a baseclass for other classes that contain a whole set of objects
   // @CAO Should this be an object itself?
-  class ObjectSet {
+  class ObjectSet { // : public Object {
+  protected:
+    ObjectSet() { ; }     // Prevent ObjectSets from being directly created or destroyed.
+    ~ObjectSet() { ; }
   public:
     virtual void AddToLayer(Layer & layer) = 0;  // Add all objects in set to this layer.
   };
