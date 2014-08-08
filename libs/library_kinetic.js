@@ -24,28 +24,6 @@ mergeInto(LibraryManager.library, {
 
 
 
-    EMK_Stage_Build__deps: ['$emk_info'],
-    EMK_Stage_Build: function(_w, _h, _name) {
-        _name = Pointer_stringify(_name);
-        var obj_id = emk_info.objs.length;
-        emk_info.objs[obj_id] = new Kinetic.Stage({
-                container: _name,
-                width: _w,
-                height: _h
-            });
-
-        return obj_id;
-    },
-
-    EMK_Stage_ResizeMax__deps: ['$emk_info'],
-    EMK_Stage_ResizeMax: function(stage_obj_id, min_x, min_y) {
-        var new_width = Math.max(window.innerWidth - 10, min_x);
-        var new_height = Math.max(window.innerHeight - 10, min_y);
-        emk_info.objs[stage_obj_id].setWidth( new_width );
-        emk_info.objs[stage_obj_id].setHeight( new_height );
-    },
-
-
     EMK_Rect_Build__deps: ['$emk_info'],
     EMK_Rect_Build: function(_x, _y, _w, _h, _fill, _stroke, _stroke_width, _draggable) {
         var obj_id = emk_info.objs.length;               // Determine the next free id for a Kinetic object.

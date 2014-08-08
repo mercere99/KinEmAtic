@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "../tools/assert.h"
+#include "../tools/functions.h"
 #include "../tools/Callbacks.h"
 #include "../tools/Colors.h"
 #include "../tools/Font.h"
@@ -15,9 +16,6 @@
 
 extern "C" {
   extern int EMK_Tween_Build(int target_id, double seconds);
-
-  extern int EMK_Stage_Build(int _w, int _h, const char * _name);
-  extern int EMK_Stage_ResizeMax(int stage_obj_id, int min_x, int min_y);
 
   extern int EMK_Rect_Build(int _x, int _y, int _w, int _h, const char * _fill, const char * _stroke, int _stroke_width, int _draggable);
   extern int EMK_RegularPolygon_Build(int _x, int _y, int _sides, int _radius,
@@ -677,7 +675,17 @@ namespace emk {
     Stage(int _w, int _h, std::string name="container") 
       : m_container(name)
     {
-      obj_id = EMK_Stage_Build(_w, _h, m_container.c_str());
+      obj_id = EM_ASM_INT({
+        name = Pointer_stringify($2);
+        var obj_id = emk_info.objs.length;
+        emk_info.objs[obj_id] = new Kinetic.Stage({
+                container: name,
+                width: $0,
+                height: $1
+            });
+
+        return obj_id;
+      }, _w, _h, m_container.c_str());
     }
     ~Stage() { ; }
 
@@ -685,7 +693,9 @@ namespace emk {
 
     // Sizing
     void ResizeMax(int min_width=0, int min_height=0) {
-      EMK_Stage_ResizeMax(obj_id, min_width, min_height);
+      int new_width = std::max( emk::GetWindowInnerWidth() - 10, min_width );
+      int new_height = std::max( emk::GetWindowInnerHeight() - 10, min_height );
+      SetSize(new_width, new_height);
     }
     int ScaleX(double x_frac) const { return x_frac * GetWidth(); }
     int ScaleY(double y_frac) const { return y_frac * GetHeight(); }

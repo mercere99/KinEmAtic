@@ -10,6 +10,9 @@ namespace emk {
     EM_ASM_ARGS({ window.setTimeout(function() { emkJSDoCallback($0); }, $1); }, (int) new_callback, delay);
   }
 
+  int GetWindowInnerWidth() { return EM_ASM_INT_V({ return window.innerWidth; }); }
+  int GetWindowInnerHeight() { return EM_ASM_INT_V({ return window.innerHeight; }); }
+
   // These may already be in HTML5 for Emscripten
   void SetCursor(const char * type) {
     EM_ASM_ARGS({
