@@ -50,7 +50,8 @@ extern "C" int emkMain()
   show << show(0.66, 0.52) << emk::Font(stage_w/35) << "Evolution";
 
   show.Pause();
-  show.SetAction( show.BuildTween("image_move", show.Text(), 3).SetXY( show(0.8, 0.88) ).SetScaleXY(5.0, 5.0).SetRotation(900).SetEasing(emk::Tween::Linear) );
+  emk::Tween & temp_tween = show.BuildTween("image_move", show.Text(), 3).SetXY( show(0.8, 0.88) ).SetScaleXY(5.0, 5.0).SetRotation(900).SetEasing(emk::Tween::Linear);
+  show.SetAction( temp_tween );
 
 
   show.Pause();

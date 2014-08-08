@@ -27,9 +27,9 @@ mergeInto(LibraryManager.library, {
         var settings_id = emk_info.objs.length;
 
         // Copy the original settings into the new structure.
-        emk_info.objs[settings_id] = {}
-        for( var key in emk_info.objs[orig_settings_id] ) {
-             emk_info.object[settings_id][ key ] = emk_info.objs[orig_settings_id][ key ];
+        emk_info.objs[settings_id] = {};
+        for (var key in emk_info.objs[orig_settings_id]) {
+            (emk_info.objs[settings_id])[ key ] = (emk_info.objs[orig_settings_id])[ key ];
         }
 
         emk_info.objs[settings_id+1] = 0; // Preserve for tween object.
