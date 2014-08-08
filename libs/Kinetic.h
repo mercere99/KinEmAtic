@@ -24,8 +24,6 @@ extern "C" {
   extern int EMK_Animation_Build(int callback_ptr, int layer_id);
   extern int EMK_Animation_Build_NoFrame(int callback_ptr, int layer_id);
 
-  extern void EMK_Shape_SetDrawFunction(int obj_id, int new_callback);
-
   extern int EMK_Custom_Shape_Build(int x, int y, int w, int h, int draw_callback);
 }
 
@@ -590,7 +588,15 @@ namespace emk {
     template<class T> Shape & SetDrawFunction(T * target, void (T::*draw_ptr)(Canvas &) ) {
       if (draw_callback != NULL) delete draw_callback;
       draw_callback = new Callback_Canvas<T>(target, draw_ptr);
-      EMK_Shape_SetDrawFunction(obj_id, (int) draw_callback);
+
+      EM_ASM_ARGS({
+        emk_info.objs[$0].setDrawFunc( function(_ctx) {
+            emk_info.ctx = _ctx._context;
+            emkJSDoCallback($1, 0);
+            emk_info.ctx = null;
+        } );
+      }, obj_id, (int) draw_callback);
+
       return *this;
     }
 

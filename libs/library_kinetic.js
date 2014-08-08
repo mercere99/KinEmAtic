@@ -110,13 +110,4 @@ mergeInto(LibraryManager.library, {
     },
   
 
-    EMK_Shape_SetDrawFunction__deps: ['$emk_info'],
-    EMK_Shape_SetDrawFunction: function(obj_id, callback_ptr) {
-        emk_info.objs[obj_id].setDrawFunc( function(_ctx) {
-            emk_info.ctx = _ctx._context;
-            emkJSDoCallback(callback_ptr, 0);
-            emk_info.ctx = null;
-        } );
-    }
-
 });
