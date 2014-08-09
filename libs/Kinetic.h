@@ -9,6 +9,7 @@
 
 #include "../tools/assert.h"
 #include "../tools/functions.h"
+#include "../tools/internal.h"
 #include "../tools/Callbacks.h"
 #include "../tools/Colors.h"
 #include "../tools/Font.h"
@@ -250,7 +251,7 @@ namespace emk {
   };
 
 
-  class Image : public Callback, public Object { // @CAO Move callback to internal object??
+  class Image : public Callback, public Object { // @CAO Move callback to internal object?
   private:
     const std::string filename;
     int img_id;

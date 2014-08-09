@@ -7,7 +7,7 @@
 */            
 
 mergeInto(LibraryManager.library, {
-    $emk_info: { objs:[], images:[], image_load_count:0 },
+    $emk_info: { objs:[], images:[], image_load_count:0, image_error_count:0 },
 
     // Below are a functions that weren't as easy to inline in the C++
 
