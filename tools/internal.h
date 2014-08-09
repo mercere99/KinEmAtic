@@ -20,6 +20,7 @@ namespace emk {
     mutable bool has_loaded;
     mutable bool has_error;
     mutable std::list<Callback *> callbacks_on_load;
+    mutable std::list<Callback *> callbacks_on_error;
 
     MethodCallback<RawImage> loaded_callback;
     MethodCallback<RawImage> error_callback;
@@ -56,17 +57,30 @@ namespace emk {
 
     void MarkLoaded() {
       has_loaded = true;
-      // @CAO Implement!
+
+      while (callbacks_on_load.size()) {
+        Callback * cur_callback = callbacks_on_load.front();
+        callbacks_on_load.pop_front();
+        cur_callback->DoCallback();
+      }
     }
 
     void MarkError() {
       has_error = true;
       emk::Alert(std::string("Error loading image: ") + filename);
-      // @CAO Implement!
+
+      while (callbacks_on_error.size()) {
+        Callback * cur_callback = callbacks_on_error.front();
+        callbacks_on_error.pop_front();
+        cur_callback->DoCallback();
+      }
     }
 
-    void AddCallback(Callback * load_callback) {
+    void AddLoadCallback(Callback * load_callback) {
       callbacks_on_load.push_back(load_callback);
+    }
+    void AddErrorCallback(Callback * load_callback) {
+      callbacks_on_error.push_back(load_callback);
     }
   };
 
@@ -85,7 +99,7 @@ namespace emk {
 
     if (load_callback) {
       if (raw_image->HasLoaded()) load_callback->DoCallback();
-      else raw_image->AddCallback(load_callback);
+      else raw_image->AddLoadCallback(load_callback);
     }
 
     return *raw_image;
