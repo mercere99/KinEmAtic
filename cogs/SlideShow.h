@@ -204,7 +204,8 @@ namespace emk {
     void Start() { run_anim.Start(); }
     void Stop() { run_anim.Stop(); }
 
-    // Setup pre-programmed actions!
+    // Setup pre-programmed actions!  All of the objects used in Appear must be created and managed from elsewhere.
+    // See operator<< methods below if you want a copy to be created and managed inside this class.
     void Appear(Shape & shape) { action_list.push_back( new SlideAction_Appear(&shape) ); }
     void Appear(Shape & shape, emk::Image & image) { action_list.push_back( new SlideAction_Appear(&shape, &image) ); }
     void Appear(emk::Image & image) { action_list.push_back( new SlideAction_Appear_Image(&image) ); }
@@ -246,15 +247,21 @@ namespace emk {
     SlideShow & operator<<(const std::string & msg) {
       // Build a text message on the screen using the default information.
       emk::Text & temp_text = BuildText(GetTempName(), default_point, msg, default_font);
-      Appear( temp_text );
-      default_point.TransX(temp_text.GetWidth());
+      Appear( temp_text );                          // Schedule the text to appear on the screen.
+      default_point.TransX(temp_text.GetWidth());   // Start the next text after this.
       return *this;
     }
 
     SlideShow & operator<<(const char * msg) { return this->operator<<(std::string(msg)); }
 
-    SlideShow & operator<<(emk::Shape & shape) { Appear(shape); return *this; }
-    SlideShow & operator<<(emk::Image & image) { Appear(image); return *this; }
+    SlideShow & operator<<(const emk::Tween & tween) {
+      emk::Tween * tween_copy = new emk::Tween(tween);  // Build a copy of the input tween.
+      ManageTemp(tween_copy);                           // Keep track of the copy (to eventually delete)
+      SetAction(*tween_copy);                           // Schedule the tween to activate.
+      return *this;
+    }
+    /* CAO CLEANUP! */ SlideShow & operator<<(emk::Shape & shape) { Appear(shape); return *this; }
+    /* CAO CLEANUP! */ SlideShow & operator<<(emk::Image & image) { Appear(image); return *this; }
 
     SlideShow & operator<<(const emk::Font & font) {
       // Change the default font.

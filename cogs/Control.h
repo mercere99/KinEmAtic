@@ -2,6 +2,7 @@
 #define EMK_CONTROL_H
 
 #include <map>
+#include <unordered_set>
 
 #include "../tools/Font.h"
 #include "../tools/Point.h"
@@ -41,6 +42,23 @@ namespace emk {
     std::map<std::string, Tween *> tween_map;
 
     std::map<std::string, Shape *> shape_map; // Fill map of all objects, by name.
+
+    // Setup storage for temporary objects that don't have a name.
+    class TempObj_Base {
+    public:
+      TempObj_Base() { ; }
+      virtual ~TempObj_Base() { ; }
+    };
+
+    template <class T> class TempObj : public TempObj_Base {
+    private:
+      T * obj_ptr;
+    public:
+      TempObj(T * _obj) : obj_ptr(_obj) { ; }
+      ~TempObj() { delete obj_ptr; }
+    };
+    std::unordered_set<TempObj_Base*> temp_objs;
+    template <class T> void ManageTemp(T * obj) { temp_objs.insert(new TempObj<T>(obj)); }
     
     // Current object being worked with.
     Stage * cur_stage;
@@ -76,7 +94,24 @@ namespace emk {
       Stage().ResizeMax();
     }
     ~Control() {
-      // @CAO We need to delete all objects created as part of the controller.
+      // Delete all objects created as part of this contoller.
+      for (auto it = stage_map.begin(); it != stage_map.end(); it++) delete (*it).second;
+      for (auto it = layer_map.begin(); it != layer_map.end(); it++) delete (*it).second;
+      for (auto it = color_map.begin(); it != color_map.end(); it++) delete (*it).second;
+      for (auto it = font_map.begin(); it != font_map.end(); it++) delete (*it).second;
+      for (auto it = point_map.begin(); it != point_map.end(); it++) delete (*it).second;
+      for (auto it = image_map.begin(); it != image_map.end(); it++) delete (*it).second;
+      for (auto it = rect_map.begin(); it != rect_map.end(); it++) delete (*it).second;
+      for (auto it = text_map.begin(); it != text_map.end(); it++) delete (*it).second;
+      for (auto it = button_map.begin(); it != button_map.end(); it++) delete (*it).second;
+      for (auto it = buttonset_map.begin(); it != buttonset_map.end(); it++) delete (*it).second;
+      for (auto it = grid_map.begin(); it != grid_map.end(); it++) delete (*it).second;
+      for (auto it = panel_map.begin(); it != panel_map.end(); it++) delete (*it).second;
+      for (auto it = animation_map.begin(); it != animation_map.end(); it++) delete (*it).second;
+      for (auto it = eventchain_map.begin(); it != eventchain_map.end(); it++) delete (*it).second;
+      for (auto it = tween_map.begin(); it != tween_map.end(); it++) delete (*it).second;
+      
+      for (auto it = temp_objs.begin(); it != temp_objs.end(); it++) delete (*it);
     }
 
     Control & SetAspect(double aspect_ratio) { Stage().SetAspect(aspect_ratio); return *this; }

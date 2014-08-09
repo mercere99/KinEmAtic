@@ -57,7 +57,7 @@ namespace emk {
   public:
     ~Object() {
       EM_ASM_ARGS({
-          if ($0 >= 0) emk_info.objs[$0].destroy();
+          if ($0 >= 0 && emk_info.objs[$0] != 0) emk_info.objs[$0].destroy();
         }, obj_id);
     }
     int GetID() const { return obj_id; }
@@ -177,7 +177,11 @@ namespace emk {
       settings_id = EMK_Tween_Clone(_in.settings_id);
       obj_id = settings_id + 1;
     }
-    ~Tween() { ; }
+    ~Tween() {
+      EM_ASM_ARGS({
+          if ($0 >= 0) delete emk_info.objs[$0];  // Remove the tween settings from memory.
+      }, settings_id);
+    }
 
     enum easing { 
       Linear,
