@@ -37,13 +37,6 @@ namespace emk {
   class Stage;
 
 
-  inline void Alert(const std::string & msg) { EM_ASM_ARGS({ msg = Pointer_stringify($0); alert(msg); }, msg.c_str()); }
-  void Alert(int val) { Alert(std::to_string(val)); }
-  void Alert(double val) { Alert(std::to_string(val)); }
-
-#define AlertVar(VAR) emk::Alert(std::string(#VAR) + std::string("=") + std::to_string(VAR))
-
-
   // All emscripten-wrapped Kinetic objects should be derived from this base class.
   class Object {
   protected:

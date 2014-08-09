@@ -9,12 +9,13 @@
 #include <string>
 
 #include "Callbacks.h"
+#include "functions.h"
 
 namespace emk {
 
   class RawImage {
   private:
-    const std::string filename;
+    std::string filename;
     int img_id;
     mutable bool has_loaded;
     mutable bool has_error;
@@ -54,9 +55,14 @@ namespace emk {
     bool HasError() const { return has_error; }
 
     void MarkLoaded() {
+      has_loaded = true;
+      // @CAO Implement!
     }
 
     void MarkError() {
+      has_error = true;
+      emk::Alert(std::string("Error loading image: ") + filename);
+      // @CAO Implement!
     }
 
     void AddCallback(Callback * load_callback) {

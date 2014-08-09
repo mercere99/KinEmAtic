@@ -4,6 +4,13 @@
 #include "Callbacks.h"
 
 namespace emk {
+
+  inline void Alert(const std::string & msg) { EM_ASM_ARGS({ msg = Pointer_stringify($0); alert(msg); }, msg.c_str()); }
+  void Alert(int val) { Alert(std::to_string(val)); }
+  void Alert(double val) { Alert(std::to_string(val)); }
+
+#define AlertVar(VAR) emk::Alert(std::string(#VAR) + std::string("=") + std::to_string(VAR))
+
   template<class T> void ScheduleMethod(T * target, void (T::*method_ptr)(), int delay) {
     MethodCallback<T> * new_callback = new MethodCallback<T>(target, method_ptr);
     new_callback->SetDisposible(); // Get rid of this object after one use.
