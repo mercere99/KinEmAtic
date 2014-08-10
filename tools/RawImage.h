@@ -1,8 +1,5 @@
-#ifndef EMK_INTERNAL_H
-#define EMK_INTERNAL_H
-
-// This file is for internal classes and structrues that facilitate EMK operation, but should
-// not be accessed directly.
+#ifndef EMK_RAW_IMAGE_H
+#define EMK_RAW_IMAGE_H
 
 #include <list>
 #include <map>
@@ -52,6 +49,8 @@ namespace emk {
     }
     ~RawImage() { ; }
 
+    const std::string & GetFilename() const { return filename; }
+    int GetImgID() const { return img_id; }
     bool HasLoaded() const { return has_loaded; }
     bool HasError() const { return has_error; }
 
@@ -79,8 +78,18 @@ namespace emk {
     void AddLoadCallback(Callback * load_callback) {
       callbacks_on_load.push_back(load_callback);
     }
-    void AddErrorCallback(Callback * load_callback) {
-      callbacks_on_error.push_back(load_callback);
+    void AddErrorCallback(Callback * error_callback) {
+      callbacks_on_error.push_back(error_callback);
+    }
+    template <class T> void AddLoadCallback(T * cb_target, void (T::*method_ptr)()) {
+      MethodCallback<T> * cb = new MethodCallback<T>(cb_target, method_ptr);
+      cb->SetDisposible(true); // Make sure callback gets deleted when triggered.
+      callbacks_on_load.push_back(cb);
+    }
+    template <class T> void AddErrorCallback(T * cb_target, void (T::*method_ptr)()) {
+      MethodCallback<T> * cb = new MethodCallback<T>(cb_target, method_ptr);
+      cb->SetDisposible(true); // Make sure callback gets deleted when triggered.
+      callbacks_on_error.push_back(cb);
     }
   };
 

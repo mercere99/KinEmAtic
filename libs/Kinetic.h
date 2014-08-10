@@ -9,7 +9,7 @@
 
 #include "../tools/assert.h"
 #include "../tools/functions.h"
-#include "../tools/internal.h"
+#include "../tools/RawImage.h"
 #include "../tools/Callbacks.h"
 #include "../tools/Colors.h"
 #include "../tools/Font.h"
@@ -244,11 +244,9 @@ namespace emk {
   };
 
 
-  class Image : public Callback, public Object { // @CAO Move callback to internal object?
+  class Image : public Object { // @CAO Move callback to internal object?
   private:
-    const std::string filename;
-    int img_id;
-    mutable bool has_loaded;
+    RawImage raw_image;
     mutable std::list<Layer *> layers_waiting;
 
     // Kinetic details to store until image is loaded.
@@ -258,22 +256,12 @@ namespace emk {
     int height;
   public:
     Image(const std::string & _filename, int _x=0, int _y=0, int _w=-1, int _h=-1)
-      : filename(_filename), has_loaded(false)
+      : raw_image(_filename)
       , x(_x), y(_y), width(_w), height(_h)
     {
-      img_id = EM_ASM_INT({
-        file = Pointer_stringify($0);
-        var img_id = emk_info.images.length;
-        emk_info.images[img_id] = new Image();
-        emk_info.images[img_id].src = file;
-
-        emk_info.images[img_id].onload = function() {
-            emk_info.image_load_count += 1;
-            emkJSDoCallback($1, 0);
-        };
-        return img_id;
-      }, filename.c_str(), (int) this);
+      raw_image.AddLoadCallback(this, &Image::ImageLoaded);
     }
+
     Image(const std::string & _filename, const Point & point, int _w=-1, int _h=-1) 
       : Image(_filename, point.GetX(), point.GetY(), _w, _h) { ; }
 
@@ -287,14 +275,17 @@ namespace emk {
     Point GetUR(int x_offset=0, int y_offset=0) const { return Point(GetX()+GetWidth()+x_offset, GetY()+y_offset); }
     Point GetLR(int x_offset=0, int y_offset=0) const { return Point(GetX()+GetWidth()+x_offset, GetY()+GetHeight()+y_offset); }
     Point GetLL(int x_offset=0, int y_offset=0) const { return Point(GetX()+x_offset, GetY()+GetHeight()+y_offset); }
+    const RawImage & GetRawImage() const { return raw_image; }
 
-    int GetImgID() const { return img_id; }
-    bool HasLoaded() const { return has_loaded; }
+    // int GetImgID() const { return img_id; }
+    bool HasLoaded() const { return raw_image.HasLoaded(); }
+    bool HasError() const { return raw_image.HasError(); }
 
     void DrawOnLoad(Layer * _layer) const { layers_waiting.push_back(_layer); }
 
-    void DoCallback(int * arg_ptr); // Called back when image is loaded
+    void ImageLoaded(); // Called back when image is loaded
 
+    // @CAO Move these to RawImage?
     static int NumImages() { return EM_ASM_INT_V({return emk_info.images.length;}); }
     static int NumLoaded() { return EM_ASM_INT_V({return emk_info.image_load_count;}); }
     static bool AllLoaded() { return EM_ASM_INT_V({return (emk_info.images.length == emk_info.image_load_count);}); }
@@ -366,14 +357,14 @@ namespace emk {
 
     inline static void DrawImage(const Image & image, int x, int y) {
       // @CAO Do something different if the image hasn't loaded yet?  Maybe draw a placeholder rectangle?
-      EM_ASM_ARGS({emk_info.ctx.drawImage(emk_info.images[$0], $1, $2);}, image.GetImgID(), x, y);
+      EM_ASM_ARGS({emk_info.ctx.drawImage(emk_info.images[$0], $1, $2);}, image.GetRawImage().GetImgID(), x, y);
     }
     inline static void DrawImage(const Image & image, const Point & point) {
       DrawImage(image, point.GetX(), point.GetY());
     }
 
     inline static void DrawImage(const Image & image, int x, int y, int w, int h) {
-      EM_ASM_ARGS({emk_info.ctx.drawImage(emk_info.images[$0], $1, $2, $3, $4);}, image.GetImgID(), x, y, w, h);
+      EM_ASM_ARGS({emk_info.ctx.drawImage(emk_info.images[$0], $1, $2, $3, $4);}, image.GetRawImage().GetImgID(), x, y, w, h);
     }
     inline static void DrawImage(const Image & image, const Point & point, int w, int h) {
       DrawImage(image, point.GetX(), point.GetY(), w, h);
@@ -482,7 +473,7 @@ namespace emk {
       EM_ASM_ARGS({
         emk_info.objs[$0].setFillPriority('pattern');
         emk_info.objs[$0].setFillPatternImage(emk_info.images[$1]);
-      }, obj_id, image->GetImgID());
+      }, obj_id, image->GetRawImage().GetImgID());
       return *this;
     }
 
@@ -866,14 +857,11 @@ namespace emk {
   //////////////////////////////////////////////////////////
   // Methods previously declared
 
-  void Image::DoCallback(int * arg_ptr) { // Called back when image is loaded
-    (void) arg_ptr;
-    has_loaded = true;
+  void Image::ImageLoaded() { // Called back when image is loaded
+    if (width == -1) width = EM_ASM_INT({return emk_info.images[$0].width;}, raw_image.GetImgID());
+    if (height == -1) height = EM_ASM_INT({return emk_info.images[$0].heigth;}, raw_image.GetImgID());
 
-    if (width == -1) width = EM_ASM_INT({return emk_info.images[$0].width;}, img_id);
-    if (height == -1) height = EM_ASM_INT({return emk_info.images[$0].heigth;}, img_id);
-
-    // Build the kinetic image object not that the image has loaded.
+    // Build the kinetic image object now that the raw image has loaded.
     obj_id = EM_ASM_INT({
         var obj_id = emk_info.objs.length;       // Determine the next free id for a Kinetic object.
         emk_info.objs[obj_id] = new Kinetic.Image({
@@ -884,12 +872,13 @@ namespace emk {
           height: $4
         });
         return obj_id;                           // Pass back the object ID for long-term storage.
-      }, img_id, x, y, width, height);
+      }, raw_image.GetImgID(), x, y, width, height);
     
+    // Loop through any layers this image is in to make sure to redraw them.
     while (layers_waiting.size()) {
       Layer * cur_layer = layers_waiting.front();
       layers_waiting.pop_front();
-      cur_layer->BatchDraw();
+      cur_layer->Draw();
     }
   }
 
