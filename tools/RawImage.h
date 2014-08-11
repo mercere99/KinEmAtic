@@ -28,7 +28,7 @@ namespace emk {
       , error_callback(this, &RawImage::MarkError)
     {
       img_id = EM_ASM_INT({
-        file = Pointer_stringify($0);
+        var file = Pointer_stringify($0);
         var img_id = emk_info.images.length;
         emk_info.images[img_id] = new Image();
         emk_info.images[img_id].src = file;
@@ -41,7 +41,7 @@ namespace emk {
         emk_info.images[img_id].onerror = function() {
             emk_info.image_error_count += 1;
             emkJSDoCallback($2, 0);
-        }
+        };
 
         return img_id;
       }, filename.c_str(), (int) &loaded_callback, (int) &error_callback);
@@ -95,7 +95,7 @@ namespace emk {
 
   static std::map<std::string, RawImage *> raw_image_map;
   
-  RawImage & LoadRawImage(const std::string & filename, Callback * load_callback=NULL) {
+  RawImage & LoadRawImage(const std::string & filename, Callback * load_callback=NULL, Callback * error_callback=NULL) {
     auto it = raw_image_map.find(filename);
     RawImage * raw_image;
     if (it == raw_image_map.end()) {        // New filename
@@ -111,9 +111,14 @@ namespace emk {
       else raw_image->AddLoadCallback(load_callback);
     }
 
+    if (error_callback) {
+      if (raw_image->HasError()) error_callback->DoCallback();
+      else raw_image->AddErrorCallback(error_callback);
+    }
+
     return *raw_image;
   }
-
+  
 };
 
 #endif

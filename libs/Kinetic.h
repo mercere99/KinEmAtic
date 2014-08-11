@@ -244,7 +244,7 @@ namespace emk {
   };
 
 
-  class Image : public Object { // @CAO Move callback to internal object?
+  class Image : public Object {
   private:
     RawImage raw_image;
     mutable std::list<Layer *> layers_waiting;
@@ -859,7 +859,7 @@ namespace emk {
 
   void Image::ImageLoaded() { // Called back when image is loaded
     if (width == -1) width = EM_ASM_INT({return emk_info.images[$0].width;}, raw_image.GetImgID());
-    if (height == -1) height = EM_ASM_INT({return emk_info.images[$0].heigth;}, raw_image.GetImgID());
+    if (height == -1) height = EM_ASM_INT({return emk_info.images[$0].height;}, raw_image.GetImgID());
 
     // Build the kinetic image object now that the raw image has loaded.
     obj_id = EM_ASM_INT({
@@ -872,7 +872,7 @@ namespace emk {
           height: $4
         });
         return obj_id;                           // Pass back the object ID for long-term storage.
-      }, raw_image.GetImgID(), x, y, width, height);
+    }, raw_image.GetImgID(), x, y, width, height);
     
     // Loop through any layers this image is in to make sure to redraw them.
     while (layers_waiting.size()) {
