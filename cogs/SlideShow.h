@@ -256,7 +256,15 @@ namespace emk {
 
     SlideShow & operator<<(const emk::Tween & tween) {
       emk::Tween * tween_copy = new emk::Tween(tween);  // Build a copy of the input tween.
-      ManageTemp(tween_copy);                           // Keep track of the copy (to eventually delete)
+      if (tween.GetName() != "") {                      // If the tween has a name, save it to that name.
+        const std::string & name = tween.GetName();
+        if (tween_map.find(name) != tween_map.end()) {
+          delete tween_map[name];                       // If we a replacing a tween, delete the old one.
+        }
+        tween_map[name] = cur_tween;
+      } else {                                          // Otherwise treat it as temporary.
+        ManageTemp(tween_copy);                           // Keep track of the copy (to eventually delete)
+      }
       SetAction(*tween_copy);                           // Schedule the tween to activate.
       return *this;
     }

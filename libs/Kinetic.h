@@ -55,9 +55,9 @@ namespace emk {
         }, obj_id);
     }
     int GetID() const { return obj_id; }
-    const std::string & GetName() { return name; }
+    const std::string & GetName() const { return name; }
 
-    virtual std::string GetType() { return "emkObject"; }
+    virtual std::string GetType() const { return "emkObject"; }
 
     // Retrieve info from JS Kinetic::Node objects
     int GetX() const { return EM_ASM_INT({return emk_info.objs[$0].x();}, obj_id); }
@@ -265,7 +265,7 @@ namespace emk {
     Image(const std::string & _filename, const Point & point, int _w=-1, int _h=-1) 
       : Image(_filename, point.GetX(), point.GetY(), _w, _h) { ; }
 
-    virtual std::string GetType() { return "emkImage"; }
+    virtual std::string GetType() const { return "emkImage"; }
 
     int GetX() const { return x; }
     int GetY() const { return y; }
@@ -409,7 +409,7 @@ namespace emk {
 
     ~Callback_Canvas() { ; }
 
-    virtual std::string GetType() { return "emkCallback_Canvas"; }
+    virtual std::string GetType() const { return "emkCallback_Canvas"; }
 
     void DoCallback(int * arg_ptr) {
       Canvas canvas; // @CAO For now, all canvas objects are alike; we should allow them to coexist.
@@ -466,7 +466,7 @@ namespace emk {
   public:
     virtual ~Shape() { ; }
 
-    virtual std::string GetType() { return "emkShape"; }
+    virtual std::string GetType() const { return "emkShape"; }
 
     virtual Shape & SetFillPatternImage(const Image & _image) {
       image = &_image;
@@ -618,7 +618,7 @@ namespace emk {
     }
     virtual ~CustomShape() { ; }
 
-    virtual std::string GetType() { return "emkCustomShape"; }
+    virtual std::string GetType() const { return "emkCustomShape"; }
   };
 
 
@@ -636,7 +636,7 @@ namespace emk {
     }
     ~Layer() { ; }
     
-    virtual std::string GetType() { return "emkLayer"; }
+    virtual std::string GetType() const { return "emkLayer"; }
 
     Layer & Add(Shape & _obj) {
       _obj.SetLayer(this);    // Track what layer this shape is in.
@@ -692,7 +692,7 @@ namespace emk {
     }
     ~Stage() { ; }
 
-    virtual std::string GetType() { return "emkStage"; }
+    virtual std::string GetType() const { return "emkStage"; }
 
     // Sizing
     void ResizeMax(int min_width=0, int min_height=0) {
@@ -746,7 +746,7 @@ namespace emk {
       : Text(point.GetX(), point.GetY(), text, font.GetSize(), font.GetFamily(), font.GetColor()) { ; }
     ~Text() { ; }
 
-    virtual std::string GetType() { return "emkText"; }
+    virtual std::string GetType() const { return "emkText"; }
 
     Text & SetText(const std::string & _text) {
       EM_ASM_ARGS({var _text = Pointer_stringify($1); emk_info.objs[$0].text(_text);}, obj_id, _text.c_str());
@@ -766,7 +766,7 @@ namespace emk {
       obj_id = EMK_Rect_Build(point.GetX(), point.GetY(), w, h, fill.c_str(), stroke.c_str(), stroke_width, draggable);
     }
 
-    virtual std::string GetType() { return "emkRect"; }
+    virtual std::string GetType() const { return "emkRect"; }
   };
 
   // The regular polygon object from Kinetic...
@@ -782,7 +782,7 @@ namespace emk {
       obj_id = EMK_RegularPolygon_Build(point.GetX(), point.GetY(), sides, radius, fill.c_str(), stroke.c_str(), stroke_width, draggable);
     }
 
-    virtual std::string GetType() { return "emkRegularPolygon"; }
+    virtual std::string GetType() const { return "emkRegularPolygon"; }
   };
 
 
