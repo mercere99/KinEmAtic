@@ -246,7 +246,7 @@ namespace emk {
 
   class Image : public Object {
   private:
-    RawImage raw_image;
+    RawImage & raw_image;
     mutable std::list<Layer *> layers_waiting;
 
     // Kinetic details to store until image is loaded.
@@ -256,7 +256,7 @@ namespace emk {
     int height;
   public:
     Image(const std::string & _filename, int _x=0, int _y=0, int _w=-1, int _h=-1)
-      : raw_image(_filename)
+      : raw_image(LoadRawImage(_filename))
       , x(_x), y(_y), width(_w), height(_h)
     {
       raw_image.AddLoadCallback(this, &Image::ImageLoaded);
@@ -264,6 +264,13 @@ namespace emk {
 
     Image(const std::string & _filename, const Point & point, int _w=-1, int _h=-1) 
       : Image(_filename, point.GetX(), point.GetY(), _w, _h) { ; }
+
+    Image(const Image & _image)
+      : raw_image(_image.raw_image)
+      , x(_image.x), y(_image.y), width(_image.width), height(_image.height)
+    {
+      raw_image.AddLoadCallback(this, &Image::ImageLoaded);
+    }
 
     virtual std::string GetType() const { return "emkImage"; }
 

@@ -268,6 +268,23 @@ namespace emk {
       SetAction(*tween_copy);                           // Schedule the tween to activate.
       return *this;
     }
+
+    SlideShow & operator<<(const emk::Image & image) {
+      emk::Image * image_copy = new emk::Image(image);  // Build a copy of the input image.
+      if (image.GetName() != "") {                      // If the image has a name, save it to that name.
+        const std::string & name = image.GetName();
+        if (image_map.find(name) != image_map.end()) {
+          delete image_map[name];                       // If we a replacing a image, delete the old one.
+        }
+        image_map[name] = cur_image;
+      } else {                                          // Otherwise treat it as temporary.
+        ManageTemp(image_copy);                         // Keep track of the copy (to eventually delete)
+      }
+      Appear(*image_copy);                           // Schedule the image to activate.
+      return *this;
+    }
+
+
     /* CAO CLEANUP! */ SlideShow & operator<<(emk::Shape & shape) { Appear(shape); return *this; }
     /* CAO CLEANUP! */ SlideShow & operator<<(emk::Image & image) { Appear(image); return *this; }
 
