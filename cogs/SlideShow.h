@@ -280,7 +280,7 @@ namespace emk {
       } else {                                          // Otherwise treat it as temporary.
         ManageTemp(image_copy);                         // Keep track of the copy (to eventually delete)
       }
-      Appear(*image_copy);                           // Schedule the image to activate.
+      Appear(*image_copy);                              // Schedule the image to activate.
       return *this;
     }
 
