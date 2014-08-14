@@ -255,7 +255,7 @@ namespace emk {
     SlideShow & operator<<(const char * msg) { return this->operator<<(std::string(msg)); }
 
     SlideShow & operator<<(const emk::Tween & tween) {
-      emk::Tween * tween_copy = new emk::Tween(tween);  // Build a copy of the input tween.
+      cur_tween = new emk::Tween(tween);                // Build a copy of the input tween.
       if (tween.GetName() != "") {                      // If the tween has a name, save it to that name.
         const std::string & name = tween.GetName();
         if (tween_map.find(name) != tween_map.end()) {
@@ -263,14 +263,14 @@ namespace emk {
         }
         tween_map[name] = cur_tween;
       } else {                                          // Otherwise treat it as temporary.
-        ManageTemp(tween_copy);                           // Keep track of the copy (to eventually delete)
+        ManageTemp(cur_tween);                           // Keep track of the copy (to eventually delete)
       }
-      SetAction(*tween_copy);                           // Schedule the tween to activate.
+      SetAction(*cur_tween);                           // Schedule the tween to activate.
       return *this;
     }
 
     SlideShow & operator<<(const emk::Image & image) {
-      emk::Image * image_copy = new emk::Image(image);  // Build a copy of the input image.
+      cur_image = new emk::Image(image);                // Build a copy of the input image.
       if (image.GetName() != "") {                      // If the image has a name, save it to that name.
         const std::string & name = image.GetName();
         if (image_map.find(name) != image_map.end()) {
@@ -278,9 +278,9 @@ namespace emk {
         }
         image_map[name] = cur_image;
       } else {                                          // Otherwise treat it as temporary.
-        ManageTemp(image_copy);                         // Keep track of the copy (to eventually delete)
+        ManageTemp(cur_image);                         // Keep track of the copy (to eventually delete)
       }
-      Appear(*image_copy);                              // Schedule the image to activate.
+      Appear(*cur_image);                              // Schedule the image to activate.
       return *this;
     }
 
