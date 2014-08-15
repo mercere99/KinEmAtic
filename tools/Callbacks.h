@@ -49,6 +49,23 @@ namespace emk {
   };
   
   
+  // @CAO This is really ugly.  Fix this!!!!
+  template <class T, class A> class MethodCallbackArg : public Callback {
+  private:
+    T * target;
+    void (T::*method_ptr)(A);
+  public:
+    MethodCallbackArg(T * _target, void (T::*_method_ptr)(A))
+      : target(_target)
+      , method_ptr(_method_ptr)
+    { ; }
+    ~MethodCallbackArg() { ; }
+    
+    void DoCallback(int * arg_ptr) { (target->*(method_ptr))((A) arg_ptr); }
+    void DoArgCallback(A arg) { (target->*(method_ptr))(arg); }
+  };
+  
+  
   // Generic interface callback information...
   class EventInfo {
   public:
