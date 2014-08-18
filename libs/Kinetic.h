@@ -273,7 +273,7 @@ namespace emk {
     }
 
     virtual std::string GetType() const { return "emkImage"; }
-
+    
     int GetX() const { return x; }
     int GetY() const { return y; }
     int GetWidth() const { return width; }
@@ -284,9 +284,12 @@ namespace emk {
     Point GetLL(int x_offset=0, int y_offset=0) const { return Point(GetX()+x_offset, GetY()+GetHeight()+y_offset); }
     const RawImage & GetRawImage() const { return raw_image; }
 
-    // int GetImgID() const { return img_id; }
     bool HasLoaded() const { return raw_image.HasLoaded(); }
     bool HasError() const { return raw_image.HasError(); }
+
+    Image & SetWidth(int _in) { width = _in; if (HasLoaded()) Object::SetWidth(_in); return *this; }
+    Image & SetHeight(int _in) { height = _in; if (HasLoaded()) Object::SetHeight(_in); return *this; }
+    Image & SetLayout(int _w, int _h) { SetWidth(_w); return SetHeight(_h); }
 
     void DrawOnLoad(Layer * _layer) const { layers_waiting.push_back(_layer); }
 
