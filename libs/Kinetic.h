@@ -153,21 +153,23 @@ namespace emk {
   class Tween : public Object {
   private:
     Object * target;   // What object is this tween associated with?
-    double seconds;    // How long should this tween run for?
 
     int settings_id;   // JS memory position where the tween settings should go.
     bool needs_config; // Does the Tween need to be reconfigured?
 
     void ConfigureTween() {
-      EM_ASM_ARGS({ emk_info.objs[$1] = new Kinetic.Tween( emk_info.objs[$0] ); }, settings_id, obj_id);
+      EM_ASM_ARGS({
+          emk_info.objs[$0].node = emk_info.objs[$1];
+          emk_info.objs[$2] = new Kinetic.Tween( emk_info.objs[$0] );
+      }, settings_id, target->GetID(), obj_id);
       needs_config = false;
     }
   public:
-    Tween(Object & _target, double _seconds) : target(&_target), seconds(_seconds), needs_config(true) {
-      settings_id = EMK_Tween_Build(target->GetID(), seconds);
+    Tween(Object & _target, double _seconds) : target(&_target), needs_config(true) {
+      settings_id = EMK_Tween_Build(target->GetID(), _seconds);
       obj_id = settings_id + 1;
     }
-    Tween(const Tween & _in) : target(_in.target), seconds(_in.seconds), needs_config(true) {
+    Tween(const Tween & _in) : target(_in.target), needs_config(true) {
       settings_id = EMK_Tween_Clone(_in.settings_id);
       obj_id = settings_id + 1;
     }
@@ -186,12 +188,12 @@ namespace emk {
       StrongEaseIn, StrongEaseOut, StrongEaseInOut
     };
 
-    // void SetTarget(Object & _target) { target = &_target; needs_config=true; }
-    // void SetTime(double _seconds) { seconds = _seconds; needs_config=true; }
+    Tween & SetTarget(Object & _target) { target = &_target; needs_config=true; return *this; }
+    Tween & SetTime(double _in) { EM_ASM_ARGS({ emk_info.objs[$0].duration = $1; }, settings_id, _in); needs_config=true; return *this; }
     Tween & SetX(int _in) { EM_ASM_ARGS({ emk_info.objs[$0].x = $1; }, settings_id, _in); needs_config=true; return *this; }
     Tween & SetY(int _in) { EM_ASM_ARGS({ emk_info.objs[$0].y = $1; }, settings_id, _in); needs_config=true; return *this; }
-    Tween & SetScaleX(int _in) { EM_ASM_ARGS({ emk_info.objs[$0].scaleX = $1; }, settings_id, _in); needs_config=true; return *this; }
-    Tween & SetScaleY(int _in) { EM_ASM_ARGS({ emk_info.objs[$0].scaleY = $1; }, settings_id, _in); needs_config=true; return *this; }
+    Tween & SetScaleX(double _in) { EM_ASM_ARGS({ emk_info.objs[$0].scaleX = $1; }, settings_id, _in); needs_config=true; return *this; }
+    Tween & SetScaleY(double _in) { EM_ASM_ARGS({ emk_info.objs[$0].scaleY = $1; }, settings_id, _in); needs_config=true; return *this; }
     Tween & SetRotation(double _in) { EM_ASM_ARGS({emk_info.objs[$0].rotation = $1; }, settings_id, _in); needs_config=true; return *this; }
     Tween & SetOpacity(double _in) { EM_ASM_ARGS({emk_info.objs[$0].opacity = $1; }, settings_id, _in); needs_config=true; return *this; }
     Tween & SetStrokeWidth(double _in) { EM_ASM_ARGS({emk_info.objs[$0].strokeWidth = $1; }, settings_id, _in); needs_config=true; return *this; }
@@ -215,7 +217,6 @@ namespace emk {
       case StrongEaseInOut: EM_ASM_ARGS({emk_info.objs[$0].easing = Kinetic.Easings.StrongEaseInOut; }, settings_id); break;
       default: Alert("Unknown Easing..."); break;
       };
-      
       
       needs_config=true;
       return *this;
@@ -254,10 +255,13 @@ namespace emk {
     int y;
     int width;
     int height;
+    double scale_x;
+    double scale_y;
   public:
     Image(const std::string & _filename, int _x=0, int _y=0, int _w=-1, int _h=-1)
       : raw_image(LoadRawImage(_filename))
       , x(_x), y(_y), width(_w), height(_h)
+      , scale_x(1.0), scale_y(1.0)
     {
       raw_image.AddLoadCallback(this, &Image::ImageLoaded);
     }
@@ -266,8 +270,7 @@ namespace emk {
       : Image(_filename, point.GetX(), point.GetY(), _w, _h) { ; }
 
     Image(const Image & _image)
-      : raw_image(_image.raw_image)
-      , x(_image.x), y(_image.y), width(_image.width), height(_image.height)
+      : Image(_image.raw_image.GetFilename(), _image.x, _image.y, _image.width, _image.height)
     {
       raw_image.AddLoadCallback(this, &Image::ImageLoaded);
     }
@@ -278,6 +281,8 @@ namespace emk {
     int GetY() const { return y; }
     int GetWidth() const { return width; }
     int GetHeight() const { return height; }
+    double GetScaleX() const { return scale_x; }
+    double GetScaleY() const { return scale_y; }
     Point GetUL(int x_offset=0, int y_offset=0) const { return Point(GetX()+x_offset, GetY()+y_offset); }
     Point GetUR(int x_offset=0, int y_offset=0) const { return Point(GetX()+GetWidth()+x_offset, GetY()+y_offset); }
     Point GetLR(int x_offset=0, int y_offset=0) const { return Point(GetX()+GetWidth()+x_offset, GetY()+GetHeight()+y_offset); }
@@ -290,6 +295,10 @@ namespace emk {
     Image & SetWidth(int _in) { width = _in; if (HasLoaded()) Object::SetWidth(_in); return *this; }
     Image & SetHeight(int _in) { height = _in; if (HasLoaded()) Object::SetHeight(_in); return *this; }
     Image & SetLayout(int _w, int _h) { SetWidth(_w); return SetHeight(_h); }
+    Image & SetScaleX(double _in) { scale_x = _in; if (HasLoaded()) Object::SetScaleX(_in); return *this; }
+    Image & SetScaleY(double _in) { scale_y = _in; if (HasLoaded()) Object::SetScaleY(_in); return *this; }
+    Image & SetScale(double _x, double _y) { SetScaleX(_x); return SetScaleY(_y); }
+    Image & SetScale(double _in) { return SetScale(_in, _in); }
 
     void DrawOnLoad(Layer * _layer) const { layers_waiting.push_back(_layer); }
 
@@ -879,10 +888,12 @@ namespace emk {
           y: $2,
           image: emk_info.images[$0],
           width: $3,
-          height: $4
+          height: $4,
+          scaleX: $5,
+          scaleY: $6
         });
         return obj_id;                           // Pass back the object ID for long-term storage.
-    }, raw_image.GetImgID(), x, y, width, height);
+      }, raw_image.GetImgID(), x, y, width, height, scale_x, scale_y);
     
     // Loop through any layers this image is in to make sure to redraw them.
     while (layers_waiting.size()) {

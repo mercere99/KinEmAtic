@@ -34,32 +34,16 @@ extern "C" int emkMain()
   const int logo_size = show.ScaleY(0.6);
   show << emk::Image("images/BeaconLogo.png", show(0.03, 0.35), logo_size, logo_size);
 
-
   // ---=== My Thought Process ===---
   show.NewSlide("What's been done?");
 
   show.Pause();
 
-  const int thought_scale = show.ScaleY(0.30);
-  show.BuildImage("boxcar", "images/boxcar.jpg", show(0.1,0.3));
-  show.BuildRect( "boxcar_rect", show(0.07,0.25), 799, 306 ).SetFillPatternImage(show.Image()).SetScale(1.25);
-  show << show.Rect();
-  //  show << emk::Image("images/HAL_eye.jpg", show.Image().GetUR(3,0), thought_scale, thought_scale);
-  //  show << show(0.14, 0.52) << emk::Font(stage_w/35) << "Artificial Intelligence";
+  // show << emk::Image("images/boxcar.jpg", show(0.1,0.3)).SetScale(1.25);  // @CAO Why does this not work??
+  show << show.BuildImage("boxcar", "images/boxcar.jpg", show(0.1,0.3)).SetScale(1.25);
 
   show.Pause();
-
-  show << emk::Image("images/Darwin.jpg", show(0.56, 0.2), thought_scale, thought_scale);
-  show << emk::Image("images/Finches.jpg", show.Image().GetUR(3,0), thought_scale, thought_scale);
-  show << show(0.66, 0.52) << emk::Font(stage_w/35) << "Evolution";
-
-  show.Pause();
-  show << emk::Tween(show.Text(), 3).SetXY( show(0.8, 0.88) ).SetScale(5.0).SetRotation(900).SetEasing(emk::Tween::Linear);
-
-  show.Pause();
-
-  const int shadow_scale = show.ScaleY(0.4);
-  show << show.BuildImage("image_descent", "images/DescentShadow.jpg", show(0.2, 0.58), shadow_scale*2.73, shadow_scale);
+  show << emk::Tween(show.Image(), 3).SetXY( show(0.7, 0.7) ).SetScale(0.25).SetEasing(emk::Tween::StrongEaseOut);
 
 
 

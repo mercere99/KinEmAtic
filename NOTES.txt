@@ -1,6 +1,6 @@
 --== For Slideshow ==--
 Setup some basic configurations
-- Lock in aspect ratio.
+- Default size -- anything else should be scaled from that default.
 - Color scheme?
 
 --== Development Notes ==--
