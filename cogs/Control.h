@@ -20,6 +20,8 @@ namespace emk {
     // What aspect ratio should the screen have?
     // aspect_ratio = width/height; a 16:9 ratio would be 1.778 (use values <= 0 to adjust values freely)
     double aspect_ratio;
+    int base_width;
+    int base_height;
 
     std::map<std::string, Stage *> stage_map;
     std::map<std::string, Layer *> layer_map;
@@ -83,8 +85,9 @@ namespace emk {
     Point default_point;
 
   public:
-    Control(int width=1200, int height=800, const std::string & name="container")
+    Control(int width=1600, int height=900, const std::string & name="container")
       : aspect_ratio(0.0)
+      , base_width(width), base_height(height)
       , cur_layer(NULL)
       , default_color("black")
       , default_font("Helvetica", 30, "black")
