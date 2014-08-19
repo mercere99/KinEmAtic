@@ -15,6 +15,8 @@ namespace GII
   const string animals[] = {"hare", "wren", "horse", "owl", "wolf", "hawk"};
   const string colors[] = {"blue", "green", "red"};
   const string ranks[] = {"W", "L", "B", "M", "R", "D"};
+  const string base_path = "img/GII/";
+  //const string base_path = "/Users/charles/Sites/Puzzle Engine/GII/";
 
   const int num_animals = 6;
   const int num_colors = 3;
@@ -238,7 +240,7 @@ public:
   DenOfThieves()
     : stage(1200, 600, "container")
     , random(-1)
-    , path("/Users/charles/Sites/Puzzle Engine/GII/")
+    , path(GII::base_path)
     , next_id(0)
     , back_image(path + "Back.png")
     , discard_image(path + "Discard.png")
