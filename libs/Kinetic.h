@@ -84,6 +84,7 @@ namespace emk {
     int GetOffsetY() const { return EM_ASM_INT({return emk_info.objs[$0].offsetY();}, obj_id); }
     int GetRotation() const { return EM_ASM_INT({return emk_info.objs[$0].rotation();}, obj_id); }
     int GetDraggable() const { return EM_ASM_INT({return emk_info.objs[$0].draggable();}, obj_id); }
+    int GetZIndex() const { return EM_ASM_INT({return emk_info.objs[$0].getZIndex();}, obj_id); }
 
     Object & SetName(const std::string & _name) { name = _name; return *this; }
     Object & SetX(int _in) { EM_ASM_ARGS({emk_info.objs[$0].x($1);}, obj_id, _in); return *this; }
@@ -99,6 +100,9 @@ namespace emk {
     Object & SetOffsetY(int _in) { EM_ASM_ARGS({emk_info.objs[$0].offsetY($1);}, obj_id, _in); return *this; }
     Object & SetRotation(int _in) { EM_ASM_ARGS({emk_info.objs[$0].rotation($1);}, obj_id, _in); return *this; }
     Object & SetDraggable(int _in) { EM_ASM_ARGS({emk_info.objs[$0].draggable($1);}, obj_id, _in); return *this; }
+    Object & SetZIndex(int _in) { EM_ASM_ARGS({emk_info.objs[$0].setZIndex($1);}, obj_id, _in); return *this; }
+    Object & SetZBottom() { EM_ASM_ARGS({emk_info.objs[$0].moveToBottom();}, obj_id); return *this; }
+    Object & SetZTop() { EM_ASM_ARGS({emk_info.objs[$0].moveToTop();}, obj_id); return *this; }
 
     inline Object & SetXY(int x, int y) { SetX(x); SetY(y); return *this; }
     inline Object & SetXY(const Point & point) { SetX(point.GetX()); SetY(point.GetY()); return *this; }
