@@ -17,6 +17,10 @@ namespace GII
   const string ranks[] = {"W", "L", "B", "M", "R", "D"};
   const string base_path = "img/GII/";
   //const string base_path = "/Users/charles/Sites/Puzzle Engine/GII/";
+  const int card_width = 150;
+  const int card_height = 210;
+  const int stage_width = 1000;
+  const int stage_height = 700;
 
   const int num_animals = 6;
   const int num_colors = 3;
@@ -30,9 +34,6 @@ namespace GII
     const emk::Image & back;
     emk::Rect card_rect;
     emk::Tween card_tween;
-    const int animal;
-    const int color;
-    const int rank;
     const int global_id;
     int id;
 
@@ -43,13 +44,14 @@ namespace GII
     emk::Callback * callback_mousemove;
     emk::Callback * callback_dragstart;
     emk::Callback * callback_dragend;
+    emk::Callback * callback_click;
   public:
-    Card(const emk::Image & _front, emk::Image & _back, int _a, int _c, int _r, int _id)
+    Card(const emk::Image & _front, const emk::Image & _back, int _id)
       : front(_front)
       , back(_back)
-      , card_rect(0, 0, 150, 210, "white", "black", 1, true)
+      , card_rect(0, 0, card_width, card_height, "white", "black", 1, true)
       , card_tween(card_rect, 1.0)
-      , animal(_a), color(_c), rank(_r), global_id(_id), id(_id)
+      , global_id(_id), id(_id)
       , callback_mouseover(NULL)
       , callback_mouseout(NULL)
       , callback_mousedown(NULL)
@@ -57,7 +59,9 @@ namespace GII
       , callback_mousemove(NULL)
       , callback_dragstart(NULL)
       , callback_dragend(NULL)
+      , callback_click(NULL)
     {
+      card_rect.SetVisible(0);
       card_rect.SetFillPatternImage(front); 
       card_rect.SetFillPatternScale(0.5);
       card_rect.SetLineJoin("round");
@@ -69,18 +73,24 @@ namespace GII
       card_rect.On("mousemove", this, &Card::MouseMove);
       card_rect.On("dragstart", this, &Card::DragStart);
       card_rect.On("dragend", this, &Card::DragEnd);
+      card_rect.On("click", this, &Card::Click);
     }
     ~Card() { ; }
 
     emk::Rect & Rect() { return card_rect; }
     emk::Tween & Tween() { return card_tween; }
-    int GetAnimal() const { return animal; }
-    int GetColor() const { return color; }
-    int GetRank() const { return rank; }
     int GetGlobalId() const { return global_id; }
     int GetID() const { return id; }
-
     Card & SetID(int _id) { id = _id; return *this; }
+
+    Card & ShowTop(bool which) {
+      if (which) {
+        card_rect.SetFillPatternImage(front);
+      } else {
+        card_rect.SetFillPatternImage(back);
+      }
+      return *this;
+    }
 
     template <class T> Card & SetMouseoverCallback(T * obj, void (T::*method_ptr)(int)) {
       callback_mouseover = new emk::MethodCallbackArg<T,int>(obj, method_ptr);
@@ -116,6 +126,14 @@ namespace GII
       callback_dragend = new emk::MethodCallbackArg<T,int>(obj, method_ptr);
       return *this;
     }
+    
+    template <class T> Card & SetClickCallback(T * obj, void (T::*method_ptr)(int)) {
+      callback_click = new emk::MethodCallbackArg<T,int>(obj, method_ptr);
+      return *this;
+    }
+    
+    Card & ClearDragendCallback() { callback_dragend = NULL; return *this; }
+    Card & ClearClickCallback() { callback_click = NULL; return *this; }
     
     void MouseOver() {
       card_rect.SetStroke("red");
@@ -156,47 +174,87 @@ namespace GII
       if (callback_dragend) callback_dragend->DoCallback((int*)id);
     }
 
+    void Click() {
+      // card_rect.MoveToTop();
+      if (callback_click) callback_click->DoCallback((int*)id);
+    }
+
     void Rescale(double scale) {
-      card_rect.SetWidth(150 * scale);
-      card_rect.SetHeight(210 * scale);
+      card_rect.SetWidth(card_width * scale);
+      card_rect.SetHeight(card_height * scale);
       card_rect.SetFillPatternScale(0.5 * scale);
       card_rect.SetCornerRadius(10 * scale);
     }
   };
 
-  class Deck {
-    double splay;
-    vector<Card *> card_array;
-    emk::Random & random;
+  class SuitedCard : public Card {
+  private:
+    const int animal;
+    const int color;
+    const int rank;
 
   public:
-    Deck(emk::Random & _random, double _splay) : random(_random), splay(_splay) { ; }
-    ~Deck() {
+    SuitedCard(const emk::Image & _front, const emk::Image & _back, int _a, int _c, int _r, int _id)
+      : Card(_front, _back, _id)
+      , animal(_a), color(_c), rank(_r)
+    { ; }
+
+    ~SuitedCard() { ; }
+
+    int GetAnimal() const { return animal; }
+    int GetColor() const { return color; }
+    int GetRank() const { return rank; }
+  };
+
+  template <class T> class CardSet {
+    emk::Layer & layer;
+    emk::Random & random;
+    double x, y, spread;
+    int visible;
+    Card placeholder;
+    vector<T *> card_array;
+
+  public:
+    CardSet(emk::Layer & _layer, emk::Random & _random, const emk::Image & placeholder_image)
+      : layer(_layer)
+      , random(_random)
+      , x(0), y(0), spread(0), visible(0)
+      , placeholder(placeholder_image, placeholder_image, -1)
+    {
+      placeholder.Rect().SetDraggable(0);
+      placeholder.Rect().SetZIndex(1);
+      layer.Add(placeholder.Rect());
+    }
+
+    ~CardSet() {
       card_array.clear();
     }
+
+    CardSet & SetX(double _x) { x = _x; return *this; }
+    CardSet & SetY(double _y) { y = _y; return *this; }
+    CardSet & SetSpread(double _spread) { spread = _spread; return *this; }
+    CardSet & SetVisible(int _visible) { visible = _visible; return *this; }
 
     int GetNumCards() const { return (int) card_array.size(); }
     Card & operator[](int index) { return *(card_array[index]); }
     const Card & operator[](int index) const { return *(card_array[index]); }
 
-    void AddTop(Card * card) {
+    void AddTop(T * card) {
       int id = (int) card_array.size();
       card_array.push_back(card);
       card->SetID(id);
+      card->Rect().SetVisible(visible);
     }
 
-    Card * TakeTop() {
-      Card * back = card_array.back();
+    T * TakeTop() {
+      T * back = card_array.back();
       card_array.pop_back();
+      back->Rect().SetVisible(0);
       return back;
     }
 
-    //Rect & GetPlaceholder() {
-    //  return placeholder.Rect();
-    //}
-
     void Shuffle() {
-      Card * temp_card;
+      T * temp_card;
       const int num_cards = (int) card_array.size();
       for (int i = 0; i < num_cards; i++) {
         int found_card = random.GetInt(num_cards - i) + i;
@@ -210,6 +268,16 @@ namespace GII
     }
 
     void Render() {
+      //placeholder.Rescale(0.2);
+      placeholder.Rect().SetVisible(visible);
+      placeholder.Rect().SetXY(x, y);
+      placeholder.Rect().SetZIndex(0);
+      for (int i = 0; i < (int) card_array.size(); i++) {
+        emk::Rect &rect = card_array[i]->Rect();
+        rect.SetVisible(visible);
+        rect.SetXY(i*0.2+x, y);
+        rect.SetZIndex(i+1);
+      }
     }
   };
 
@@ -226,31 +294,33 @@ private:
   int next_id;
   emk::Image back_image;
   emk::Image discard_image;
+  emk::Image empty_image;
   const int hand_size;
   const bool include_dragons;
-  const double default_splay;
+  const double default_spread;
   vector<emk::Image *> front_images;
-  vector<GII::Card *> card_array;
-  GII::Deck deck;
-  GII::Deck discard;
-  GII::Deck dragons;
-  GII::Deck hand;
+  vector<GII::SuitedCard *> card_array;
+  GII::CardSet<GII::SuitedCard> deck;
+  GII::CardSet<GII::SuitedCard> discard;
+  GII::CardSet<GII::SuitedCard> dragons;
+  GII::CardSet<GII::SuitedCard> hand;
 
 public:
   DenOfThieves()
-    : stage(1200, 600, "container")
+    : stage(GII::stage_width, GII::stage_height, "container")
     , random(-1)
     , path(GII::base_path)
     , next_id(0)
     , back_image(path + "Back.png")
     , discard_image(path + "Discard.png")
+    , empty_image(path + "Empty.png")
     , hand_size(7)
     , include_dragons(false)
-    , default_splay(0.2)
-    , deck(random, default_splay)
-    , discard(random, default_splay)
-    , dragons(random, default_splay)
-    , hand(random, default_splay)
+    , default_spread(0.2)
+    , deck(layer, random, empty_image)
+    , discard(layer, random, discard_image)
+    , dragons(layer, random, empty_image)
+    , hand(layer, random, empty_image)
   {
     for (int animal_id = 0; animal_id < GII::num_animals; animal_id++) {
       for (int rank_id = 0; rank_id < GII::num_base_ranks; rank_id++) {
@@ -258,7 +328,8 @@ public:
         emk::Image * cur_front = new emk::Image(path + GII::ranks[rank_id] + "_" + GII::animals[animal_id] + ".png");
         front_images.push_back(cur_front);
         for (int card_count = 0; card_count <= rank_id; card_count++) {
-          GII::Card * new_card = new GII::Card(*cur_front, back_image, animal_id, animal_id/2, rank_id, next_id++);
+          GII::SuitedCard * new_card = new GII::SuitedCard(*cur_front, back_image, animal_id, animal_id/2, rank_id, next_id++);
+          new_card->SetClickCallback(this, &DenOfThieves::Card_Click);
           layer.Add(new_card->Rect());
           card_array.push_back(new_card);
           deck.AddTop(new_card);
@@ -270,7 +341,7 @@ public:
       // Load in the associated image.
       emk::Image * cur_front = new emk::Image(path + "D_" + GII::colors[color_id] + ".png");
       front_images.push_back(cur_front);          
-      GII::Card * new_card = new GII::Card(*cur_front, back_image, color_id*2, color_id, GII::num_base_ranks, next_id++);
+      GII::SuitedCard * new_card = new GII::SuitedCard(*cur_front, back_image, color_id*2, color_id, GII::num_base_ranks, next_id++);
       layer.Add(new_card->Rect());
       card_array.push_back(new_card);
       dragons.AddTop(new_card);
@@ -281,20 +352,30 @@ public:
 
     // Shuffle the deck.
     deck.Shuffle();
+    deck.SetX(335);
+    deck.SetY(245);
+    deck.SetSpread(1);
+    deck.SetVisible(1);
+    deck.Render();
+    discard.SetX(335 + 150 + 30); // left + deck width + 30 buffer
+    discard.SetY(245);
+    discard.SetSpread(1);
+    discard.SetVisible(1);
+    discard.Render();
 
     // Build the hand.
-    for (int i = 0; i < hand_size; i++) {
-      GII::Card * top_card = deck.TakeTop();
-      hand.AddTop(top_card);
-      top_card->SetDragendCallback(this, &DenOfThieves::Card_DragEnd);
-    }
+    //for (int i = 0; i < hand_size; i++) {
+    //  GII::SuitedCard * top_card = deck.TakeTop();
+    //  hand.AddTop(top_card);
+    //  top_card->SetDragendCallback(this, &DenOfThieves::Card_DragEnd);
+    //}
     
     // Draw the hand to the screen.
-    for (int i = 0; i < hand_size; i++) {
-      emk::Rect & rect = hand[i].Rect();
-      rect.SetXY(i*100+10, 100);
-      // deck[i].Rescale(0.2 + 0.01 * (double) i);
-    }
+    //for (int i = 0; i < hand_size; i++) {
+    //  emk::Rect & rect = hand[i].Rect();
+    //  rect.SetXY(i*100+10, 100);
+    //  // deck[i].Rescale(0.2 + 0.01 * (double) i);
+    //}
 
     stage.Add(layer);
 
@@ -311,6 +392,15 @@ public:
   void Card_DragEnd(int id) {
     hand[id].Tween().SetXY(id*100+10,100).SetEasing(emk::Tween::StrongEaseOut);
     hand[id].Tween().Play();
+  }
+
+  void Card_Click(int id) {
+    GII::SuitedCard * top_card = deck.TakeTop();
+    top_card->ShowTop(true);
+    top_card->Rect().SetDraggable(0);
+    top_card->ClearClickCallback();
+    discard.AddTop(top_card);
+    discard.Render();
   }
 };
 
