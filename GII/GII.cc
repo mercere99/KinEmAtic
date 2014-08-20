@@ -62,7 +62,7 @@ namespace GII
       , callback_click(NULL)
     {
       card_rect.SetVisible(0);
-      card_rect.SetFillPatternImage(front); 
+      card_rect.SetFillPatternImage(back); 
       card_rect.SetFillPatternScale(0.5);
       card_rect.SetLineJoin("round");
       card_rect.SetCornerRadius(10);
@@ -83,8 +83,8 @@ namespace GII
     int GetID() const { return id; }
     Card & SetID(int _id) { id = _id; return *this; }
 
-    Card & ShowTop(bool which) {
-      if (which) {
+    Card & ShowTop(bool show_front) {
+      if (show_front) {
         card_rect.SetFillPatternImage(front);
       } else {
         card_rect.SetFillPatternImage(back);
@@ -236,8 +236,8 @@ namespace GII
     CardSet & SetVisible(int _visible) { visible = _visible; return *this; }
 
     int GetNumCards() const { return (int) card_array.size(); }
-    Card & operator[](int index) { return *(card_array[index]); }
-    const Card & operator[](int index) const { return *(card_array[index]); }
+    T & operator[](int index) { return *(card_array[index]); }
+    const T & operator[](int index) const { return *(card_array[index]); }
 
     void AddTop(T * card) {
       int id = (int) card_array.size();
@@ -275,9 +275,10 @@ namespace GII
       for (int i = 0; i < (int) card_array.size(); i++) {
         emk::Rect &rect = card_array[i]->Rect();
         rect.SetVisible(visible);
-        rect.SetXY(i*0.2+x, y);
+        rect.SetXY(i*spread+x, y);
         rect.SetZIndex(i+1);
       }
+      placeholder.Rect().DrawLayer();
     }
   };
 
@@ -354,12 +355,12 @@ public:
     deck.Shuffle();
     deck.SetX(335);
     deck.SetY(245);
-    deck.SetSpread(1);
+    deck.SetSpread(default_spread);
     deck.SetVisible(1);
     deck.Render();
     discard.SetX(335 + 150 + 30); // left + deck width + 30 buffer
     discard.SetY(245);
-    discard.SetSpread(1);
+    discard.SetSpread(default_spread);
     discard.SetVisible(1);
     discard.Render();
 
