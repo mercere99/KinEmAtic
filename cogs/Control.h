@@ -8,7 +8,7 @@
 #include "../tools/Point.h"
 #include "../libs/Kinetic.h"
 #include "Button.h"
-#include "ButtonSet.h"
+#include "ButtonGrid.h"
 #include "Events.h"
 #include "Grid.h"
 #include "Panel.h"
@@ -35,7 +35,7 @@ namespace emk {
     std::map<std::string, Text *> text_map;
 
     std::map<std::string, Button *> button_map;
-    std::map<std::string, ButtonSet *> buttonset_map;
+    std::map<std::string, ButtonGrid *> buttonset_map;
     std::map<std::string, Grid *> grid_map;
     std::map<std::string, Panel *> panel_map;
 
@@ -72,7 +72,7 @@ namespace emk {
     Rect * cur_rect;
     Text * cur_text;
     Button * cur_button;
-    ButtonSet * cur_buttonset;
+    ButtonGrid * cur_buttonset;
     Grid * cur_grid;
     Panel * cur_panel;
     // cur_animation ??
@@ -193,8 +193,8 @@ namespace emk {
       return *cur_button;
     }
 
-    ButtonSet & BuildButtonSet(const std::string & name, int cols, int rows, const Point & point, int width, int height, int spacing=0) {
-      cur_buttonset = new emk::ButtonSet(cols, rows, point, width, height, spacing);
+    ButtonGrid & BuildButtonGrid(const std::string & name, int cols, int rows, const Point & point, int width, int height, int spacing=0) {
+      cur_buttonset = new emk::ButtonGrid(cols, rows, point, width, height, spacing);
       if (buttonset_map.find(name) != buttonset_map.end()) delete buttonset_map[name]; // If we a replacing a buttonset, delete the old one.
       buttonset_map[name] = cur_buttonset;
       return *cur_buttonset;
@@ -269,7 +269,7 @@ namespace emk {
       assert(cur_button != NULL);
       return *cur_button;
     }
-    emk::ButtonSet & ButtonSet(const std::string & name="") {
+    emk::ButtonGrid & ButtonGrid(const std::string & name="") {
       if (name != "") cur_buttonset = buttonset_map[name];
       assert(cur_buttonset != NULL);
       return *cur_buttonset;

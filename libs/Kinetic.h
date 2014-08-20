@@ -144,12 +144,18 @@ namespace emk {
   };
 
 
-  // This is a baseclass for other classes that contain a whole set of objects
+  // This is a base class for other classes that contain a whole set of objects
   // @CAO Should this be an object itself?
-  class ObjectSet { // : public Object {
+  template <class T> class ObjectGrid { // : public Object {
   protected:
-    ObjectSet() { ; }     // Prevent ObjectSets from being directly created or destroyed.
-    ~ObjectSet() { ; }
+    int cols;
+    int rows;
+    int x;
+    int y;
+
+    ObjectGrid(int _cols, int _rows, int _x, int _y) 
+      : cols(_cols), rows(_rows), x(_x), y(_y) { ; }     // Prevent ObjectGrids from being directly created or destroyed.
+    ~ObjectGrid() { ; }
   public:
     virtual void AddToLayer(Layer & layer) = 0;  // Add all objects in set to this layer.
   };
@@ -679,7 +685,7 @@ namespace emk {
       return *this;
     }
 
-    Layer & Add(ObjectSet & set) { set.AddToLayer(*this); return *this; }
+    template <class T> Layer & Add(ObjectGrid<T> & set) { set.AddToLayer(*this); return *this; }
 
     Layer & Remove(Object & _obj) {
       EM_ASM_ARGS({emk_info.objs[$0].remove();}, _obj.GetID());

@@ -7,12 +7,8 @@
 
 namespace emk {
   
-  class ButtonSet : public ObjectSet {
+  class ButtonGrid : public ObjectGrid<Button> {
   private:
-    int cols;
-    int rows;
-    int x;
-    int y;
     int button_width;
     int button_height;
     int spacing;
@@ -21,8 +17,9 @@ namespace emk {
     std::vector<Button *> button_set;
 
   public:
-    ButtonSet(int _cols, int _rows, int _x, int _y, int _width, int _height, int _spacing=0)
-      : cols(_cols), rows(_rows), x(_x), y(_y), button_width(_width), button_height(_height), spacing(_spacing),
+    ButtonGrid(int _cols, int _rows, int _x, int _y, int _width, int _height, int _spacing=0)
+      : ObjectGrid(_cols, _rows, _x, _y)
+      , button_width(_width), button_height(_height), spacing(_spacing),
         set_size(cols * rows), button_set(set_size)
     {
       const int extra_width = button_width + spacing;  // Gives room for all buttons to have spacing on right.
@@ -39,10 +36,10 @@ namespace emk {
       }
 
     }
-    ButtonSet(int _cols, int _rows, const Point & point, int _width, int _height, int _spacing=0)
-      : ButtonSet(_cols, _rows, point.GetX(), point.GetY(), _width, _height, _spacing) { ; }
+    ButtonGrid(int _cols, int _rows, const Point & point, int _width, int _height, int _spacing=0)
+      : ButtonGrid(_cols, _rows, point.GetX(), point.GetY(), _width, _height, _spacing) { ; }
 
-    ~ButtonSet() {
+    ~ButtonGrid() {
       for (int i = 0; i < (int) button_set.size(); i++) {
         if (button_set[i]) delete button_set[i];
       }
@@ -57,8 +54,8 @@ namespace emk {
     Button & Get(int col, int row) { return *(button_set[col + row*cols]); }
     Button & operator[](int pos) { return *(button_set[pos]); }
 
-    ButtonSet & SetActive(bool active=true) { for (int i = 0; i < set_size; i++) { button_set[i]->SetActive(active); } return *this; }
-    ButtonSet & SetRoundCorners(bool ul=true, bool ur=true, bool lr=true, bool ll=true) {
+    ButtonGrid & SetActive(bool active=true) { for (int i = 0; i < set_size; i++) { button_set[i]->SetActive(active); } return *this; }
+    ButtonGrid & SetRoundCorners(bool ul=true, bool ur=true, bool lr=true, bool ll=true) {
       for (int i = 0; i < set_size; i++) { button_set[i]->SetRoundCorners(ul, ur, lr, ll); }
       return *this;
     }
@@ -69,28 +66,28 @@ namespace emk {
       button_set[(rows-1) * cols + 1]->SetRoundCornerLR();
       button_set[set_size-1]->SetRoundCornerLL();
     }
-    ButtonSet & SetFillPatternImage(const Image & image) {
+    ButtonGrid & SetFillPatternImage(const Image & image) {
       for (int i = 0; i < set_size; i++) { button_set[i]->SetFillPatternImage(image); }
       return *this;
     }
 
-    ButtonSet & SetBGColor(const Color & color) { 
+    ButtonGrid & SetBGColor(const Color & color) { 
       for (int i = 0; i < set_size; i++) { button_set[i]->SetBGColor(color); }
       return *this;
     }
-    ButtonSet & SetBGColorToggled(const Color & color) {
+    ButtonGrid & SetBGColorToggled(const Color & color) {
       for (int i = 0; i < set_size; i++) { button_set[i]->SetBGColorToggled(color); }
       return *this;
     }
-    ButtonSet & SetBGColorMouseover(const Color & color) {
+    ButtonGrid & SetBGColorMouseover(const Color & color) {
       for (int i = 0; i < set_size; i++) { button_set[i]->SetBGColorMouseover(color); }
       return *this;
     }
-    ButtonSet & SetBGColorToggledMouseover(const Color & color) {
+    ButtonGrid & SetBGColorToggledMouseover(const Color & color) {
       for (int i = 0; i < set_size; i++) { button_set[i]->SetBGColorToggledMouseover(color); }
       return *this;
     }
-    ButtonSet & SetBGColorMousedown(const Color & color) {
+    ButtonGrid & SetBGColorMousedown(const Color & color) {
       for (int i = 0; i < set_size; i++) { button_set[i]->SetBGColorMousedown(color); }
       return *this;
     }
