@@ -9,7 +9,7 @@
 //#include "../tools/Point.h"
 #include "../tools/Random.h"
 #include "../cogs/Button.h"
-#include "../cogs/ButtonSet.h"
+#include "../cogs/ButtonGrid.h"
 #include "../cogs/Events.h"
 #include "../cogs/Grid.h"
 #include "../cogs/Panel.h"
@@ -64,7 +64,7 @@ public:
 
 
     // Setup the mode buttons
-    emk::ButtonSet & mode_buttons = control.BuildButtonSet("modes", 1, 4, logo_rect.GetLL(0, 10), logo_w, 40, 5);
+    emk::ButtonGrid & mode_buttons = control.BuildButtonGrid("modes", 1, 4, logo_rect.GetLL(0, 10), logo_w, 40, 5);
 
     mode_buttons[0].SetTrigger(this, &GridExample::ModePopulation);  // Population mode
     mode_buttons[1].SetTrigger(this, &GridExample::ModeOrganism);    // Organism mode
@@ -87,7 +87,7 @@ public:
     const int button_spacing = 5;
     const int button_set_w = button_w * num_buttons + button_spacing * (num_buttons-1);
     const emk::Point grid_button_pos( grid_x + (grid_w - button_set_w)/2, grid_y + grid_h + 5);
-    emk::ButtonSet & grid_buttons = control.BuildButtonSet("grid", 3, 1, grid_button_pos, button_w, button_w, button_spacing);
+    emk::ButtonGrid & grid_buttons = control.BuildButtonGrid("grid", 3, 1, grid_button_pos, button_w, button_w, button_spacing);
 
     grid_buttons[0].SetTrigger(this, &GridExample::SetupRun);
     grid_buttons[1].SetTrigger(this, &GridExample::PauseRun);

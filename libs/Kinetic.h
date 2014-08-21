@@ -145,19 +145,34 @@ namespace emk {
 
 
   // This is a base class for other classes that contain a whole set of objects
-  // @CAO Should this be an object itself?
+  // @CAO Should this be an Object itself?
   template <class T> class ObjectGrid { // : public Object {
   protected:
     int cols;
     int rows;
     int x;
     int y;
+    int spacing;
 
-    ObjectGrid(int _cols, int _rows, int _x, int _y) 
-      : cols(_cols), rows(_rows), x(_x), y(_y) { ; }     // Prevent ObjectGrids from being directly created or destroyed.
+    int set_size;
+    std::vector<T *> object_set;
+
+    // Protected to prevent ObjectGrids from being directly created or destroyed.
+    ObjectGrid(int _cols, int _rows, int _x, int _y, int _spacing) 
+      : cols(_cols), rows(_rows), x(_x), y(_y), spacing(_spacing), set_size(cols * rows), object_set(set_size)
+    { ; }     
     ~ObjectGrid() { ; }
   public:
-    virtual void AddToLayer(Layer & layer) = 0;  // Add all objects in set to this layer.
+    int GetCols() const { return cols; }
+    int GetRows() const { return rows; }
+    int GetX() const { return x; }
+    int GetY() const { return y; }
+    int GetSpacing() const { return spacing; }
+    int GetSetSize() const { return set_size; }  // @CAO Move to ObjectSet base class when we build it.
+
+    T & Get(int pos) { return *(object_set[pos]); }
+    T & Get(int col, int row) { return *(object_set[col + row*cols]); }
+    T & operator[](int pos) { return *(object_set[pos]); }
   };
 
   class Tween : public Object {
@@ -685,7 +700,10 @@ namespace emk {
       return *this;
     }
 
-    template <class T> Layer & Add(ObjectGrid<T> & set) { set.AddToLayer(*this); return *this; }
+    template <class T> Layer & Add(ObjectGrid<T> & obj_set) {
+      for (int i = 0; i < obj_set.GetSetSize(); i++) {  Add(obj_set[i]);  }
+      return *this;
+    }
 
     Layer & Remove(Object & _obj) {
       EM_ASM_ARGS({emk_info.objs[$0].remove();}, _obj.GetID());
@@ -886,7 +904,8 @@ namespace emk {
   //////////////////////////////////////////////////////////
   // Methods previously declared
 
-  void Image::ImageLoaded() { // Called back when image is loaded
+  void Image::ImageLoaded() // Called back when image is loaded
+  {
     if (width == -1) width = EM_ASM_INT({return emk_info.images[$0].width;}, raw_image.GetImgID());
     if (height == -1) height = EM_ASM_INT({return emk_info.images[$0].height;}, raw_image.GetImgID());
 
@@ -914,6 +933,5 @@ namespace emk {
   }
 
 };
-
 
 #endif
