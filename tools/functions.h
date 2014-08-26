@@ -28,6 +28,12 @@ namespace emk {
     }, type);
   }
 
+  void OpenWindow(const std::string & url) {
+    EM_ASM_ARGS({
+        var url = Pointer_stringify($0);
+        window.open = url;
+    }, url.c_str());
+  }
 };
 
 #endif
