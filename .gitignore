@@ -29,3 +29,9 @@ Presentation/ss.js
 *.map
 
 Talks/2014-BEACON-WebDev/ss.js
+
+cse450/index.js
+
+Tests/string_test.js
+
+tmp

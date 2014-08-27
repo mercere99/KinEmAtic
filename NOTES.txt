@@ -1,6 +1,9 @@
 --== For Slideshow ==--
 Setup some basic configurations
 - Default size -- anything else should be scaled from that default.
+  Perhaps put right into Stage object as locked_width, locked_height, and/or locked_aspect??
+- Method in SlideShow to attach a link to an object, along with creating a red border, tracking
+  mouse-in, -out, etc.
 - Color scheme?
 
 --== Development Notes ==--

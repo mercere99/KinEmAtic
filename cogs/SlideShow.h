@@ -314,7 +314,7 @@ namespace emk {
 
     void DoRewind() {
       pause = false;
-      next_action--;
+      if (next_action > 0) next_action--;
       while (!pause && next_action-- > 0) {
         action_list[next_action]->Reverse(this);
       }
@@ -374,7 +374,7 @@ namespace emk {
 
     void DoRestore(std::vector<Object *> & cleared_set) {
       for (int i = 0; i < (int) cleared_set.size(); i++) {
-        visible_set[i]->SetVisible(true);
+        cleared_set[i]->SetVisible(true);
       }
       visible_set = cleared_set;
       cleared_set.resize(0);

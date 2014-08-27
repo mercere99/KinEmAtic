@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>EmKinetic Test</title>
+  </head>
+  <body>
+    <div id="container"></div>
+    <script type="text/javascript" src="string_test.js"></script>
+    <script>
+      PrintString = Module.cwrap('PrintString', null, ['string']);
+      $("field_name").update("New text");
+      PrintString("Hello World!");
+    </script>
+  </body>
+</html>
