@@ -670,7 +670,6 @@ namespace emk {
   // Manager for stage layers
   class Layer : public Object {
   public:
-  public:
     Layer() {
       obj_id = EM_ASM_INT_V({
           var obj_id = emk_info.objs.length;                   // Determine the next free id for a Kinetic object.
@@ -721,9 +720,12 @@ namespace emk {
   private:
     std::string m_container;      // Name of this stage.
 
+    int scaled_width;             // Width stage should appear internally (-1 means use real width)
+    int scaled_height;            // Height stage should appear internally (-1 means use real height)
+    double aspect_ratio;          // Aspect ratio to keep stage at (0 means do not lock aspect)
   public:
-    Stage(int _w, int _h, std::string name="container") 
-      : m_container(name)
+    Stage(int _w, int _h, std::string name="container", bool lock_aspect=true) 
+      : m_container(name), scaled_width(_w), scaled_height(_h), aspect_ratio(0.0)
     {
       obj_id = EM_ASM_INT({
         name = Pointer_stringify($2);
@@ -736,25 +738,62 @@ namespace emk {
 
         return obj_id;
       }, _w, _h, m_container.c_str());
+
+      // If we are lockig the aspect ratio, determine it now!
+      if (lock_aspect) aspect_ratio = ((double) scaled_width) / (double) scaled_height;
     }
     ~Stage() { ; }
 
     virtual std::string GetType() const { return "emkStage"; }
 
     // Sizing
-    void ResizeMax(int min_width=0, int min_height=0) {
+    int GetScaledWidth() const { return scaled_width; }
+    int GetScaledHeight() const { return scaled_height; }
+    double GetAspectRatio() const { return aspect_ratio; }
+
+    Stage & SetScaledSize(int _w, int _h, bool lock_aspect=true) {
+      scaled_width = _w;
+      scaled_height = _h;
+      if (lock_aspect) aspect_ratio = ((double) scaled_width) / (double) scaled_height;
+      Rescale();
+      return *this;
+    }
+    void Rescale() {
+      double x_scale = 1.0, y_scale = 1.0;
+      if (scaled_width > 0 && GetWidth() != scaled_width) x_scale = ((double) scaled_width) / (double) GetWidth();
+      if (scaled_height > 0 && GetHeight() != scaled_height) y_scale = ((double) scaled_height) / (double) GetHeight();
+      // AlertVar(GetWidth());
+      SetScale(1.0/x_scale, 1.0/y_scale);
+    }
+
+    inline Object & SetSize(int w, int h) {
+      // If the aspect ratio is locked, adjust the new size to fit inside the dimensions provided.
+      if (aspect_ratio > 0) {
+        if (h * aspect_ratio < w) w = h * aspect_ratio;
+        else h = w / aspect_ratio;
+      }      
+
+      SetWidth(w);    // Set the new (absolute) size of the stage
+      SetHeight(h);
+      Rescale();      // Adjust anything already on the stage
+      return *this;
+    }
+    void ResizeMax(int min_width, int min_height) {
       int new_width = std::max( emk::GetWindowInnerWidth() - 10, min_width );
       int new_height = std::max( emk::GetWindowInnerHeight() - 10, min_height );
       SetSize(new_width, new_height);
     }
-    int ScaleX(double x_frac) const { return x_frac * GetWidth(); }
-    int ScaleY(double y_frac) const { return y_frac * GetHeight(); }
+    void ResizeMax() { ResizeMax(0,0); }
+    int ScaleX(double x_frac) const { return x_frac * scaled_width; }
+    int ScaleY(double y_frac) const { return y_frac * scaled_height; }
+
+    // @CAO Need to adjust into new aspect ratio system.
     Stage & SetAspect(double aspect_ratio) {
       const double width = GetWidth();
-      const double height = GetHeight();
+      const double height = GetHeight(); 
       if (height * aspect_ratio < width) SetSize(height * aspect_ratio, height);
       else SetSize(width, width / aspect_ratio);
-      return *this;
+     return *this;
     }
 
     // Add a layer and return this stage itself (so adding can be chained...)
