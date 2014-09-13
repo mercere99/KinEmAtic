@@ -318,15 +318,15 @@ public:
     button_toggleclick.SetToolTip("Toggle answers & pencilmarks");
 
     // Setup button icons
-    button_rewind.SetupDrawIcon(this, &SudokuInterface::DrawIcon_Rewind);
-    button_undo.SetupDrawIcon(this, &SudokuInterface::DrawIcon_Undo);
-    button_bookmark.SetupDrawIcon(this, &SudokuInterface::DrawIcon_Bookmark);
-    button_redo.SetupDrawIcon(this, &SudokuInterface::DrawIcon_Redo);
-    button_redoall.SetupDrawIcon(this, &SudokuInterface::DrawIcon_Redoall);
-    button_hint.SetupDrawIcon(this, &SudokuInterface::DrawIcon_Hint);
-    button_warnings.SetupDrawIcon(this, &SudokuInterface::DrawIcon_Warnings);
-    button_autonotes.SetupDrawIcon(this, &SudokuInterface::DrawIcon_Autonotes);
-    button_toggleclick.SetupDrawIcon(this, &SudokuInterface::DrawIcon_Toggleclick);
+    button_rewind.SetDrawIcon(this, &SudokuInterface::DrawIcon_Rewind);
+    button_undo.SetDrawIcon(this, &SudokuInterface::DrawIcon_Undo);
+    button_bookmark.SetDrawIcon(this, &SudokuInterface::DrawIcon_Bookmark);
+    button_redo.SetDrawIcon(this, &SudokuInterface::DrawIcon_Redo);
+    button_redoall.SetDrawIcon(this, &SudokuInterface::DrawIcon_Redoall);
+    button_hint.SetDrawIcon(this, &SudokuInterface::DrawIcon_Hint);
+    button_warnings.SetDrawIcon(this, &SudokuInterface::DrawIcon_Warnings);
+    button_autonotes.SetDrawIcon(this, &SudokuInterface::DrawIcon_Autonotes);
+    button_toggleclick.SetDrawIcon(this, &SudokuInterface::DrawIcon_Toggleclick);
 
     // puzzle_board.On("click", this, &SudokuInterface::OnClick);
     puzzle_board.On("mousedown", this, &SudokuInterface::OnMousedown);
@@ -428,12 +428,12 @@ public:
     const int cell_y = offset + cell_width * active_row;
 
     // Clear out the background
-    canvas.SetFillStyle(emk::Color(255,250,245));
+    canvas.SetFill(emk::Color(255,250,245));
     canvas.Rect(offset, offset, board_width, board_width, true);
 
     // Highlight the regions affected.
     if (active_row != -1 && active_col != -1) {
-      canvas.SetFillStyle(emk::Color(200, 200, 250, 0.5));  // Highlight color
+      canvas.SetFill(emk::Color(200, 200, 250, 0.5));  // Highlight color
       canvas.Rect(cell_x, offset, cell_width, board_width, true);
       canvas.Rect(offset, cell_y, board_width, cell_width, true);
  	 
@@ -441,7 +441,7 @@ public:
       const int region_y = active_row / 3;
       canvas.Rect(offset + region_x*region_width, offset + region_y*region_width, region_width, region_width, true);
 
-      canvas.SetFillStyle(emk::Color(250, 250, 250));     // Target (white)
+      canvas.SetFill(emk::Color(250, 250, 250));     // Target (white)
       canvas.Rect(cell_x, cell_y, cell_width, cell_width, true);
         
       // If there is a cell to highlight, do so.
@@ -450,14 +450,14 @@ public:
         const int h_row = puzzle.GetLayout().ToRow(highlight_id);
         const int hx = offset + cell_width * h_col;
         const int hy = offset + cell_width * h_row;
-        canvas.SetFillStyle("yellow");
+        canvas.SetFill("yellow");
         canvas.Rect(hx, hy, cell_width, cell_width, true);
       }
     }
 
     // Setup drawing the actual grid.
     canvas.BeginPath();
-    canvas.SetFillStyle("black");
+    canvas.SetFill("black");
     canvas.SetLineJoin("round");
     canvas.SetLineWidth(mid_width);
       
@@ -514,8 +514,8 @@ public:
               const int val = mi + 1 + (mj*3);
               if (puzzle.GetNote(i,j,val) == false) continue;
           	  
-              if (do_autonotes) canvas.SetFillStyle("#00AA00");
-              else canvas.SetFillStyle("#006600");
+              if (do_autonotes) canvas.SetFill("#00AA00");
+              else canvas.SetFill("#006600");
               const int text_y = cur_y + puz_note_width * (mj+1);
               canvas.Text(std::to_string(val), text_x, text_y);
             }
@@ -523,19 +523,19 @@ public:
         }
         else { // This cell has a value, so we should draw it!
           canvas.SetFont(std::to_string(puz_text_pt) + "pt Calibri");
-          if (puzzle.GetLock(i,j) != 0) canvas.SetFillStyle("black");    // This number is locked! (original in puzzle)
+          if (puzzle.GetLock(i,j) != 0) canvas.SetFill("black");    // This number is locked! (original in puzzle)
           else {                                                         // Changeable cell.
             const int cur_id = puzzle.GetLayout().ToID(i, j);
 
             if (puzzle.GetWarn(cur_id) == true) {                        // Are warnings on for this cell?
               // ...Has cell changed on the current bookmark level?
-              if (bm_touch_cur[cur_id] > 0) canvas.SetFillStyle("#880000");
-              else canvas.SetFillStyle("#AA6666");
+              if (bm_touch_cur[cur_id] > 0) canvas.SetFill("#880000");
+              else canvas.SetFill("#AA6666");
             }
             else {                                                       // No warnings
               // ...Has cell changed on the current bookmark level?
-              if (bm_touch_cur[cur_id] > 0) canvas.SetFillStyle("#0000FF");
-              else canvas.SetFillStyle("#6666AA");
+              if (bm_touch_cur[cur_id] > 0) canvas.SetFill("#0000FF");
+              else canvas.SetFill("#6666AA");
             }
           }
           canvas.Text(std::to_string(puzzle.GetState(i,j)),
@@ -555,11 +555,11 @@ public:
           for (int j = 0; j < 3; j++) {
             const int val = i + 1 + (j*3);
             if (puzzle.GetNote(cell_id, val) == false) {
-              if (val == hover_val) canvas.SetFillStyle("#FF8800");
-              else canvas.SetFillStyle("#888888");
+              if (val == hover_val) canvas.SetFill("#FF8800");
+              else canvas.SetFill("#888888");
             } else {
-              if (val == hover_val) canvas.SetFillStyle("#884400");
-              else canvas.SetFillStyle("#008800");
+              if (val == hover_val) canvas.SetFill("#884400");
+              else canvas.SetFill("#008800");
             }
             const int text_y = cell_y + puz_note_width * (j+1);
             canvas.Text(std::to_string(val), text_x, text_y);
@@ -815,7 +815,7 @@ public:
     // Draw the bookmark
     canvas.BeginPath();
     canvas.SetLineWidth(3);
-    canvas.SetFillStyle("#F5DEB3");
+    canvas.SetFill("#F5DEB3");
     canvas.MoveTo(5, 100);
     canvas.Arc(15, 10, 10, emk::PI, emk::PI*1.5);
     canvas.Arc(35, 10, 10, emk::PI*1.5, 0);
@@ -833,7 +833,7 @@ public:
     // Draw Arrow 1
     canvas.BeginPath();
     canvas.SetLineWidth(2);
-    canvas.SetFillStyle("white");
+    canvas.SetFill("white");
     canvas.MoveTo(45, 30);
     canvas.LineTo(65, 10);
     canvas.LineTo(65, 20);
@@ -853,7 +853,7 @@ public:
     // Draw Arrow 2  
     canvas.BeginPath();
     canvas.SetLineWidth(2);
-    canvas.SetFillStyle("white");
+    canvas.SetFill("white");
     canvas.MoveTo(45, 75);
     canvas.LineTo(65, 55);
     canvas.LineTo(65, 65);
@@ -873,7 +873,7 @@ public:
 
   void DrawIcon_Undo(emk::Canvas & canvas) {
     canvas.BeginPath();
-    canvas.SetFillStyle("white");
+    canvas.SetFill("white");
     canvas.MoveTo(30,95);              // Arrow point
     canvas.LineTo(50,75);               // Angle up on right side of arrow
     canvas.LineTo(40,75);               // Back in to base of arrow head
@@ -911,7 +911,7 @@ public:
     
     canvas.BeginPath();
     canvas.SetLineWidth(3);
-    canvas.SetFillStyle("white");
+    canvas.SetFill("white");
     canvas.Rect(gridx, gridy, gridw, gridh);
     canvas.Fill();
     for (int i = 0; i < grid_lines; i++) {
@@ -924,7 +924,7 @@ public:
 
     canvas.BeginPath();
     canvas.SetLineWidth(3);
-    canvas.SetFillStyle("#F5DEB3");
+    canvas.SetFill("#F5DEB3");
     canvas.MoveTo(15, 100);
     canvas.Arc(25, 10, 10, emk::PI, emk::PI*1.5);
     canvas.Arc(45, 10, 10, emk::PI*1.5, 0);
@@ -942,7 +942,7 @@ public:
 
   void DrawIcon_Redo(emk::Canvas & canvas) {
     canvas.BeginPath();
-    canvas.SetFillStyle("white");
+    canvas.SetFill("white");
     canvas.MoveTo(70,95);              // Arrow point
     canvas.LineTo(50,75);               // Angle up on right side of arrow
     canvas.LineTo(60,75);               // Back in to base of arrow head
@@ -969,7 +969,7 @@ public:
     // Arrow 1
     canvas.BeginPath();
     canvas.SetLineWidth(2);
-    canvas.SetFillStyle("white");
+    canvas.SetFill("white");
     canvas.MoveTo(70, 30);
     canvas.LineTo(50, 10);
     canvas.LineTo(50, 20);
@@ -989,7 +989,7 @@ public:
     // Arrow 2
     canvas.BeginPath();
     canvas.SetLineWidth(2);
-    canvas.SetFillStyle("white");
+    canvas.SetFill("white");
     canvas.MoveTo(70, 75);
     canvas.LineTo(50, 55);
     canvas.LineTo(50, 65);
@@ -1009,7 +1009,7 @@ public:
     // Wall
     canvas.BeginPath();
     canvas.Rect(75, 0, 10, 100);
-    canvas.SetFillStyle("#999");
+    canvas.SetFill("#999");
     canvas.SetShadowColor("#999");
     canvas.SetShadowBlur(4);
     canvas.SetShadowOffsetX(2);
@@ -1021,7 +1021,7 @@ public:
   
   void DrawIcon_Hint(emk::Canvas & canvas) {
     canvas.SetFont("95pt Helvetica");
-    canvas.SetFillStyle("green");
+    canvas.SetFill("green");
     canvas.SetTextAlign("center");
     canvas.SetShadowColor("#999");
     canvas.SetShadowBlur(4);
@@ -1034,7 +1034,7 @@ public:
   
   void DrawIcon_Warnings(emk::Canvas & canvas) {
     canvas.SetFont("95pt Helvetica");
-    canvas.SetFillStyle("#800");
+    canvas.SetFill("#800");
     canvas.SetTextAlign("center");
     canvas.SetShadowColor("#999");
     canvas.SetShadowBlur(4);
@@ -1061,7 +1061,7 @@ public:
 
     // Pencil marks    
     canvas.SetFont("20pt Helvetica");
-    canvas.SetFillStyle("#008800");
+    canvas.SetFill("#008800");
     canvas.SetTextAlign("center");
     canvas.Text("?", 25, 35);
     canvas.Text("?", 50, 35);
@@ -1091,7 +1091,7 @@ public:
 
     // Pencil marks    
     canvas.SetFont("25pt Helvetica");
-    canvas.SetFillStyle("blue");
+    canvas.SetFill("blue");
     canvas.SetTextAlign("center");
     canvas.Text("1", 25, 40);
     canvas.Text("4", 75, 62);
@@ -1101,7 +1101,7 @@ public:
     // Pencil
     canvas.BeginPath();
     canvas.SetLineWidth(2);
-    canvas.SetFillStyle("#F5DEB3");
+    canvas.SetFill("#F5DEB3");
     canvas.MoveTo(30, 85);
     canvas.LineTo(30, 70);
     canvas.LineTo(60, 0);

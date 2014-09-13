@@ -15,6 +15,8 @@ Once we have a first draft of the basic framework:
 
 Specific class improvements:
 * Cleanup Image class to be a Shape.
+* Make stages easily resizable:
+  http://stackoverflow.com/questions/14247665/making-kineticjs-stage-of-variable-width-or-update-stage-on-resize
 * Control class should allow for easy relationships to track when building objects (and perhaps maintained through size changes?)
 * Buttonsets should allow dynamic spacers.
 * EventChains need to be able to handle callbacks and animations
