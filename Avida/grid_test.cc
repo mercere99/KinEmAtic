@@ -4,17 +4,17 @@
 
 #include <html5.h>
 
-#include "../libs/Kinetic.h"
-#include "../tools/assert.h"
-//#include "../tools/Point.h"
-#include "../tools/Random.h"
-#include "../cogs/Button.h"
-#include "../cogs/ButtonGrid.h"
-#include "../cogs/Events.h"
-#include "../cogs/Grid.h"
-#include "../cogs/Panel.h"
+#include "libs/Kinetic.h"
+#include "tools/assert.h"
+//#include "tools/Point.h"
+#include "tools/Random.h"
+#include "cogs/Button.h"
+#include "cogs/ButtonGrid.h"
+#include "cogs/Events.h"
+#include "cogs/Grid.h"
+#include "cogs/Panel.h"
 
-#include "../cogs/Control.h"
+#include "cogs/Control.h"
 
 class GridExample {
 private:
@@ -28,18 +28,18 @@ private:
 
   std::vector<double> merits;
 
-  emk::Control control;           // Main controller for GUI elements
+  emk::Control control;        // Main controller for GUI elements
 
   emk::Grid grid;              // Visual Grid.
   emk::Panel panel_config;     // Congifuration options.
   emk::Animation<GridExample> anim_grid_run;
 
   // Current status 
-  emk::Random random;        // Random number generator
+  emk::Random random;          // Random number generator
   emk::ProbSchedule sched;
   int update;
-  bool is_paused;            // false = grid running.  true = grid paused.
-  bool is_flipped;           // false = grid showing.  true = config showing.
+  bool is_paused;              // false = grid running.  true = grid paused.
+  bool is_flipped;             // false = grid showing.  true = config showing.
 
   double mut_rate;
 public:

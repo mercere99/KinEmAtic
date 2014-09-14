@@ -8,6 +8,9 @@ Setup some basic configurations
 
 --== Development Notes ==--
 
+Creating files to be saved locally:
+http://stackoverflow.com/questions/3665115/create-a-file-in-memory-for-user-to-download-not-through-server
+
 Once we have a first draft of the basic framework:
 * Make sure copy constructors work properly, and encourage the use of template objects
 * Build a library of canvas shapes (lattice, arrow, etc.) to easily plug into things like button images.

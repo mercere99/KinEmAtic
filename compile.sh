@@ -14,6 +14,6 @@ else
   set OUTDIR = $2
 endif
 
-$COMMAND $INPUT -std=c++11 --js-library libs/library_kinetic.js -g4 -Werror -DEMK_DEBUG $1.cc -o $1.js -s EXPORTED_FUNCTIONS="['_emkMain', '_emkJSDoCallback']"
+$COMMAND $INPUT -std=c++11 --js-library libs/library_kinetic.js -g4 -Werror -DEMK_DEBUG -I. $1.cc -o $1.js -s EXPORTED_FUNCTIONS="['_emkMain', '_emkJSDoCallback']"
 cp $1.js $OUTDIR
 cp $1.html $OUTDIR
