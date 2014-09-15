@@ -117,6 +117,22 @@ namespace emk {
       for (auto it = temp_objs.begin(); it != temp_objs.end(); it++) delete (*it);
     }
 
+    inline double ScaleX(double x_frac) const {
+      assert(cur_stage != NULL);
+      assert(x_frac >= 0.0 && x_frac <= 1.0);
+      return cur_stage->ScaleX(x_frac);
+    }
+    inline double ScaleY(double y_frac) const {
+      assert(cur_stage != NULL);
+      assert(y_frac >= 0.0 && y_frac <= 1.0);
+      return cur_stage->ScaleY(y_frac);
+    }
+    inline emk::Point ScaleXY(double x_frac, double y_frac) { return emk::Point( ScaleX(x_frac), ScaleY(y_frac) ); }
+    
+    // Setup basic parentheses usage for scaling to new positions...
+    inline double operator()(double x_frac) { return ScaleX(x_frac); }
+    inline emk::Point operator()(double x_frac, double y_frac) { return emk::Point( ScaleX(x_frac), ScaleY(y_frac) ); }
+
     Control & SetAspect(double aspect_ratio) { Stage().SetAspect(aspect_ratio); return *this; }
 
     Stage & BuildStage(const std::string & name, int width, int height) {
