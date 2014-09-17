@@ -100,10 +100,10 @@ public:
 
     // Setup the text.
     emk::Font font("Calibri", 30, "black");
-    emk::Text & text_title  = control.BuildText("title", emk::Point(650, 10), "Avida Viewer test!", font);
-    emk::Text & text_update = control.BuildText("update", emk::Point(650, 50), "Update: 0", font);
-    emk::Text & text_mouse  = control.BuildText("mouse", emk::Point(650, 90), "Move mouse over grid to test!", font);
-    emk::Text & text_click  = control.BuildText("click", emk::Point(650, 130), "Click on grid to test!", font);
+    emk::TextBox & text_title  = control.BuildTextBox("title", emk::Point(650, 10), "Avida Viewer test!", font);
+    emk::TextBox & text_update = control.BuildTextBox("update", emk::Point(650, 50), "Update: 0", font);
+    emk::TextBox & text_mouse  = control.BuildTextBox("mouse", emk::Point(650, 90), "Move mouse over grid to test!", font);
+    emk::TextBox & text_click  = control.BuildTextBox("click", emk::Point(650, 130), "Click on grid to test!", font);
 
     // Create all of the layers
     emk::Layer & layer_static = control.BuildLayer("static");       // Background layer that should never need to be updated.
@@ -229,7 +229,7 @@ public:
 
   void Animate_Grid(const emk::AnimationFrame & frame) {
     update++;
-    control.Text("update").SetText(std::string("Update: ") + std::to_string(update));
+    control.TextBox("update").SetText(std::string("Update: ") + std::to_string(update));
     const int steps = std::min(100, update/2+1);
     for (int i = 0; i < steps; i++) {
       int from = sched.NextID();
@@ -257,11 +257,11 @@ public:
 
 
   void Draw_Gridmouse() {
-    control.Text("mouse").SetText(std::string("Mouse Col:") + std::to_string(grid.GetMouseCol()) + std::string(" Row:") + std::to_string(grid.GetMouseRow()));
+    control.TextBox("mouse").SetText(std::string("Mouse Col:") + std::to_string(grid.GetMouseCol()) + std::string(" Row:") + std::to_string(grid.GetMouseRow()));
   }
 
   void Draw_Gridclick() {
-    control.Text("click").SetText(std::string("Click Col:") + std::to_string(grid.GetClickCol()) + std::string(" Row:") + std::to_string(grid.GetClickRow()));
+    control.TextBox("click").SetText(std::string("Click Col:") + std::to_string(grid.GetClickCol()) + std::string(" Row:") + std::to_string(grid.GetClickRow()));
     control.Layer("info").BatchDraw();
   }
 

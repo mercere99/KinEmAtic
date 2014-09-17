@@ -32,7 +32,7 @@ namespace emk {
 
     std::map<std::string, Image *> image_map;
     std::map<std::string, Rect *> rect_map;
-    std::map<std::string, Text *> text_map;
+    std::map<std::string, TextBox *> text_map;
 
     std::map<std::string, Button *> button_map;
     std::map<std::string, ButtonGrid *> buttonset_map;
@@ -70,7 +70,7 @@ namespace emk {
     Point * cur_point;
     Image * cur_image;
     Rect * cur_rect;
-    Text * cur_text;
+    TextBox * cur_text;
     Button * cur_button;
     ButtonGrid * cur_buttonset;
     Grid * cur_grid;
@@ -189,8 +189,8 @@ namespace emk {
       return *cur_rect;
     }
 
-    Text & BuildText(const std::string & name, const Point & point, std::string text, const emk::Font & font) {
-      cur_text = new emk::Text(point, text, font);
+    TextBox & BuildTextBox(const std::string & name, const Point & point, std::string text, const emk::Font & font) {
+      cur_text = new emk::TextBox(point, text, font);
       if (text_map.find(name) != text_map.end()) delete text_map[name]; // If we a replacing a text, delete the old one.
       text_map[name] = cur_text;
       shape_map[name] = cur_text;
@@ -198,7 +198,7 @@ namespace emk {
     }
 
     // If no explicit font is provided for the text use the cur_font (plus other default values).
-    Text & BuildText(const std::string & name, const Point & point, std::string text="") { return BuildText(name, point, text, default_font); }
+    TextBox & BuildTextBox(const std::string & name, const Point & point, std::string text="") { return BuildTextBox(name, point, text, default_font); }
 
 
     template<class T> Button & BuildButton(const std::string & name, T * target, void (T::*method_ptr)()) {
@@ -275,7 +275,7 @@ namespace emk {
       assert(cur_rect != NULL);
       return *cur_rect;
     }
-    emk::Text & Text(const std::string & name="") {
+    emk::TextBox & TextBox(const std::string & name="") {
       if (name != "") cur_text = text_map[name];
       assert(cur_text != NULL);
       return *cur_text;

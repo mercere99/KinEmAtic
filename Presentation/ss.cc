@@ -51,7 +51,7 @@ extern "C" int emkMain()
   show << show(0.66, 0.52) << emk::Font(stage_w/35) << "Evolution";
 
   show.Pause();
-  show << emk::Tween(show.Text(), 3).SetXY( show(0.8, 0.88) ).SetScale(5.0).SetRotation(900).SetEasing(emk::Tween::Linear);
+  show << emk::Tween(show.TextBox(), 3).SetXY( show(0.8, 0.88) ).SetScale(5.0).SetRotation(900).SetEasing(emk::Tween::Linear);
 
   show.Pause();
 

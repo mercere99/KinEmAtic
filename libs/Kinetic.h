@@ -805,9 +805,9 @@ namespace emk {
 
 
   // The text object from Kinetic...
-  class Text : public Shape {
+  class TextBox : public Shape {
   public:
-    Text(int x=0, int y=0, const std::string & text="", int font_size=30, const std::string & font_family="Helvetica", const emk::Color & fill="black")
+    TextBox(int x=0, int y=0, const std::string & text="", int font_size=30, const std::string & font_family="Helvetica", const emk::Color & fill="black")
     {
       obj_id = EM_ASM_INT( {
           var obj_id = emk_info.objs.length;         // Determine the next free id for a Kinetic object.
@@ -827,14 +827,14 @@ namespace emk {
           return obj_id;                                       // Return the Kinetic object id.
       }, x, y, text.c_str(), std::to_string(font_size).c_str(), font_family.c_str(), fill.AsString().c_str());
     }
-    Text(int x, int y, std::string text, const Font & font) : Text(x, y, text, font.GetSize(), font.GetFamily(), font.GetColor()) { ; }
-    Text(const Point & point, std::string text, const Font & font)
-      : Text(point.GetX(), point.GetY(), text, font.GetSize(), font.GetFamily(), font.GetColor()) { ; }
-    ~Text() { ; }
+    TextBox(int x, int y, std::string text, const Font & font) : TextBox(x, y, text, font.GetSize(), font.GetFamily(), font.GetColor()) { ; }
+    TextBox(const Point & point, std::string text, const Font & font)
+      : TextBox(point.GetX(), point.GetY(), text, font.GetSize(), font.GetFamily(), font.GetColor()) { ; }
+    ~TextBox() { ; }
 
-    virtual std::string GetType() const { return "emkText"; }
+    virtual std::string GetType() const { return "emkTextBox"; }
 
-    Text & SetText(const std::string & _text) {
+    TextBox & SetText(const std::string & _text) {
       EM_ASM_ARGS({var _text = Pointer_stringify($1); emk_info.objs[$0].text(_text);}, obj_id, _text.c_str());
       return *this;
     }

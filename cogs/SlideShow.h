@@ -215,7 +215,7 @@ namespace emk {
       // If a title is provided, include it centered on the screen. // @CAO eventually include proper alignment cues.
       if (title.size() > 0) {
         std::string title_name = std::string("slide") + std::to_string(slide_id) + std::string("_title");
-        emk::Text & title_text = BuildText(title_name, emk::Point(0,0), title, title_font);
+        emk::TextBox & title_text = BuildTextBox(title_name, emk::Point(0,0), title, title_font);
         int title_x = (Stage().GetWidth() - title_text.GetWidth()) / 2;
         title_text.SetXY(title_x, title_y);
         Appear(title_text);
@@ -230,7 +230,7 @@ namespace emk {
 
     SlideShow & operator<<(const std::string & msg) {
       // Build a text message on the screen using the default information.
-      emk::Text & temp_text = BuildText(GetTempName(), default_point, msg, default_font);
+      emk::TextBox & temp_text = BuildTextBox(GetTempName(), default_point, msg, default_font);
       Appear( temp_text );                          // Schedule the text to appear on the screen.
       default_point.TransX(temp_text.GetWidth());   // Start the next text after this.
       return *this;
