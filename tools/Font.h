@@ -2,6 +2,7 @@
 #define EMK_FONT_H
 
 #include <string>
+#include <sstream>
 
 #include "Colors.h"
 
@@ -40,6 +41,22 @@ namespace emk {
     Font & SetBold(bool _in=true) { is_bold = _in; return *this; }
     Font & SetItalic(bool _in=true) { is_italic = _in; return *this; }
 
+    std::string GetHTMLStart() {
+      std::stringstream ss;
+      ss << "<span style=\"color:" << color.AsString()
+         << "; font-family:" << family
+         << "; font-size:" << size;
+      if (is_bold) ss << "; font-weight:bold";
+      if (is_italic) ss << "; font-style:italic";
+      ss << "\">";
+      return ss.str();
+    }
+    std::string GetHTMLEnd() { return "</span>"; }
+
+    bool operator==(const Font & _in) const {
+      return (family == _in.family) && (size == _in.size) && (color == _in.color) && (is_bold == _in.is_bold) && (is_italic == _in.is_italic);
+    }
+    bool operator!=(const Font & _in) const { return !operator==(_in); }
   };
 };
 

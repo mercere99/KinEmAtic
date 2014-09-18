@@ -29,6 +29,8 @@ namespace emk {
     }
 
     const Color & operator=(const Color & _in) { colorname = _in.colorname; return *this; }
+    bool operator==(const Color & _in) const { return colorname == colorname; }
+    bool operator!=(const Color & _in) const { return colorname != colorname; }
 
     const std::string & AsString() const { return colorname; }
 
