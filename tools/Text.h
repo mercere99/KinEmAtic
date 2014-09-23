@@ -78,6 +78,22 @@ namespace emk {
       }
     }
     ~TextStream() { ; }
+
+    std::string AsString() {
+      std::stringstream ss;
+      for (int i = 0; i < (int) text_set.size(); i++) {
+        ss << text_set[i]->GetText();
+      }
+      return ss.str();
+    }
+
+    std::string AsHTMLString() {
+      std::stringstream ss;
+      for (int i = 0; i < (int) text_set.size(); i++) {
+        ss << text_set[i]->AsHTMLString();
+      }
+      return ss.str();
+    }
     
     TextStream & operator<<(const std::string & in_str) { 
       if (font_change == false) {
@@ -91,6 +107,8 @@ namespace emk {
 
       return *this;
     }
+
+    TextStream & operator<<(const char * in_str) { return operator<<(std::string(in_str)); }
 
     TextStream & operator<<(char in_char) { 
       if (font_change == false) {
@@ -118,6 +136,19 @@ namespace emk {
       return *this;
     }
 
+    TextStream & operator<<(float in_float) { 
+      if (font_change == false) {
+        text_set.back()->Append(std::to_string(in_float));
+      }
+      else {
+        SFText * new_text = new SFText(std::to_string(in_float), cur_font);
+        text_set.push_back(new_text);
+        font_change = false;
+      }
+
+      return *this;
+    }
+
     TextStream & operator<<(const Font & in_font) { 
       if (in_font != cur_font) {
         cur_font = in_font;
@@ -135,6 +166,25 @@ namespace emk {
 
       return *this;
     }
+
+    TextStream & operator<<( std::ostream&(*f)(std::ostream&) )
+    {
+      if (f == std::endl) {
+
+        if (font_change == false) {
+          text_set.back()->Append(std::to_string('\n'));
+        }
+        else {
+          SFText * new_text = new SFText(std::to_string('\n'), cur_font);
+          text_set.push_back(new_text);
+          font_change = false;
+        }
+
+      }
+      
+      return *this;
+    }
+
   };
 
 };

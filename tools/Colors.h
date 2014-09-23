@@ -12,8 +12,8 @@ namespace emk {
 
   public:
     Color() { ; }
-    Color(const Color & _in) : colorname(_in.colorname) { ; }
     Color(const std::string & _name) : colorname(_name) { ; }
+    Color(const Color & _in) : colorname(_in.colorname) { ; }
     Color(const char * _name) : colorname(_name) { ; }
     Color(int r, int g, int b) { // @CAO This is technically shorter than "rgb(##,##,##)", but more processing up front.
       std::stringstream stream;

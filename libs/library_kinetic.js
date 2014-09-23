@@ -1,11 +1,3 @@
-/*
-  var long_result = "Target Info: ";
-  for (var i in evt) {
-    long_result += " (" + i + ":::" + evt[i] + ")  ";
-  }
-  alert(long_result);
-*/            
-
 mergeInto(LibraryManager.library, {
     $emk_info: { objs:[], images:[], image_load_count:0, image_error_count:0 },
 
